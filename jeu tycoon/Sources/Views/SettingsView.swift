@@ -1,0 +1,184 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @Environment(GameManager.self) private var gameManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var showingResetConfirmation = false
+    @State private var cheatAmount: String = ""
+    @AppStorage("numberFormatStyle") private var numberFormatStyle: NumberFormatStyle = .scientific
+    @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 25) {
+                        // Profil / Info
+                        VStack(spacing: 10) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 50))
+                                .foregroundStyle(LinearGradient(colors: [.gray, .white], startPoint: .top, endPoint: .bottom))
+                            Text("Paramètres")
+                                .font(.largeTitle.bold())
+                                .foregroundColor(.white)
+                        }
+                        .padding(.top, 20)
+                        
+                        // Affichage
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("Affichage")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 10) {
+                                HStack {
+                                    Text("Format des Nombres")
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    Picker("", selection: $numberFormatStyle) {
+                                        ForEach(NumberFormatStyle.allCases) { style in
+                                            Text(style.rawValue).tag(style)
+                                        }
+                                    }
+                                    .accentColor(.white)
+                                    .pickerStyle(MenuPickerStyle())
+                                }
+                                .padding()
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(12)
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+                        // Sauvegarde
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("Progression")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            Button(action: {
+                                showingResetConfirmation = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "trash")
+                                    Text("Réinitialiser ma progression")
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.red)
+                                .padding()
+                                .background(Color.red.opacity(0.1))
+                                .cornerRadius(12)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.3), lineWidth: 1))
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+#if DEBUG
+                        // Dev Tools
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("Outils Développeur")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 15) {
+                                Toggle("Mode Développeur (Achats In-App gratuits)", isOn: $isDeveloperMode)
+                                    .padding()
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .tint(.blue)
+                                
+                                TextField("Montant (ex: 100000)", text: $cheatAmount)
+                                    .keyboardType(.numberPad)
+                                    .padding()
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                
+                                HStack(spacing: 15) {
+                                    Button("+ 💰 Argent") {
+                                        if let amount = Double(cheatAmount) {
+                                            gameManager.money += BigNumber(amount)
+                                            gameManager.evaluateAffordableCrates(reset: false)
+                                            gameManager.saveGame()
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue.opacity(0.2))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(8)
+                                    
+                                    Button("+ 🧬 ADN") {
+                                        if let amount = Double(cheatAmount) {
+                                            gameManager.addMutationPoints(BigNumber(amount))
+                                            gameManager.saveGame()
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.purple.opacity(0.2))
+                                    .foregroundColor(.purple)
+                                    .cornerRadius(8)
+                                    
+                                    Button("+ ⭐️ Étoiles") {
+                                        if let amount = Double(cheatAmount) {
+                                            gameManager.currentStars += BigNumber(amount)
+                                            gameManager.totalStars += BigNumber(amount)
+                                            gameManager.unspentStars += BigNumber(amount)
+                                            gameManager.saveGame()
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.yellow.opacity(0.2))
+                                    .foregroundColor(.yellow)
+                                    .cornerRadius(8)
+                                }
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.05))
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                        }
+#endif
+                        Spacer(minLength: 40)
+                        
+                        Text("CanardFactory v1.0")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fermer") { dismiss() }
+                        .foregroundColor(.white)
+                }
+            }
+            .alert("Êtes-vous sûr ?", isPresented: $showingResetConfirmation) {
+                Button("Annuler", role: .cancel) { }
+                Button("Oui, tout effacer", role: .destructive) {
+                    gameManager.resetProgression()
+                    dismiss()
+                }
+            } message: {
+                Text("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.")
+            }
+        }
+    }
+}
