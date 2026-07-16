@@ -463,6 +463,7 @@ struct Duck: Identifiable, Codable, Hashable {
         
         for perk in perks {
             extraMultiplier += perk.duckValueBonus
+            extraMultiplier += perk.duckExtraPerkBonus
             
             if perk.duckConditionalLevels(duckRarity: .commun) == 999 {
                 // Mythic: maximize all

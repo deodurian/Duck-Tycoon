@@ -92,12 +92,20 @@ extension GameManager {
                 rebuildAssignedDucksCache()
             }
             
+            var globalFactoryBonusOthers = 0.0
+            for factory in factories {
+                let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+                for perk in factoryPerks {
+                    globalFactoryBonusOthers += perk.factoryBonusOthers
+                }
+            }
+            
             for factory in factories {
                 if !factory.assignedDuckIds.isEmpty {
                     let ducks = factory.assignedDuckIds.compactMap { assignedDucksCache[$0] }
                     let displayValues = ducks.map { displaySellValue(for: $0) }
                     let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks)
+                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, globalPerkBonus: globalFactoryBonusOthers)
                     mutationsThisSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier)
                 }
             }

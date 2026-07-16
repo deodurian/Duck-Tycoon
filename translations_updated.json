@@ -1,0 +1,677 @@
+{
+  "v1.0.0": {
+    "fr": "v1.0.0",
+    "en": "v1.0.0 (EN)",
+    "es": "v1.0.0 (ES)"
+  },
+  "Toucher pour continuer": {
+    "fr": "Toucher pour continuer",
+    "en": "Toucher pour continuer (EN)",
+    "es": "Toucher pour continuer (ES)"
+  },
+  "DUCK TYCOON": {
+    "fr": "DUCK TYCOON",
+    "en": "DUCK TYCOON (EN)",
+    "es": "DUCK TYCOON (ES)"
+  },
+  "Recyclage": {
+    "fr": "Recyclage",
+    "en": "Recyclage (EN)",
+    "es": "Recyclage (ES)"
+  },
+  "Inventaire": {
+    "fr": "Inventaire",
+    "en": "Inventaire (EN)",
+    "es": "Inventaire (ES)"
+  },
+  "Tous affichés": {
+    "fr": "Tous affichés",
+    "en": "Tous affichés (EN)",
+    "es": "Tous affichés (ES)"
+  },
+  "Labo": {
+    "fr": "Labo",
+    "en": "Labo (EN)",
+    "es": "Labo (ES)"
+  },
+  "CanardFactory v1.0": {
+    "fr": "CanardFactory v1.0",
+    "en": "CanardFactory v1.0 (EN)",
+    "es": "CanardFactory v1.0 (ES)"
+  },
+  "Réinitialiser ma progression": {
+    "fr": "Réinitialiser ma progression",
+    "en": "Réinitialiser ma progression (EN)",
+    "es": "Réinitialiser ma progression (ES)"
+  },
+  "Outils Développeur": {
+    "fr": "Outils Développeur",
+    "en": "Outils Développeur (EN)",
+    "es": "Outils Développeur (ES)"
+  },
+  "Paramètres": {
+    "fr": "Paramètres",
+    "en": "Paramètres (EN)",
+    "es": "Paramètres (ES)"
+  },
+  "Progression": {
+    "fr": "Progression",
+    "en": "Progression (EN)",
+    "es": "Progression (ES)"
+  },
+  "Affichage": {
+    "fr": "Affichage",
+    "en": "Affichage (EN)",
+    "es": "Affichage (ES)"
+  },
+  "Format des Nombres": {
+    "fr": "Format des Nombres",
+    "en": "Format des Nombres (EN)",
+    "es": "Format des Nombres (ES)"
+  },
+  "Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.": {
+    "fr": "Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.",
+    "en": "Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards. (EN)",
+    "es": "Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards. (ES)"
+  },
+  "Boutique": {
+    "fr": "Boutique",
+    "en": "Boutique (EN)",
+    "es": "Boutique (ES)"
+  },
+  "/": {
+    "fr": "/",
+    "en": "/ (EN)",
+    "es": "/ (ES)"
+  },
+  "🦆": {
+    "fr": "🦆",
+    "en": "🦆 (EN)",
+    "es": "🦆 (ES)"
+  },
+  "Achats Premium": {
+    "fr": "Achats Premium",
+    "en": "Achats Premium (EN)",
+    "es": "Achats Premium (ES)"
+  },
+  "Banque": {
+    "fr": "Banque",
+    "en": "Banque (EN)",
+    "es": "Banque (ES)"
+  },
+  "Aucun Perk équipé (Toucher pour choisir)": {
+    "fr": "Aucun Perk équipé (Toucher pour choisir)",
+    "en": "Aucun Perk équipé (Toucher pour choisir) (EN)",
+    "es": "Aucun Perk équipé (Toucher pour choisir) (ES)"
+  },
+  "Améliorations (Coûte des 🧬)": {
+    "fr": "Améliorations (Coûte des 🧬)",
+    "en": "Améliorations (Coûte des 🧬) (EN)",
+    "es": "Améliorations (Coûte des 🧬) (ES)"
+  },
+  "Ce canard sera retiré de l'usine si vous le recyclez.": {
+    "fr": "Ce canard sera retiré de l'usine si vous le recyclez.",
+    "en": "Ce canard sera retiré de l'usine si vous le recyclez. (EN)",
+    "es": "Ce canard sera retiré de l'usine si vous le recyclez. (ES)"
+  },
+  "Canards ciblés": {
+    "fr": "Canards ciblés",
+    "en": "Canards ciblés (EN)",
+    "es": "Canards ciblés (ES)"
+  },
+  "Gain Total": {
+    "fr": "Gain Total",
+    "en": "Gain Total (EN)",
+    "es": "Gain Total (ES)"
+  },
+  "Niveau (Coûte des 💰)": {
+    "fr": "Niveau (Coûte des 💰)",
+    "en": "Niveau (Coûte des 💰) (EN)",
+    "es": "Niveau (Coûte des 💰) (ES)"
+  },
+  "Filtres": {
+    "fr": "Filtres",
+    "en": "Filtres (EN)",
+    "es": "Filtres (ES)"
+  },
+  "canards au total": {
+    "fr": "canards au total",
+    "en": "canards au total (EN)",
+    "es": "canards au total (ES)"
+  },
+  "RECYCLER LA RARETÉ": {
+    "fr": "RECYCLER LA RARETÉ",
+    "en": "RECYCLER LA RARETÉ (EN)",
+    "es": "RECYCLER LA RARETÉ (ES)"
+  },
+  "RECYCLER EN LOT": {
+    "fr": "RECYCLER EN LOT",
+    "en": "RECYCLER EN LOT (EN)",
+    "es": "RECYCLER EN LOT (ES)"
+  },
+  "💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection.": {
+    "fr": "💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection.",
+    "en": "💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection. (EN)",
+    "es": "💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection. (ES)"
+  },
+  "Appuie sur une barre pour voir les détails": {
+    "fr": "Appuie sur une barre pour voir les détails",
+    "en": "Appuie sur une barre pour voir les détails (EN)",
+    "es": "Appuie sur une barre pour voir les détails (ES)"
+  },
+  "Perk Équipé": {
+    "fr": "Perk Équipé",
+    "en": "Perk Équipé (EN)",
+    "es": "Perk Équipé (ES)"
+  },
+  "Recycler la rareté": {
+    "fr": "Recycler la rareté",
+    "en": "Recycler la rareté (EN)",
+    "es": "Recycler la rareté (ES)"
+  },
+  "Nouvelle Usine": {
+    "fr": "Nouvelle Usine",
+    "en": "Nouvelle Usine (EN)",
+    "es": "Nouvelle Usine (ES)"
+  },
+  "Missions": {
+    "fr": "Missions",
+    "en": "Missions (EN)",
+    "es": "Missions (ES)"
+  },
+  "⭐": {
+    "fr": "⭐",
+    "en": "⭐ (EN)",
+    "es": "⭐ (ES)"
+  },
+  "Usines": {
+    "fr": "Usines",
+    "en": "Usines (EN)",
+    "es": "Usines (ES)"
+  },
+  "🎒": {
+    "fr": "🎒",
+    "en": "🎒 (EN)",
+    "es": "🎒 (ES)"
+  },
+  "Perks": {
+    "fr": "Perks",
+    "en": "Perks (EN)",
+    "es": "Perks (ES)"
+  },
+  "🎯": {
+    "fr": "🎯",
+    "en": "🎯 (EN)",
+    "es": "🎯 (ES)"
+  },
+  "Atteindre 10B d'argent": {
+    "fr": "Atteindre 10B d'argent",
+    "en": "Atteindre 10B d'argent (EN)",
+    "es": "Atteindre 10B d'argent (ES)"
+  },
+  "ACQUIS": {
+    "fr": "ACQUIS",
+    "en": "ACQUIS (EN)",
+    "es": "ACQUIS (ES)"
+  },
+  "Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs.": {
+    "fr": "Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs.",
+    "en": "Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs. (EN)",
+    "es": "Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs. (ES)"
+  },
+  "Dépensées:": {
+    "fr": "Dépensées:",
+    "en": "Dépensées: (EN)",
+    "es": "Dépensées: (ES)"
+  },
+  "Le Prestige": {
+    "fr": "Le Prestige",
+    "en": "Le Prestige (EN)",
+    "es": "Le Prestige (ES)"
+  },
+  "Bonus Passifs": {
+    "fr": "Bonus Passifs",
+    "en": "Bonus Passifs (EN)",
+    "es": "Bonus Passifs (ES)"
+  },
+  "Effectuer un Prestige": {
+    "fr": "Effectuer un Prestige",
+    "en": "Effectuer un Prestige (EN)",
+    "es": "Effectuer un Prestige (ES)"
+  },
+  "Prestige Disponible !": {
+    "fr": "Prestige Disponible !",
+    "en": "Prestige Disponible ! (EN)",
+    "es": "Prestige Disponible ! (ES)"
+  },
+  "libres": {
+    "fr": "libres",
+    "en": "libres (EN)",
+    "es": "libres (ES)"
+  },
+  "Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.": {
+    "fr": "Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.",
+    "en": "Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire. (EN)",
+    "es": "Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire. (ES)"
+  },
+  "Fermer": {
+    "fr": "Fermer",
+    "en": "Fermer (EN)",
+    "es": "Fermer (ES)"
+  },
+  "Auto": {
+    "fr": "Auto",
+    "en": "Auto (EN)",
+    "es": "Auto (ES)"
+  },
+  "Aucun canard disponible.": {
+    "fr": "Aucun canard disponible.",
+    "en": "Aucun canard disponible. (EN)",
+    "es": "Aucun canard disponible. (ES)"
+  },
+  "(Taxe 5%)": {
+    "fr": "(Taxe 5%)",
+    "en": "(Taxe 5%) (EN)",
+    "es": "(Taxe 5%) (ES)"
+  },
+  "?": {
+    "fr": "?",
+    "en": "? (EN)",
+    "es": "? (ES)"
+  },
+  "Sélectionnez 3 canards de même rareté et niveau": {
+    "fr": "Sélectionnez 3 canards de même rareté et niveau",
+    "en": "Sélectionnez 3 canards de même rareté et niveau (EN)",
+    "es": "Sélectionnez 3 canards de même rareté et niveau (ES)"
+  },
+  "FUSIONNER": {
+    "fr": "FUSIONNER",
+    "en": "FUSIONNER (EN)",
+    "es": "FUSIONNER (ES)"
+  },
+  "Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !": {
+    "fr": "Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !",
+    "en": "Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité ! (EN)",
+    "es": "Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité ! (ES)"
+  },
+  "Canards": {
+    "fr": "Canards",
+    "en": "Canards (EN)",
+    "es": "Canards (ES)"
+  },
+  "Aucun perk de ce type.": {
+    "fr": "Aucun perk de ce type.",
+    "en": "Aucun perk de ce type. (EN)",
+    "es": "Aucun perk de ce type. (ES)"
+  },
+  "🧬": {
+    "fr": "🧬",
+    "en": "🧬 (EN)",
+    "es": "🧬 (ES)"
+  },
+  "MAXIMUM": {
+    "fr": "MAXIMUM",
+    "en": "MAXIMUM (EN)",
+    "es": "MAXIMUM (ES)"
+  },
+  "Perk": {
+    "fr": "Perk",
+    "en": "Perk (EN)",
+    "es": "Perk (ES)"
+  },
+  "💰": {
+    "fr": "💰",
+    "en": "💰 (EN)",
+    "es": "💰 (ES)"
+  },
+  "Canard": {
+    "fr": "Canard",
+    "en": "Canard (EN)",
+    "es": "Canard (ES)"
+  },
+  "MAX": {
+    "fr": "MAX",
+    "en": "MAX (EN)",
+    "es": "MAX (ES)"
+  },
+  "Évoluer": {
+    "fr": "Évoluer",
+    "en": "Évoluer (EN)",
+    "es": "Évoluer (ES)"
+  },
+  "+25% Revenus & +5% Mutation": {
+    "fr": "+25% Revenus & +5% Mutation",
+    "en": "+25% Revenus & +5% Mutation (EN)",
+    "es": "+25% Revenus & +5% Mutation (ES)"
+  },
+  "10 Gemmes": {
+    "fr": "10 Gemmes",
+    "en": "10 Gemmes (EN)",
+    "es": "10 Gemmes (ES)"
+  },
+  "Bonus Actuels": {
+    "fr": "Bonus Actuels",
+    "en": "Bonus Actuels (EN)",
+    "es": "Bonus Actuels (ES)"
+  },
+  "1 Perk Usine & 1 Perk Canard": {
+    "fr": "1 Perk Usine & 1 Perk Canard",
+    "en": "1 Perk Usine & 1 Perk Canard (EN)",
+    "es": "1 Perk Usine & 1 Perk Canard (ES)"
+  },
+  "Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.": {
+    "fr": "Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.",
+    "en": "Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions. (EN)",
+    "es": "Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions. (ES)"
+  },
+  "Revenus doublés !": {
+    "fr": "Revenus doublés !",
+    "en": "Revenus doublés ! (EN)",
+    "es": "Revenus doublés ! (ES)"
+  },
+  "LANCER LE RITUEL": {
+    "fr": "LANCER LE RITUEL",
+    "en": "LANCER LE RITUEL (EN)",
+    "es": "LANCER LE RITUEL (ES)"
+  },
+  "Sélectionnez un canard pour voir les détails": {
+    "fr": "Sélectionnez un canard pour voir les détails",
+    "en": "Sélectionnez un canard pour voir les détails (EN)",
+    "es": "Sélectionnez un canard pour voir les détails (ES)"
+  },
+  "Sélectionner": {
+    "fr": "Sélectionner",
+    "en": "Sélectionner (EN)",
+    "es": "Sélectionner (ES)"
+  },
+  "Chance de réussite": {
+    "fr": "Chance de réussite",
+    "en": "Chance de réussite (EN)",
+    "es": "Chance de réussite (ES)"
+  },
+  "x2": {
+    "fr": "x2",
+    "en": "x2 (EN)",
+    "es": "x2 (ES)"
+  },
+  "Le Rituel Canarifique": {
+    "fr": "Le Rituel Canarifique",
+    "en": "Le Rituel Canarifique (EN)",
+    "es": "Le Rituel Canarifique (ES)"
+  },
+  "Doré 🌟": {
+    "fr": "Doré 🌟",
+    "en": "Doré 🌟 (EN)",
+    "es": "Doré 🌟 (ES)"
+  },
+  "Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !": {
+    "fr": "Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !",
+    "en": "Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais ! (EN)",
+    "es": "Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais ! (ES)"
+  },
+  "x10": {
+    "fr": "x10",
+    "en": "x10 (EN)",
+    "es": "x10 (ES)"
+  },
+  "Actuelle": {
+    "fr": "Actuelle",
+    "en": "Actuelle (EN)",
+    "es": "Actuelle (ES)"
+  },
+  "Récupérer": {
+    "fr": "Récupérer",
+    "en": "Récupérer (EN)",
+    "es": "Récupérer (ES)"
+  },
+  "De Retour !": {
+    "fr": "De Retour !",
+    "en": "De Retour ! (EN)",
+    "es": "De Retour ! (ES)"
+  },
+  "Récupérer X2": {
+    "fr": "Récupérer X2",
+    "en": "Récupérer X2 (EN)",
+    "es": "Récupérer X2 (ES)"
+  },
+  "Achetez « Automatisation Initiale » dans le Prestige.": {
+    "fr": "Achetez « Automatisation Initiale » dans le Prestige.",
+    "en": "Achetez « Automatisation Initiale » dans le Prestige. (EN)",
+    "es": "Achetez « Automatisation Initiale » dans le Prestige. (ES)"
+  },
+  "Améliorations": {
+    "fr": "Améliorations",
+    "en": "Améliorations (EN)",
+    "es": "Améliorations (ES)"
+  },
+  "Certaines mécaniques nécessitent l'Arbre Stellaire (Prestige).": {
+    "fr": "Certaines mécaniques nécessitent l'Arbre Stellaire (Prestige).",
+    "en": "Certaines mécaniques nécessitent l'Arbre Stellaire (Prestige). (EN)",
+    "es": "Certaines mécaniques nécessitent l'Arbre Stellaire (Prestige). (ES)"
+  },
+  "Auto-Amélioration Usine": {
+    "fr": "Auto-Amélioration Usine",
+    "en": "Auto-Amélioration Usine (EN)",
+    "es": "Auto-Amélioration Usine (ES)"
+  },
+  "Débloqué via l'Arbre Stellaire": {
+    "fr": "Débloqué via l'Arbre Stellaire",
+    "en": "Débloqué via l'Arbre Stellaire (EN)",
+    "es": "Débloqué via l'Arbre Stellaire (ES)"
+  },
+  "⭐️": {
+    "fr": "⭐️",
+    "en": "⭐️ (EN)",
+    "es": "⭐️ (ES)"
+  },
+  "💎": {
+    "fr": "💎",
+    "en": "💎 (EN)",
+    "es": "💎 (ES)"
+  },
+  "Terminé": {
+    "fr": "Terminé",
+    "en": "Terminé (EN)",
+    "es": "Terminé (ES)"
+  },
+  "Réclamer": {
+    "fr": "Réclamer",
+    "en": "Réclamer (EN)",
+    "es": "Réclamer (ES)"
+  },
+  "Appuyer pour continuer": {
+    "fr": "Appuyer pour continuer",
+    "en": "Appuyer pour continuer (EN)",
+    "es": "Appuyer pour continuer (ES)"
+  },
+  "Méga-Fusion": {
+    "fr": "Méga-Fusion",
+    "en": "Méga-Fusion (EN)",
+    "es": "Méga-Fusion (ES)"
+  },
+  "(Taxe 100%)": {
+    "fr": "(Taxe 100%)",
+    "en": "(Taxe 100%) (EN)",
+    "es": "(Taxe 100%) (ES)"
+  },
+  "TOUT FUSIONNER": {
+    "fr": "TOUT FUSIONNER",
+    "en": "TOUT FUSIONNER (EN)",
+    "es": "TOUT FUSIONNER (ES)"
+  },
+  "LANCER MÉGA-FUSION": {
+    "fr": "LANCER MÉGA-FUSION",
+    "en": "LANCER MÉGA-FUSION (EN)",
+    "es": "LANCER MÉGA-FUSION (ES)"
+  },
+  "Rareté cible": {
+    "fr": "Rareté cible",
+    "en": "Rareté cible (EN)",
+    "es": "Rareté cible (ES)"
+  },
+  "Fusions possibles": {
+    "fr": "Fusions possibles",
+    "en": "Fusions possibles (EN)",
+    "es": "Fusions possibles (ES)"
+  },
+  "Auto-Fusion": {
+    "fr": "Auto-Fusion",
+    "en": "Auto-Fusion (EN)",
+    "es": "Auto-Fusion (ES)"
+  },
+  "Coût de l'opération": {
+    "fr": "Coût de l'opération",
+    "en": "Coût de l'opération (EN)",
+    "es": "Coût de l'opération (ES)"
+  },
+  "💀": {
+    "fr": "💀",
+    "en": "💀 (EN)",
+    "es": "💀 (ES)"
+  },
+  "RITUEL DORÉ !": {
+    "fr": "RITUEL DORÉ !",
+    "en": "RITUEL DORÉ ! (EN)",
+    "es": "RITUEL DORÉ ! (ES)"
+  },
+  "DÉTRUIT...": {
+    "fr": "DÉTRUIT...",
+    "en": "DÉTRUIT... (EN)",
+    "es": "DÉTRUIT... (ES)"
+  },
+  "×2": {
+    "fr": "×2",
+    "en": "×2 (EN)",
+    "es": "×2 (ES)"
+  },
+  "×10": {
+    "fr": "×10",
+    "en": "×10 (EN)",
+    "es": "×10 (ES)"
+  },
+  "RITUEL RÉUSSI !": {
+    "fr": "RITUEL RÉUSSI !",
+    "en": "RITUEL RÉUSSI ! (EN)",
+    "es": "RITUEL RÉUSSI ! (ES)"
+  },
+  "Étoiles libres insuffisantes.": {
+    "fr": "Étoiles libres insuffisantes.",
+    "en": "Étoiles libres insuffisantes. (EN)",
+    "es": "Étoiles libres insuffisantes. (ES)"
+  },
+  "Compétence Acquise": {
+    "fr": "Compétence Acquise",
+    "en": "Compétence Acquise (EN)",
+    "es": "Compétence Acquise (ES)"
+  },
+  "•": {
+    "fr": "•",
+    "en": "• (EN)",
+    "es": "• (ES)"
+  },
+  "Multiple": {
+    "fr": "Multiple",
+    "en": "Multiple (EN)",
+    "es": "Multiple (ES)"
+  },
+  "Ouverture Multiple": {
+    "fr": "Ouverture Multiple",
+    "en": "Ouverture Multiple (EN)",
+    "es": "Ouverture Multiple (ES)"
+  },
+  "Quantité sélectionnée": {
+    "fr": "Quantité sélectionnée",
+    "en": "Quantité sélectionnée (EN)",
+    "es": "Quantité sélectionnée (ES)"
+  },
+  "Taille": {
+    "fr": "Taille",
+    "en": "Taille (EN)",
+    "es": "Taille (ES)"
+  },
+  "Rareté": {
+    "fr": "Rareté",
+    "en": "Rareté (EN)",
+    "es": "Rareté (ES)"
+  },
+  "Génération...": {
+    "fr": "Génération...",
+    "en": "Génération... (EN)",
+    "es": "Génération... (ES)"
+  },
+  "CONFIRMER L'ACHAT": {
+    "fr": "CONFIRMER L'ACHAT",
+    "en": "CONFIRMER L'ACHAT (EN)",
+    "es": "CONFIRMER L'ACHAT (ES)"
+  },
+  "Mutation": {
+    "fr": "Mutation",
+    "en": "Mutation (EN)",
+    "es": "Mutation (ES)"
+  },
+  "Maintenir = boucle": {
+    "fr": "Maintenir = boucle",
+    "en": "Maintenir = boucle (EN)",
+    "es": "Maintenir = boucle (ES)"
+  },
+  "×1": {
+    "fr": "×1",
+    "en": "×1 (EN)",
+    "es": "×1 (ES)"
+  },
+  "+ 🧬 ADN": {
+    "fr": "+ 🧬 ADN",
+    "en": "+ 🧬 ADN",
+    "es": "+ 🧬 ADN"
+  },
+  "+ 💰 Argent": {
+    "fr": "+ 💰 Argent",
+    "en": "+ 💰 Argent",
+    "es": "+ 💰 Argent"
+  },
+  "+ ⭐️ Étoiles": {
+    "fr": "+ ⭐️ Étoiles",
+    "en": "+ ⭐️ Étoiles",
+    "es": "+ ⭐️ Étoiles"
+  },
+  "Annuler\", role: .cancel) { }\n                Button(\"Oui, tout effacer\", role: .destructive) {\n                    gameManager.resetProgression()\n                    dismiss()\n                }\n            } message: {\n                Text(tr(\"Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.": {
+    "fr": "Annuler\", role: .cancel) { }\n                Button(\"Oui, tout effacer\", role: .destructive) {\n                    gameManager.resetProgression()\n                    dismiss()\n                }\n            } message: {\n                Text(tr(\"Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.",
+    "en": "Annuler\", role: .cancel) { }\n                Button(\"Oui, tout effacer\", role: .destructive) {\n                    gameManager.resetProgression()\n                    dismiss()\n                }\n            } message: {\n                Text(tr(\"Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.",
+    "es": "Annuler\", role: .cancel) { }\n                Button(\"Oui, tout effacer\", role: .destructive) {\n                    gameManager.resetProgression()\n                    dismiss()\n                }\n            } message: {\n                Text(tr(\"Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards."
+  },
+  "Mode Développeur (Achats In-App gratuits)": {
+    "fr": "Mode Développeur (Achats In-App gratuits)",
+    "en": "Mode Développeur (Achats In-App gratuits)",
+    "es": "Mode Développeur (Achats In-App gratuits)"
+  },
+  "Annuler\", role: .cancel) { }\n            Button(\"Confirmer\", role: .destructive) {\n                let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)\n                impactHeavy.impactOccurred()\n                gameManager.executePrestige()\n            }\n        } message: {\n            Text(tr(\"Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.": {
+    "fr": "Annuler\", role: .cancel) { }\n            Button(\"Confirmer\", role: .destructive) {\n                let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)\n                impactHeavy.impactOccurred()\n                gameManager.executePrestige()\n            }\n        } message: {\n            Text(tr(\"Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.",
+    "en": "Annuler\", role: .cancel) { }\n            Button(\"Confirmer\", role: .destructive) {\n                let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)\n                impactHeavy.impactOccurred()\n                gameManager.executePrestige()\n            }\n        } message: {\n            Text(tr(\"Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.",
+    "es": "Annuler\", role: .cancel) { }\n            Button(\"Confirmer\", role: .destructive) {\n                let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)\n                impactHeavy.impactOccurred()\n                gameManager.executePrestige()\n            }\n        } message: {\n            Text(tr(\"Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire."
+  },
+  "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !": {
+    "fr": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !",
+    "en": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !",
+    "es": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"
+  },
+  "Retirer": {
+    "fr": "Retirer",
+    "en": "Retirer",
+    "es": "Retirer"
+  },
+  "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.": {
+    "fr": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.",
+    "en": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.",
+    "es": "Compris\", role: .cancel) { }\n            } message: {\n                Text(tr(\"Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."
+  },
+  "Compris\", role: .cancel) {}\n        } message: {\n            Text(tr(\"Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !": {
+    "fr": "Compris\", role: .cancel) {}\n        } message: {\n            Text(tr(\"Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !",
+    "en": "Compris\", role: .cancel) {}\n        } message: {\n            Text(tr(\"Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !",
+    "es": "Compris\", role: .cancel) {}\n        } message: {\n            Text(tr(\"Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"
+  },
+  "Désactivé": {
+    "fr": "Désactivé",
+    "en": "Désactivé",
+    "es": "Désactivé"
+  }
+}

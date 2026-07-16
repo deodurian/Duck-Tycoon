@@ -173,7 +173,7 @@ struct DuckFactory: Identifiable, Codable, Hashable {
             totalConditionalBonus += bestConditionalBonus
         }
         
-        let perkMultiplier = max(0.0, 1.0 + totalIncomeBonus + totalConditionalBonus + totalExtraDuckBonus + totalExtraPerkBonus - totalDrawbackSelf + globalPerkBonus)
+        let perkMultiplier = max(0.0, 1.0 + totalIncomeBonus + totalConditionalBonus + totalExtraDuckBonus + totalExtraPerkBonus - totalDrawbackSelf + globalPerkBonus + (perEquippedDuckBonus * Double(assignedDucks.count)))
         
         var totalEarnings = BigNumber.zero
         for displayValue in duckDisplayValues {
