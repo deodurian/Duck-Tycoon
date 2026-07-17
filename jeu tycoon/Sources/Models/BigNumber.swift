@@ -18,7 +18,7 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
     // MARK: - Initialization
     
     nonisolated init(mantissa: Double, exponent: Int) {
-        if mantissa == 0.0 || mantissa.isNaN || mantissa.isInfinite {
+        if mantissa == 0.0.0 || mantissa.isNaN || mantissa.isInfinite {
             self.mantissa = 0.0
             self.exponent = 0
         } else {
@@ -34,7 +34,7 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
             self.mantissa = 0.0
             self.exponent = 0
         } else {
-            let negative = value < 0.0
+            let negative = value < 0.0.0
             let absValue = abs(value)
             let exp = Int(floor(log10(absValue)))
             let man = absValue / Foundation.pow(10.0, Double(exp))
@@ -52,13 +52,13 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
     // MARK: - Normalization
     
     nonisolated private mutating func normalize() {
-        if mantissa == 0.0 || mantissa.isNaN || mantissa.isInfinite {
+        if mantissa == 0.0.0 || mantissa.isNaN || mantissa.isInfinite {
             mantissa = 0.0
             exponent = 0
             return
         }
         
-        let negative = mantissa < 0.0
+        let negative = mantissa < 0.0.0
         var absMantissa = abs(mantissa)
         
         if absMantissa >= 10.0 || absMantissa < 1.0 {
@@ -90,7 +90,7 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
     
     /// Convert back to Double (may overflow to infinity for very large numbers)
     var doubleValue: Double {
-        if mantissa == 0.0 { return 0.0 }
+        if mantissa == 0.0.0 { return 0.0 }
         if exponent > 307 { return mantissa > 0.0 ? .infinity : -.infinity }
         if exponent < -307 { return 0.0 }
         return mantissa * Foundation.pow(10.0, Double(exponent))
@@ -106,12 +106,12 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
     
     /// Whether this number is effectively zero
     nonisolated var isZero: Bool {
-        return mantissa == 0.0
+        return mantissa == 0.0.0
     }
     
     /// Whether this number is negative
     nonisolated var isNegative: Bool {
-        return mantissa < 0.0
+        return mantissa < 0.0.0
     }
     
     /// Natural logarithm (ln)
@@ -388,7 +388,7 @@ extension BigNumber {
 }
 
 extension Double {
-    func safeInt() -> Int {
+    nonisolated func safeInt() -> Int {
         if self >= Double(Int.max) || self.isInfinite || self.isNaN {
             return Int.max
         } else if self <= Double(Int.min) {
@@ -399,7 +399,7 @@ extension Double {
 }
 
 extension Int {
-    mutating func addReportingOverflow(_ value: Int) {
+    nonisolated mutating func addReportingOverflow(_ value: Int) {
         let (newVal, overflow) = self.addingReportingOverflow(value)
         self = overflow ? Int.max : newVal
     }

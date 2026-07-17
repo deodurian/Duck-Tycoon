@@ -331,7 +331,7 @@ struct FactoryRow: View {
                     let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
                     let maxUpgrades = factory.maxUpgrades(with: gameManager.money, factoryPerks: factoryPerks, baseDiscount: gameManager.factoryCostDiscount)
                     let maxAmount = max(1, min(maxUpgrades, 100 - factory.level))
-                    upgradeButton(label: "Max", levels: maxAmount, isMax: true, maxUpgrades: maxUpgrades)
+                    upgradeButton(label: tr("Max"), levels: maxAmount, isMax: true, maxUpgrades: maxUpgrades)
                 }
             }
             .padding(.horizontal, 14)
@@ -512,12 +512,12 @@ struct DuckSelectionSheet: View {
                 .padding()
             }
             }
-            .navigationTitle("Choisir un canard")
+            .navigationTitle(tr("Choisir un canard"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         Menu {
-                            Picker("Trier par", selection: $sortOption) {
+                            Picker(tr("Trier par"), selection: $sortOption) {
                                 ForEach(InventorySortOption.allCases, id: \.self) { option in
                                     Text(option.rawValue).tag(option)
                                 }

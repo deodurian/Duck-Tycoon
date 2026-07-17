@@ -42,6 +42,9 @@ struct DuckDetailView: View {
     @State private var showingRecycleAlert = false
     
     var body: some View {
+        let duckPerks = currentDuck.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
+        let dynamicStats = currentDuck.getDynamicStats(with: duckPerks)
+        
         ZStack {
             LinearGradient(
                 colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
@@ -59,12 +62,12 @@ struct DuckDetailView: View {
                 .padding()
                 .background(Circle().fill(currentDuck.rarity.color.opacity(0.3)))
             
-            Text("Canard \(currentDuck.rarity.rawValue)")
+            Text("\(tr("Canard "))\(currentDuck.rarity.localizedName)")
                 .font(.system(.largeTitle, design: .rounded).weight(.black))
                 .foregroundColor(currentDuck.rarity.color)
             
             if currentDuck.fusionLevel > 0 {
-                Text("Niveau de Fusion \(currentDuck.fusionLevel)/4")
+                Text("\(tr("Niveau de Fusion "))\(currentDuck.fusionLevel)/4")
                     .font(.headline)
                     .foregroundColor(currentDuck.fusionLevel == 4 ? .purple : .yellow)
                     .padding(.horizontal, 12)
@@ -80,7 +83,7 @@ struct DuckDetailView: View {
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(10)
             
-            Text("Génère : \(gameManager.displaySellValue(for: currentDuck).formattedString()) 💰 / sec")
+            Text("\(tr("Génère : "))\(gameManager.displaySellValue(for: currentDuck).formattedString()) 💰\(tr(" / sec"))")
                 .font(.headline)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -100,7 +103,7 @@ struct DuckDetailView: View {
             
             // Emplacement de Perk
             VStack(spacing: 5) {
-                Text("Perk Équipé")
+                Text(tr("Perk Équipé"))
                     .font(.caption)
                     .foregroundColor(.gray)
                 
@@ -119,7 +122,7 @@ struct DuckDetailView: View {
                         .background(perk.rarity.color.opacity(0.1))
                         .cornerRadius(8)
                     } else {
-                        Text("Aucun Perk équipé (Toucher pour choisir)")
+                        Text(tr("Aucun Perk équipé (Toucher pour choisir)"))
                             .font(.subheadline)
                             .foregroundColor(.gray.opacity(0.8))
                             .padding(8)
@@ -133,50 +136,50 @@ struct DuckDetailView: View {
             
             Divider()
             
-            Text("Améliorations (Coûte des 🧬)")
+            Text(tr("Améliorations (Coûte des 🧬)"))
                 .font(.title2)
                 .foregroundColor(.gray)
             
             HStack(spacing: 20) {
                 // Bouton Taille
                 DuckUpgradeButton(
-                    title: "Améliorer Taille",
+                    title: tr("Améliorer Taille"),
                     cost: currentDuck.sizeUpgradeCost,
                     icon: "🧬",
                     color: .blue,
                     impact: sizeUpgradeImpact(),
                     canAfford: currentDuck.sizeUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.sizeUpgradeCost ?? BigNumber(1e100)),
-                    maxLabel: "Niveau MAX",
+                    maxLabel: tr("Niveau MAX"),
                     action: { gameManager.upgradeDuckSize(id: currentDuck.id) }
                 )
                 
                 // Bouton Mutation
                 DuckUpgradeButton(
-                    title: "Muter",
+                    title: tr("Muter"),
                     cost: currentDuck.mutationUpgradeCost,
                     icon: "🧬",
                     color: .purple,
                     impact: mutationUpgradeImpact(),
                     canAfford: currentDuck.mutationUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.mutationUpgradeCost ?? BigNumber(1e100)),
-                    maxLabel: "Niveau MAX",
+                    maxLabel: tr("Niveau MAX"),
                     action: { gameManager.upgradeDuckMutation(id: currentDuck.id) }
                 )
             }
             
             Divider()
             
-            Text("Niveau (Coûte des 💰)")
+            Text(tr("Niveau (Coûte des 💰)"))
                 .font(.title2)
                 .foregroundColor(.gray)
             
             DuckUpgradeButton(
-                title: "Augmenter Niveau",
+                title: tr("Augmenter Niveau"),
                 cost: currentDuck.levelUpgradeCost,
                 icon: "💰",
                 color: .yellow,
                 impact: levelUpgradeImpact(),
                 canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
-                maxLabel: "Niveau MAX (100)",
+                maxLabel: tr("Niveau MAX (100)"),
                 action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
             )
             
@@ -189,7 +192,7 @@ struct DuckDetailView: View {
             }) {
                 HStack {
                     Image(systemName: "trash")
-                    Text("Recycler (+ \(gameManager.displayRecycleValue(for: currentDuck).formattedString()) 🧬)")
+                    Text("\(tr("Recycler (+ "))\(gameManager.displayRecycleValue(for: currentDuck).formattedString()) 🧬)")
                         .fontWeight(.bold)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
@@ -202,7 +205,7 @@ struct DuckDetailView: View {
             }
             
             if isAssigned {
-                Text("Ce canard sera retiré de l'usine si vous le recyclez.")
+                Text(tr("Ce canard sera retiré de l'usine si vous le recyclez."))
                     .font(.caption)
                     .foregroundColor(.orange)
             }
@@ -211,13 +214,13 @@ struct DuckDetailView: View {
             }
         }
         .alert("Confirmer le recyclage", isPresented: $showingRecycleAlert) {
-            Button("Annuler", role: .cancel) { }
-            Button("Oui, Recycler", role: .destructive) {
+            Button(tr("Annuler"), role: .cancel) { }
+            Button(tr("Oui, Recycler"), role: .destructive) {
                 gameManager.recycleDucks(ids: [currentDuck.id])
                 dismiss()
             }
         } message: {
-            Text("Voulez-vous vraiment recycler ce canard de rareté \(currentDuck.rarity.rawValue) ? Cette action est définitive.")
+            Text("\(tr("Voulez-vous vraiment recycler ce canard de rareté "))\(currentDuck.rarity.localizedName)\(tr(" ? Cette action est définitive."))")
         }
         .sheet(isPresented: $showingPerkSelection) {
             PerkSelectionSheet(targetId: currentDuck.id, targetType: .duck)
@@ -258,7 +261,7 @@ struct BulkRecycleSheet: View {
                 VStack(spacing: 0) {
                     ScrollView {
                     HStack {
-                        Text("Recyclage")
+                        Text(tr("Recyclage"))
                             .font(.largeTitle.bold())
                         Button(action: { showInfo = true }) {
                             Image(systemName: "info.circle")
@@ -271,7 +274,7 @@ struct BulkRecycleSheet: View {
                     VStack(spacing: 24) {
                         // Selection section
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Filtres")
+                            Text(tr("Filtres"))
                                 .font(.headline)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal)
@@ -282,9 +285,9 @@ struct BulkRecycleSheet: View {
                                         RaritySelectionButton(rarity: rarity, selectedRarity: $selectedRarity)
                                     }
                                 }
-                                Picker("Niveau", selection: $selectedLevel) {
+                                Picker(tr("Niveau"), selection: $selectedLevel) {
                                     ForEach(0...4, id: \.self) { level in
-                                        Text("Niveau \(level)").tag(level)
+                                        Text("\(tr("Niveau "))\(level)").tag(level)
                                     }
                                 }
                                 .pickerStyle(SegmentedPickerStyle())
@@ -299,7 +302,7 @@ struct BulkRecycleSheet: View {
                         VStack(spacing: 15) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("Canards ciblés")
+                                    Text(tr("Canards ciblés"))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                     Text("\(matchingDucks)")
@@ -307,7 +310,7 @@ struct BulkRecycleSheet: View {
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 5) {
-                                    Text("Gain Total")
+                                    Text(tr("Gain Total"))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                     Text("+\(potentialYield.formattedString()) 🧬")
@@ -321,7 +324,7 @@ struct BulkRecycleSheet: View {
                                     gameManager.recycleBulkDucks(rarity: selectedRarity, level: selectedLevel)
                                     dismiss()
                                 }) {
-                                    Text("RECYCLER EN LOT")
+                                    Text(tr("RECYCLER EN LOT"))
                                         .font(.headline.bold())
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
@@ -343,12 +346,12 @@ struct BulkRecycleSheet: View {
                             let totalYield = gameManager.potentialRecycleYield(rarity: selectedRarity) * gameManager.mutationMultiplier
                             
                             VStack(alignment: .leading, spacing: 15) {
-                                Text("Recycler la rareté")
+                                Text(tr("Recycler la rareté"))
                                     .font(.headline)
                                     .foregroundColor(.red)
                                 
                                 HStack {
-                                    Text("\(totalMatching) ciblés")
+                                    Text("\(totalMatching)\(tr(" ciblés"))")
                                         .font(.subheadline.bold())
                                     Spacer()
                                     Text("+\(totalYield.formattedString()) 🧬")
@@ -361,7 +364,7 @@ struct BulkRecycleSheet: View {
                                         gameManager.recycleAllUnassigned(rarity: selectedRarity)
                                         dismiss()
                                     }) {
-                                        Text("RECYCLER LA RARETÉ")
+                                        Text(tr("RECYCLER LA RARETÉ"))
                                             .font(.headline.bold())
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 14)
@@ -389,13 +392,13 @@ struct BulkRecycleSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
             .alert("Comment ça marche ?", isPresented: $showInfo) {
-                Button("OK", role: .cancel) { }
+                Button(tr("OK"), role: .cancel) { }
             } message: {
-                Text("Recyclage en Lot : S'applique à la rareté sélectionnée et toutes les raretés inférieures. Pour la rareté exacte sélectionnée, s'applique au niveau choisi et à ses niveaux inférieurs.\n\nRecycler la rareté : Détruit TOUS les canards non-assignés de la rareté sélectionnée, quel que soit leur niveau.")
+                Text(tr("Recyclage en Lot : S'applique à la rareté sélectionnée et toutes les raretés inférieures. Pour la rareté exacte sélectionnée, s'applique au niveau choisi et à ses niveaux inférieurs.\n\nRecycler la rareté : Détruit TOUS les canards non-assignés de la rareté sélectionnée, quel que soit leur niveau."))
             }
         }
     }
@@ -462,7 +465,7 @@ struct InventorySummaryView: View {
                     .padding(.top, 16)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 } else {
-                    Text("Appuie sur une barre pour voir les détails")
+                    Text(tr("Appuie sur une barre pour voir les détails"))
                         .font(.caption)
                         .foregroundColor(.gray)
                         .padding(.top, 16)
@@ -528,18 +531,18 @@ struct InventorySummaryView: View {
                 Divider()
                 
                 // Note
-                Text("💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection.")
+                Text(tr("💡 L'inventaire affiche les 100 meilleurs canards. L'Auto-Fusion et le Recyclage accèdent à toute la collection."))
                     .font(.caption)
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
             }
-            .navigationTitle("Statistiques")
+            .navigationTitle(tr("Statistiques"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") {
+                    Button(tr("Fermer")) {
                         dismiss()
                     }
                 }
@@ -627,7 +630,7 @@ struct DuckUpgradeButton: View {
                     .foregroundColor(.primary)
                 
                 if let cost = cost, let impact = impact {
-                    Text("Coût : \(cost.formattedString()) \(icon)")
+                    Text("\(tr("Coût : "))\(cost.formattedString()) \(icon)")
                         .font(.subheadline)
                         .foregroundColor(color)
                         .bold()

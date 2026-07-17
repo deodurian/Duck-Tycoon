@@ -37,7 +37,7 @@ struct LevelSheetView: View {
                         .frame(height: 30)
                         .padding(.horizontal)
                         
-                        Text("\(currentXP) / \(requiredXP) XP")
+                        Text("\(currentXP) / \(requiredXP)\(tr(" XP"))")
                             .font(.subheadline)
                             .foregroundColor(.gray)
                     }
@@ -124,7 +124,7 @@ struct LevelSheetView: View {
                 }
                 .padding(.top, 20)
             }
-            .navigationTitle("Niveau Joueur")
+            .navigationTitle(tr("Niveau Joueur"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

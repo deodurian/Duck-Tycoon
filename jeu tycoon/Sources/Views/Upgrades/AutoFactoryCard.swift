@@ -73,7 +73,7 @@ struct AutoFactoryCard: View {
             Spacer(minLength: 0)
             
             if level >= maxLevel {
-                UpgradeMaxedButton(text: "MAX", color: .green, iconName: "checkmark.circle.fill")
+                UpgradeMaxedButton(text: tr("MAX"), color: .green, iconName: "checkmark.circle.fill")
             } else {
                 UpgradeSinglePurchaseButton(
                     costStr: cost.formattedString(),

@@ -103,7 +103,7 @@ struct PerkSelectionSheet: View {
                     .padding(.vertical)
                 }
             }
-            .navigationTitle("Sélectionner un Perk")
+            .navigationTitle(tr("Sélectionner un Perk"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

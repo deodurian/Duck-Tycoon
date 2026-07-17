@@ -72,7 +72,7 @@ struct BonusCard: View {
             
             // Boutons
             if isMaxed {
-                UpgradeMaxedButton(text: "MAX", color: rarityColor, iconName: "crown.fill")
+                UpgradeMaxedButton(text: tr("MAX"), color: rarityColor, iconName: "crown.fill")
             } else {
                 HStack(spacing: 6) {
                     // Bouton x1

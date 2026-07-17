@@ -16,7 +16,7 @@ struct PerkSheetView: View {
                     let factoryPerksCount = gameManager.perksInventory.filter { $0.type == .factory }.count
                     let duckPerksCount = gameManager.perksInventory.filter { $0.type == .duck }.count
                     
-                    Picker("Type de Perks", selection: $selectedTab) {
+                    Picker(tr("Type de Perks"), selection: $selectedTab) {
                         Text("Usines (\(factoryPerksCount))").tag(0)
                         Text("Canards (\(duckPerksCount))").tag(1)
                     }

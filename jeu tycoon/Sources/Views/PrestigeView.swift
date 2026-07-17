@@ -78,7 +78,7 @@ struct PrestigeView: View {
         }
         .alert("Confirmation de Prestige", isPresented: $showingPrestigeAlert) {
             Button("Annuler", role: .cancel) { }
-            Button("Confirmer", role: .destructive) {
+            Button(tr("Confirmer"), role: .destructive) {
                 let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
                 impactHeavy.impactOccurred()
                 gameManager.executePrestige()
@@ -127,9 +127,9 @@ struct PrestigeView: View {
                 if gameManager.hasPrestiged {
                     // Stats d'étoiles
                     HStack(spacing: 20) {
-                        statBubble(title: "Total", value: "\(gameManager.totalStars)", icon: "star.fill", color: .gray)
-                        statBubble(title: "Libres", value: "\(gameManager.unspentStars)", icon: "star.circle.fill", color: .yellow)
-                        statBubble(title: "Dépensées", value: "\(gameManager.spentStars)", icon: "star.slash.fill", color: .orange)
+                        statBubble(title: tr("Total"), value: "\(gameManager.totalStars)", icon: "star.fill", color: .gray)
+                        statBubble(title: tr("Libres"), value: "\(gameManager.unspentStars)", icon: "star.circle.fill", color: .yellow)
+                        statBubble(title: tr("Dépensées"), value: "\(gameManager.spentStars)", icon: "star.slash.fill", color: .orange)
                     }
                     .padding(.horizontal)
                     
@@ -147,25 +147,25 @@ struct PrestigeView: View {
                         .padding(.bottom, 10)
                         
                         VStack(spacing: 0) {
-                            bonusRow(icon: "dollarsign.circle.fill", label: "Gain d'argent", value: "+\(formatBonus(10))%", color: .green)
+                            bonusRow(icon: "dollarsign.circle.fill", label: tr("Gain d'argent"), value: "+\(formatBonus(10))%", color: .green)
                             Divider().background(Color.white.opacity(0.1))
-                            bonusRow(icon: "arrow.triangle.merge", label: "Bonus fusion", value: "+\(formatBonus(5))%", color: .blue)
+                            bonusRow(icon: "arrow.triangle.merge", label: tr("Bonus fusion"), value: "+\(formatBonus(5))%", color: .blue)
                             Divider().background(Color.white.opacity(0.1))
                             let discount = 1.0 - gameManager.factoryCostDiscount
-                            bonusRow(icon: "building.2.fill", label: "Réduction usines", value: "-\(Int(discount * 100))%", color: .purple)
+                            bonusRow(icon: "building.2.fill", label: tr("Réduction usines"), value: "-\(Int(discount * 100))%", color: .purple)
                             Divider().background(Color.white.opacity(0.1))
-                            bonusRow(icon: "DNA", label: "Gain mutation", value: "+\(formatBonus(3))%", color: .cyan)
+                            bonusRow(icon: "DNA", label: tr("Gain mutation"), value: "+\(formatBonus(3))%", color: .cyan)
                             Divider().background(Color.white.opacity(0.1))
                             if gameManager.totalStars >= 100 {
-                                bonusRow(icon: "wand.and.stars", label: "Mutation spontanée", value: "+\(formatBonus(0.2))%", color: .mint)
+                                bonusRow(icon: "wand.and.stars", label: tr("Mutation spontanée"), value: "+\(formatBonus(0.2))%", color: .mint)
                             } else {
-                                bonusRow(icon: "lock.fill", label: "Mutation spontanée", value: "100 ⭐️", color: .red, locked: true)
+                                bonusRow(icon: "lock.fill", label: tr("Mutation spontanée"), value: "100 ⭐️", color: .red, locked: true)
                             }
                             Divider().background(Color.white.opacity(0.1))
                             if gameManager.totalStars >= 1000 {
-                                bonusRow(icon: "flame.fill", label: "Gain du Rituel", value: "+\(formatBonus(2))%", color: .orange)
+                                bonusRow(icon: "flame.fill", label: tr("Gain du Rituel"), value: "+\(formatBonus(2))%", color: .orange)
                             } else {
-                                bonusRow(icon: "lock.fill", label: "Gain du Rituel", value: "1000 ⭐️", color: .red, locked: true)
+                                bonusRow(icon: "lock.fill", label: tr("Gain du Rituel"), value: "1000 ⭐️", color: .red, locked: true)
                             }
                         }
                     }

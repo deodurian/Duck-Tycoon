@@ -47,7 +47,7 @@ struct MissionSheetView: View {
                 
                 ScrollView {
                     VStack(spacing: 15) {
-                        Picker("Type de mission", selection: $selectedTab) {
+                        Picker(tr("Type de mission"), selection: $selectedTab) {
                             ForEach(MissionTypeTab.allCases, id: \.self) { tab in
                                 Text(tab.rawValue).tag(tab)
                             }
@@ -62,7 +62,7 @@ struct MissionSheetView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Missions")
+            .navigationTitle(tr("Missions"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

@@ -59,7 +59,7 @@ struct UnlockCard: View {
             
             // Bouton
             if isPurchased {
-                UpgradeMaxedButton(text: "ACQUIS", color: .green, iconName: "checkmark.circle.fill")
+                UpgradeMaxedButton(text: tr("ACQUIS"), color: .green, iconName: "checkmark.circle.fill")
             } else {
                 UpgradeSinglePurchaseButton(
                     costStr: BigNumber(def.baseCost).formattedString(),

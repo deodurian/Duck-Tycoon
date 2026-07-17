@@ -143,7 +143,7 @@ struct FusionView: View {
                 }
                 Spacer()
                 Menu {
-                    Picker("Trier par", selection: $sortOption) {
+                    Picker(tr("Trier par"), selection: $sortOption) {
                         ForEach(InventorySortOption.allCases, id: \.self) { option in
                             Text(option.rawValue).tag(option)
                         }

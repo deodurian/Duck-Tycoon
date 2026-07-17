@@ -542,7 +542,7 @@ struct RitualDuckPickerSheet: View {
                     }
                     .padding()
                 }
-                .navigationTitle("Sélectionner un canard")
+                .navigationTitle(tr("Sélectionner un canard"))
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Fermer") { dismiss() }

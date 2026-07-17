@@ -50,7 +50,7 @@ struct OfflineEarningsPopupView: View {
                         HStack {
                             Text("⭐")
                                 .font(.title)
-                            Text("\(earnings.xp) XP")
+                            Text("\(earnings.xp)\(tr(" XP"))")
                                 .font(.title2.bold())
                                 .foregroundColor(.yellow)
                             Spacer()
