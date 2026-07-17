@@ -63,8 +63,12 @@ struct OfflineEarningsPopupView: View {
                     
                     VStack(spacing: 15) {
                         Button(action: {
-                            withAnimation {
-                                gameManager.claimOfflineEarnings(multiplier: 2.0)
+                            AdManager.shared.showRewardedAd { earned in
+                                if earned {
+                                    withAnimation {
+                                        gameManager.claimOfflineEarnings(multiplier: 2.0)
+                                    }
+                                }
                             }
                         }) {
                             HStack {
