@@ -180,7 +180,7 @@ struct CustomTabBar: View {
                             .scaleEffect(selectedTab == index ? 1.2 : 1.0)
                         
                         if selectedTab == index {
-                            Text(tabs[index].title)
+                            Text(tr(tabs[index].title))
                                 .font(.system(size: 9, weight: .bold)) // Slightly smaller to fit 7 tabs
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
