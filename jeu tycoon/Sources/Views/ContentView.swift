@@ -134,7 +134,6 @@ struct ContentView: View {
                 .environment(gameManager)
         }
         } // closes ZStack
-        .id(LocalizationManager.shared.language.rawValue)
         } // closes NavigationStack
         .sheet(isPresented: $showingSettings) {
             SettingsView()

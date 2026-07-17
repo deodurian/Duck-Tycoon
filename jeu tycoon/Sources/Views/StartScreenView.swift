@@ -30,7 +30,7 @@ struct StartScreenView: View {
                         .padding(.bottom, 20)
                     
                     if phase == .waitingForTap {
-                        Text("Toucher pour continuer")
+                        Text(tr("Toucher pour continuer"))
                             .font(.headline)
                             .foregroundColor(.white.opacity(0.8))
                             .modifier(BlinkEffect())
@@ -111,14 +111,14 @@ struct StartScreenView: View {
                     }
                     
                     if Int.random(in: 0...2) == 0 || i == 1 {
-                        loadingText = loadingMessages.randomElement() ?? "Chargement..."
+                        loadingText = tr(loadingMessages.randomElement() ?? "Chargement...")
                     }
                 }
             }
             
             await MainActor.run {
                 loadingProgress = 1.0
-                loadingText = "Terminé !"
+                loadingText = tr("Terminé !")
             }
             
             try? await Task.sleep(nanoseconds: 300_000_000)

@@ -13,7 +13,11 @@ struct SettingsView: View {
     private var selectedLanguage: Binding<AppLanguage> {
         Binding(
             get: { LocalizationManager.shared.language },
-            set: { LocalizationManager.shared.language = $0 }
+            set: { newLang in
+                // Sauvegarder avant de rebooter l'app (car .id(language) sur le App root va détruire la vue)
+                gameManager.saveGame(sync: true)
+                LocalizationManager.shared.language = newLang
+            }
         )
     }
     
