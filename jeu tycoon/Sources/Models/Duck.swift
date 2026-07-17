@@ -11,6 +11,10 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
     case legendaire = "Légendaire"
     case mythique = "Mythique"
     
+    nonisolated var localizedName: String {
+        return tr(self.rawValue)
+    }
+    
     nonisolated var multiplier: Double {
         switch self {
         case .commun: return 1.0
