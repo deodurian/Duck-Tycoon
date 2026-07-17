@@ -73,12 +73,11 @@ struct DuckDetailView: View {
                     .cornerRadius(8)
             }
             
-            Text("Lvl \(currentDuck.level)")
-                .font(.system(.title3, design: .rounded).weight(.bold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 6)
-                .background(Color.blue)
+            Text("Lvl \(dynamicStats.level)")
+                .font(.headline)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.white.opacity(0.1))
                 .cornerRadius(10)
             
             Text("Génère : \(gameManager.displaySellValue(for: currentDuck).formattedString()) 💰 / sec")
@@ -87,12 +86,12 @@ struct DuckDetailView: View {
                 .minimumScaleFactor(0.5)
             
             HStack {
-                Text("Taille: \(currentDuck.size.rawValue)")
+                Text("Taille: \(dynamicStats.size.rawValue)")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)
                 
-                Text("Mutation: \(currentDuck.mutation.rawValue)")
+                Text("Mutation: \(dynamicStats.mutation.rawValue)")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)
@@ -111,13 +110,13 @@ struct DuckDetailView: View {
                     if let perkId = currentDuck.equippedPerkIds.first, let perk = gameManager.perksInventory.first(where: { $0.id == perkId }) {
                         HStack {
                             Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
+                                .foregroundColor(perk.rarity.color)
                             Text(perk.name)
                                 .font(.subheadline.bold())
                                 .foregroundColor(.primary)
                         }
                         .padding(8)
-                        .background(Color.yellow.opacity(0.1))
+                        .background(perk.rarity.color.opacity(0.1))
                         .cornerRadius(8)
                     } else {
                         Text("Aucun Perk équipé (Toucher pour choisir)")
@@ -162,24 +161,24 @@ struct DuckDetailView: View {
                     maxLabel: "Niveau MAX",
                     action: { gameManager.upgradeDuckMutation(id: currentDuck.id) }
                 )
-                }
-                
-                Divider()
-                
-                Text("Niveau (Coûte des 💰)")
-                    .font(.title2)
-                    .foregroundColor(.gray)
-                
-                DuckUpgradeButton(
-                    title: "Augmenter Niveau",
-                    cost: currentDuck.levelUpgradeCost,
-                    icon: "💰",
-                    color: .yellow,
-                    impact: levelUpgradeImpact(),
-                    canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
-                    maxLabel: "Niveau MAX (100)",
-                    action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
-                )
+            }
+            
+            Divider()
+            
+            Text("Niveau (Coûte des 💰)")
+                .font(.title2)
+                .foregroundColor(.gray)
+            
+            DuckUpgradeButton(
+                title: "Augmenter Niveau",
+                cost: currentDuck.levelUpgradeCost,
+                icon: "💰",
+                color: .yellow,
+                impact: levelUpgradeImpact(),
+                canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
+                maxLabel: "Niveau MAX (100)",
+                action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
+            )
             
             Spacer()
             

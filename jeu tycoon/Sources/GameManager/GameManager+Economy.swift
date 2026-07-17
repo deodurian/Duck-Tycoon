@@ -71,7 +71,7 @@ extension GameManager {
     var earningsMultiplier: BigNumber {
         let level = upgradeLevels[.bonusGlobal] ?? 0
         let base = BigNumber(1.0 + Double(level) * 0.01)
-        let prestigeBonus = BigNumber(1.0) + (totalStars * 0.10)
+        let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.10)
         let playerLevelBonus = BigNumber(PlayerLevelSystem.moneyMultiplier(for: playerLevel))
         let total = base * prestigeBonus * playerLevelBonus
         return hasPrestigeUpgrade("p2_eco") ? total * 1.30 : total
@@ -81,7 +81,7 @@ extension GameManager {
     var mutationMultiplier: BigNumber {
         let level = upgradeLevels[.bonusMutation] ?? 0
         let base = BigNumber(1.0 + Double(level) * 0.02)
-        let prestigeBonus = BigNumber(1.0) + (totalStars * 0.03)
+        let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.03)
         let playerLevelBonus = BigNumber(PlayerLevelSystem.mutationMultiplier(for: playerLevel))
         let total = base * prestigeBonus * playerLevelBonus
         return hasPrestigeUpgrade("p4_adn") ? total * 3.0 : total // +200% = x3
@@ -89,7 +89,7 @@ extension GameManager {
     
     // Prestige: Bonus d'argent après fusion (+5% par étoile)
     var fusionValueMultiplier: BigNumber {
-        return BigNumber(1.0) + (totalStars * 0.05)
+        return BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.05)
     }
     
     // Prestige: Prix des usines moins chères (-1% par étoile, asymptote max 100%)
@@ -104,13 +104,13 @@ extension GameManager {
         if totalStars >= BigNumber(500.0) { // 500 étoiles = 100% de chance
             return 1.0
         }
-        return totalStars.doubleValue * 0.002
+        return min(1.0, pow(totalStars.doubleValue, 0.5) * 0.002)
     }
     
     // Prestige: Gain du Rituel (+2% par étoile, si totalStars >= 1000)
     var prestigeRitualBonusMultiplier: BigNumber {
         guard totalStars >= BigNumber(1000.0) else { return BigNumber(1.0) }
-        return BigNumber(1.0) + (totalStars * 0.02)
+        return BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.02)
     }
     
     /// Multiplicateur de revenus pour une rareté spécifique
@@ -333,6 +333,7 @@ extension GameManager {
         guard spentStars >= BigNumber(Double(upgrade.requiredSpentStars)) else { return }
         guard unspentStars >= BigNumber(Double(upgrade.cost)) else { return }
         
+        unspentStars -= BigNumber(Double(upgrade.cost))
         spentStars += BigNumber(Double(upgrade.cost))
         purchasedPrestigeUpgrades.insert(upgrade.id)
         
@@ -438,6 +439,7 @@ extension GameManager {
         
         currentStars += starsEarned
         totalStars += starsEarned
+        unspentStars += starsEarned
         
         // Reset everything
         money = BigNumber(150.0)

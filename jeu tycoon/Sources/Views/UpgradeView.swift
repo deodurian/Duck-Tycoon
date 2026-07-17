@@ -20,12 +20,8 @@ struct UpgradeView: View {
     
     var visibleUnlockChains: [[UpgradeID]] {
         var chains = unlockChains
-        if gameManager.hasPrestigeUpgrade("p3_fusion") || !gameManager.hasPrestiged {
-            chains.insert([.manualFusion, .autoFusion, .megaFusion], at: 0)
-        }
-        if gameManager.hasPrestigeUpgrade("p4_recycle") || !gameManager.hasPrestiged {
-            chains.insert([.bulkRecycle], at: 4) // Position doesn't matter too much
-        }
+        chains.insert([.manualFusion, .autoFusion, .megaFusion], at: 0)
+        chains.insert([.bulkRecycle], at: 4) // Position doesn't matter too much
         return chains
     }
     
@@ -86,22 +82,6 @@ struct UpgradeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         if selectedTab == .deblocage {
-                            if !gameManager.hasPrestigeUpgrade("p3_fusion") && gameManager.hasPrestiged || !gameManager.hasPrestigeUpgrade("p4_recycle") && gameManager.hasPrestiged {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "info.circle.fill")
-                                        .foregroundColor(.orange)
-                                    Text("Certaines mécaniques nécessitent l'Arbre Stellaire (Prestige).")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.orange.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.2), lineWidth: 1))
-                                .padding(.horizontal)
-                            }
-                            
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(0..<visibleUnlockChains.count, id: \.self) { index in
                                     let chain = visibleUnlockChains[index]

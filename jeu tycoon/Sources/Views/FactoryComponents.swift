@@ -130,10 +130,10 @@ struct FactoryRow: View {
                                             Text(perk.name)
                                                 .font(.system(size: 10, weight: .semibold))
                                         }
-                                        .foregroundColor(.cyan)
+                                        .foregroundColor(perk.rarity.color)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(Color.cyan.opacity(0.12))
+                                        .background(perk.rarity.color.opacity(0.12))
                                         .clipShape(Capsule())
                                     }
                                 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @Environment(GameManager.self) private var gameManager
@@ -7,7 +8,9 @@ struct SettingsView: View {
     @State private var showingResetConfirmation = false
     @State private var cheatAmount: String = ""
     @AppStorage("numberFormatStyle") private var numberFormatStyle: NumberFormatStyle = .scientific
-    @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .fr
+    
+    @State private var isRestoring = false
     
     var body: some View {
         NavigationStack {
@@ -40,6 +43,22 @@ struct SettingsView: View {
                                 .padding(.horizontal)
                             
                             VStack(spacing: 10) {
+                                HStack {
+                                    Text("Langue")
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    Picker("", selection: $appLanguage) {
+                                        ForEach(AppLanguage.allCases) { lang in
+                                            Text(lang.rawValue).tag(lang)
+                                        }
+                                    }
+                                    .accentColor(.white)
+                                    .pickerStyle(MenuPickerStyle())
+                                }
+                                .padding()
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(12)
+                                
                                 HStack {
                                     Text("Format des Nombres")
                                         .foregroundColor(.white)
@@ -84,77 +103,34 @@ struct SettingsView: View {
                             }
                             .padding(.horizontal)
                         }
-                        
-#if DEBUG
-                        // Dev Tools
+                        // Achats
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Outils Développeur")
+                            Text("Achats Premium")
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
                             
-                            VStack(spacing: 15) {
-                                Toggle("Mode Développeur (Achats In-App gratuits)", isOn: $isDeveloperMode)
-                                    .padding()
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .foregroundColor(.white)
-                                    .tint(.blue)
-                                
-                                TextField("Montant (ex: 100000)", text: $cheatAmount)
-                                    .keyboardType(.numberPad)
-                                    .padding()
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .foregroundColor(.white)
-                                
-                                HStack(spacing: 15) {
-                                    Button("+ 💰 Argent") {
-                                        if let amount = Double(cheatAmount) {
-                                            gameManager.money += BigNumber(amount)
-                                            gameManager.evaluateAffordableCrates(reset: false)
-                                            gameManager.saveGame()
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.blue.opacity(0.2))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(8)
-                                    
-                                    Button("+ 🧬 ADN") {
-                                        if let amount = Double(cheatAmount) {
-                                            gameManager.addMutationPoints(BigNumber(amount))
-                                            gameManager.saveGame()
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.purple.opacity(0.2))
-                                    .foregroundColor(.purple)
-                                    .cornerRadius(8)
-                                    
-                                    Button("+ ⭐️ Étoiles") {
-                                        if let amount = Double(cheatAmount) {
-                                            gameManager.currentStars += BigNumber(amount)
-                                            gameManager.totalStars += BigNumber(amount)
-                                            gameManager.unspentStars += BigNumber(amount)
-                                            gameManager.saveGame()
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.yellow.opacity(0.2))
-                                    .foregroundColor(.yellow)
-                                    .cornerRadius(8)
+                            Button(action: {
+                                Task {
+                                    isRestoring = true
+                                    try? await AppStore.sync()
+                                    isRestoring = false
                                 }
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                    Text(isRestoring ? "Restauration en cours..." : "Restaurer les achats")
+                                    Spacer()
+                                }
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.blue.opacity(0.2))
+                                .cornerRadius(12)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
                             }
-                            .padding()
-                            .background(Color.white.opacity(0.05))
-                            .cornerRadius(12)
                             .padding(.horizontal)
+                            .disabled(isRestoring)
                         }
-#endif
                         Spacer(minLength: 40)
                         
                         Text("CanardFactory v1.0")

@@ -14,6 +14,9 @@ struct DuckFactory: Identifiable, Codable, Hashable {
     /// IDs des Perks équipés sur cette usine (jusqu'à 2 avec le Perk Épique/Légendaire/Mythique)
     var equippedPerkIds: [UUID]
     
+    /// Prix d'achat de l'usine, utilisé pour calculer le coût des niveaux
+    var basePurchasePrice: Double?
+    
     // Pour la migration depuis d'anciennes sauvegardes
     private var assignedDuckId: UUID?
     private var equippedPerkId: String?
@@ -27,11 +30,12 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         self.level = 1
         self.evolution = 0
         self.equippedPerkIds = []
+        self.basePurchasePrice = nil
     }
     
     // Migration logic
     enum CodingKeys: String, CodingKey {
-        case id, name, assignedDuckId, assignedDuckIds, level, evolution, equippedPerkId, equippedPerkIds, productionLevel, multiplierLevel
+        case id, name, assignedDuckId, assignedDuckIds, level, evolution, equippedPerkId, equippedPerkIds, productionLevel, multiplierLevel, basePurchasePrice
     }
     
     init(from decoder: Decoder) throws {
@@ -61,6 +65,8 @@ struct DuckFactory: Identifiable, Codable, Hashable {
             self.level = try container.decodeIfPresent(Int.self, forKey: .level) ?? 1
             self.evolution = try container.decodeIfPresent(Int.self, forKey: .evolution) ?? 0
         }
+        
+        self.basePurchasePrice = try container.decodeIfPresent(Double.self, forKey: .basePurchasePrice)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -71,11 +77,14 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         try container.encode(level, forKey: .level)
         try container.encode(evolution, forKey: .evolution)
         try container.encode(equippedPerkIds, forKey: .equippedPerkIds)
+        try container.encodeIfPresent(basePurchasePrice, forKey: .basePurchasePrice)
     }
     
     // Paramètres d'équilibrage de base
     private let baseProductionRate: Double = 1.0
-    private let baseUpgradeCost: Double = 50.0
+    var baseUpgradeCost: Double {
+        return (basePurchasePrice ?? 500.0) / 10.0
+    }
     
     private var effectiveLevel: Int {
         return level + (evolution * 200)
@@ -109,7 +118,7 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         for i in 0..<levels {
             if level + i > 100 { break }
             let currentEffective = (level + i) + (evolution * 200)
-            let multiplier = BigNumber.pow(BigNumber(1.618), Double(currentEffective))
+            let multiplier = BigNumber.pow(BigNumber(1.44), Double(currentEffective))
             totalCost += BigNumber(baseUpgradeCost) * multiplier * BigNumber(finalDiscountMultiplier)
         }
         return totalCost
@@ -120,7 +129,7 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         let perkDiscount = calculateDiscount(with: factoryPerks)
         let finalDiscountMultiplier = max(0.01, baseDiscount - perkDiscount)
         
-        let multiplier = BigNumber.pow(BigNumber(1.618), Double(100 + (evolution * 200)))
+        let multiplier = BigNumber.pow(BigNumber(1.44), Double(100 + (evolution * 200)))
         let level100Cost = BigNumber(baseUpgradeCost) * multiplier * BigNumber(finalDiscountMultiplier)
         return level100Cost * 10.0
     }
@@ -134,7 +143,7 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         var count = 0
         for i in 0..<(100 - level) {
             let currentEffective = (level + i) + (evolution * 200)
-            let multiplier = BigNumber.pow(BigNumber(1.618), Double(currentEffective))
+            let multiplier = BigNumber.pow(BigNumber(1.44), Double(currentEffective))
             let cost = BigNumber(baseUpgradeCost) * multiplier * BigNumber(finalDiscountMultiplier)
             if remainingBudget >= cost {
                 remainingBudget -= cost

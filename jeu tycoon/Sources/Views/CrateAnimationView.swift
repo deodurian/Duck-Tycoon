@@ -282,75 +282,76 @@ struct CrateAnimationView: View {
         animationTask?.cancel()
         animationTask = Task { @MainActor in
             do {
-                // === Phase 1: Entrance (0.3s) ===
+                // === Phase 1: Entrance (Snappy pop) ===
                 phase = .anticipation
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                crateScale = 0.1
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) {
                     crateScale = 1.0
                 }
                 haptics.lightTap()
                 
-                try await Task.sleep(nanoseconds: 300_000_000)
+                try await Task.sleep(nanoseconds: 250_000_000)
                 
-                // === Phase 2: Anticipation — slow pulse (1.2s) ===
+                // === Phase 2: Anticipation — Rapid pulses ===
                 startOrbitingParticles()
                 
-                // Gentle pulse
-                withAnimation(.easeInOut(duration: 0.6).repeatCount(2, autoreverses: true)) {
-                    crateScale = 1.08
-                    glowOpacity = 0.4
+                withAnimation(.easeInOut(duration: 0.15).repeatCount(3, autoreverses: true)) {
+                    crateScale = 1.1
+                    glowOpacity = 0.6
                 }
                 haptics.lightTap()
                 
-                try await Task.sleep(nanoseconds: 1_200_000_000)
+                try await Task.sleep(nanoseconds: 400_000_000)
                 
-                // === Phase 3: Intensifying (1.0s) ===
+                // === Phase 3: Intensifying — Violent shake & squash ===
                 phase = .intensifying
                 
-                // Start jiggling
-                withAnimation(.easeInOut(duration: 0.08).repeatForever(autoreverses: true)) {
+                withAnimation(.easeInOut(duration: 0.04).repeatForever(autoreverses: true)) {
                     isJiggling = true
                 }
                 
-                // Ramp up intensity
-                for i in 0..<5 {
-                    try await Task.sleep(nanoseconds: 200_000_000)
-                    let progress = Double(i + 1) / 5.0
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        jiggleIntensity = 3.0 + progress * 12.0
-                        crateScale = 1.08 + CGFloat(progress) * 0.15
-                        glowOpacity = 0.4 + progress * 0.5
-                        glowScale = 1.0 + CGFloat(progress) * 0.3
+                for i in 0..<4 {
+                    try await Task.sleep(nanoseconds: 100_000_000)
+                    let progress = Double(i + 1) / 4.0
+                    withAnimation(.easeOut(duration: 0.1)) {
+                        jiggleIntensity = 8.0 + progress * 20.0
+                        crateScale = 1.0 - CGFloat(progress) * 0.15 // Squash down slightly
+                        glowOpacity = 0.5 + progress * 0.5
+                        glowScale = 1.0 + CGFloat(progress) * 0.4
                     }
                     if i % 2 == 0 { haptics.mediumTap() }
                 }
                 
                 haptics.heavyTap()
                 
-                try await Task.sleep(nanoseconds: 100_000_000)
-                
-                // === Phase 4: Explosion ===
+                // === Phase 4: Explosion (BOOM!) ===
                 phase = .exploding
                 particleTimer?.invalidate()
                 
                 // Flash color based on best rarity
-                withAnimation(.easeOut(duration: 0.08)) {
+                withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
+                    crateScale = 1.6 // Burst out
+                }
+                
+                try await Task.sleep(nanoseconds: 80_000_000)
+                
+                withAnimation(.easeOut(duration: 0.1)) {
                     flashColor = bestRarity.color.opacity(0.9)
-                    crateScale = 1.5
+                    crateScale = 0.0
                 }
                 
                 haptics.heavyTap()
                 spawnExplosionParticles()
                 
-                try await Task.sleep(nanoseconds: 120_000_000)
+                try await Task.sleep(nanoseconds: 100_000_000)
                 
-                withAnimation(.easeOut(duration: 0.15)) {
+                withAnimation(.easeOut(duration: 0.1)) {
                     flashColor = .white.opacity(0.95)
-                    crateScale = 0.0
                 }
                 
-                try await Task.sleep(nanoseconds: 200_000_000)
+                try await Task.sleep(nanoseconds: 150_000_000)
                 
-                withAnimation(.easeOut(duration: 0.4)) {
+                withAnimation(.easeOut(duration: 0.3)) {
                     flashColor = .clear
                     phase = .revealed
                 }
@@ -358,7 +359,7 @@ struct CrateAnimationView: View {
                 // Haptic for rarity
                 haptics.rarityReveal(bestRarity)
                 
-                try await Task.sleep(nanoseconds: 300_000_000)
+                try await Task.sleep(nanoseconds: 150_000_000)
                 
                 // === Phase 5: Staggered card reveal ===
                 let totalCards: Int
@@ -371,16 +372,16 @@ struct CrateAnimationView: View {
                 }
                 
                 for i in 0..<totalCards {
-                    try await Task.sleep(nanoseconds: 150_000_000)
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.65)) {
+                    try await Task.sleep(nanoseconds: 60_000_000) // Super fast staggered reveal
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
                         revealedCards = i + 1
                     }
                     haptics.lightTap()
                 }
                 
                 // Show tap hint after a delay
-                try await Task.sleep(nanoseconds: 800_000_000)
-                withAnimation(.easeInOut(duration: 0.5)) {
+                try await Task.sleep(nanoseconds: 500_000_000)
+                withAnimation(.easeInOut(duration: 0.3)) {
                     showTapHint = true
                 }
                 

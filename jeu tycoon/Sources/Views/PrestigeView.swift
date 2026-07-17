@@ -489,7 +489,7 @@ private struct PrestigeUpgradeCard: View {
 
 extension PrestigeView {
     private func formatBonus(_ multiplier: Double) -> String {
-        let bnVal = gameManager.totalStars * multiplier
+        let bnVal = BigNumber.pow(gameManager.totalStars, 0.5) * multiplier
         let val = bnVal.doubleValue
         if bnVal >= BigNumber(1_000_000.0) {
             return bnVal.formattedString()

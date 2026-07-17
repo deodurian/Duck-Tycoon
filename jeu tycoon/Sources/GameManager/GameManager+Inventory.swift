@@ -60,8 +60,10 @@ extension GameManager {
     
     func buyNewFactory() {
         if money >= newFactoryCost {
+            let costVal = newFactoryCost.doubleValue // Get underlying Double value
             money -= newFactoryCost
-            let newFactory = DuckFactory(name: "Usine \(factories.count + 1)")
+            var newFactory = DuckFactory(name: "Usine \(factories.count + 1)")
+            newFactory.basePurchasePrice = costVal
             factories.append(newFactory)
             saveGame()
         }
@@ -69,10 +71,11 @@ extension GameManager {
     
     func assignDuck(_ duck: Duck, to factoryId: UUID) {
         if let index = factories.firstIndex(where: { $0.id == factoryId }) {
-            if !factories[index].assignedDuckIds.contains(duck.id) && factories[index].assignedDuckIds.count < 2 {
+            let maxCapacity = maxDucks(for: factories[index])
+            if !factories[index].assignedDuckIds.contains(duck.id) && factories[index].assignedDuckIds.count < maxCapacity {
                 factories[index].assignedDuckIds.append(duck.id)
-            } else if factories[index].assignedDuckIds.count >= 2 {
-                // Si plein, on remplace le premier (ou le dernier)
+            } else if factories[index].assignedDuckIds.count >= maxCapacity {
+                // Si plein, on remplace le premier
                 if !factories[index].assignedDuckIds.isEmpty {
                     factories[index].assignedDuckIds[0] = duck.id
                 }
@@ -188,6 +191,37 @@ extension GameManager {
         saveGame()
     }
     
+    // MARK: - Perks
+    
+    func recyclePerk(id: UUID) {
+        guard let index = perksInventory.firstIndex(where: { $0.id == id }) else { return }
+        
+        // Vérifier si le perk est équipé
+        if let factory = factories.first(where: { $0.equippedPerkIds.contains(id) }) {
+            unequipPerk(id, from: factory.id)
+        }
+        if let duck = inventory.first(where: { $0.equippedPerkIds.contains(id) }) {
+            unequipPerk(id, from: duck.id)
+        }
+        
+        let perk = perksInventory[index]
+        
+        // Calcul des points de mutation (modifiable selon l'équilibrage souhaité)
+        let mutYield: Int
+        switch perk.rarity {
+        case .commun: mutYield = 50
+        case .peuCommun: mutYield = 200
+        case .rare: mutYield = 1000
+        case .epique: mutYield = 5000
+        case .legendaire: mutYield = 25000
+        case .mythique: mutYield = 100000
+        }
+        
+        addMutationPoints(BigNumber(mutYield) * mutationMultiplier)
+        perksInventory.remove(at: index)
+        saveGame()
+    }
+    
     private func getDucksToRecycle(rarity: DuckRarity, level: Int) -> [Duck] {
         let assignedIds = Set(factories.flatMap { $0.assignedDuckIds })
         return inventory.filter { duck in
@@ -235,7 +269,7 @@ extension GameManager {
         }
         
         // Calculer la valeur du nouveau canard et le coût
-        var totalSellValue = ducksToFuse.reduce(BigNumber.zero) { $0 + $1.sellValue }
+        var totalSellValue = getWeightedSellValue(from: ducksToFuse)
         if hasPrestigeUpgrade("p4_fusion_ing"), let maxVal = ducksToFuse.map({ $0.sellValue }).max() {
             totalSellValue += maxVal
         }
@@ -280,6 +314,27 @@ extension GameManager {
         saveGame()
     }
     
+    // MARK: - Helpers Poids de Fusion
+    private func getWeightedSellValue(from chunk: [Duck]) -> BigNumber {
+        var total = BigNumber.zero
+        for duck in chunk {
+            let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first(where: { $0.id == id }) }
+            let weight = duck.fusionWeight(with: perks)
+            total += duck.sellValue * Double(weight)
+        }
+        return total
+    }
+    
+    private func getWeightedDisplaySellValue(from chunk: [Duck]) -> BigNumber {
+        var total = BigNumber.zero
+        for duck in chunk {
+            let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first(where: { $0.id == id }) }
+            let weight = duck.fusionWeight(with: perks)
+            total += displaySellValue(for: duck) * Double(weight)
+        }
+        return total
+    }
+    
     // MARK: - Tri Asynchrone (Pagination)
     func getSortedInventoryAsync(by sortOption: InventorySortOption, limit: Int = 100, filterAssigned: Bool = false) async -> [Duck] {
         let snapshot = self.inventory
@@ -322,7 +377,7 @@ extension GameManager {
         
         for (level, ducks) in grouped {
             for chunk in getFusionChunks(from: ducks) {
-                var sumSellValue = chunk.reduce(BigNumber.zero) { $0 + displaySellValue(for: $1) }
+                var sumSellValue = getWeightedDisplaySellValue(from: chunk)
                 if hasPrestigeUpgrade("p4_fusion_ing"), let maxVal = chunk.map({ displaySellValue(for: $0) }).max() {
                     sumSellValue += maxVal
                 }
@@ -364,7 +419,7 @@ extension GameManager {
                     }
                 }
                 
-                var futureRawPrice = chunk.reduce(BigNumber.zero) { $0 + $1.sellValue }
+                var futureRawPrice = getWeightedSellValue(from: chunk)
                 if hasPrestigeUpgrade("p4_fusion_ing"), let maxRaw = chunk.map({ $0.sellValue }).max() {
                     futureRawPrice += maxRaw
                 }
@@ -430,8 +485,8 @@ extension GameManager {
                     }
                     
                     for chunk in chunks {
-                        var futureRawPrice = chunk.reduce(BigNumber.zero) { $0 + $1.sellValue }
-                        var futureDisplayPrice = chunk.reduce(BigNumber.zero) { $0 + displaySellValue(for: $1) }
+                        var futureRawPrice = getWeightedSellValue(from: chunk)
+                        var futureDisplayPrice = getWeightedDisplaySellValue(from: chunk)
                         
                         if hasPrestigeUpgrade("p4_fusion_ing") {
                             let maxRaw = chunk.map({ $0.sellValue }).max() ?? .zero
@@ -592,9 +647,23 @@ extension GameManager {
     // MARK: - Perks
     
     func equipPerk(_ perk: Perk, to targetId: UUID) {
+        // Vérifier que le perk n'est pas déjà équipé quelque part
+        let alreadyEquippedOnFactory = factories.contains { $0.equippedPerkIds.contains(perk.id) }
+        let alreadyEquippedOnDuck = inventory.contains { $0.equippedPerkIds.contains(perk.id) }
+        guard !alreadyEquippedOnFactory && !alreadyEquippedOnDuck else { return }
+        
         // Checking if it's a factory
         if let index = factories.firstIndex(where: { $0.id == targetId }) {
+            guard perk.type == .factory else { return } // Seuls les perks d'usine sur une usine
+            
+            let currentPerks = factories[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            let hasExtraSlot = currentPerks.contains(where: { $0.factoryExtraPerkSlot })
+            let maxSlots = hasExtraSlot ? 2 : 1
+            
+            guard factories[index].equippedPerkIds.count < maxSlots else { return }
+            
             factories[index].equippedPerkIds.append(perk.id)
+            invalidateEarningsCache()
             emitMissionEvent(.assignPerk)
             saveGame()
             return
@@ -602,11 +671,93 @@ extension GameManager {
         
         // Checking if it's a duck
         if let index = inventory.firstIndex(where: { $0.id == targetId }) {
+            guard perk.type == .duck else { return } // Seuls les perks de canard sur un canard
+            
+            let currentPerks = inventory[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            let hasExtraSlot = currentPerks.contains(where: { $0.duckExtraPerkSlot })
+            let maxSlots = hasExtraSlot ? 2 : 1
+            
+            guard inventory[index].equippedPerkIds.count < maxSlots else { return }
+            
             inventory[index].equippedPerkIds.append(perk.id)
             emitMissionEvent(.assignPerk)
             saveGame()
             return
         }
+    }
+    
+    func unequipPerk(_ perkId: UUID, from targetId: UUID) {
+        // Retirer d'une usine
+        if let index = factories.firstIndex(where: { $0.id == targetId }) {
+            factories[index].equippedPerkIds.removeAll { $0 == perkId }
+            
+            // Si on retire un perk qui donnait un slot canard extra, retirer le 2ème canard
+            let currentPerks = factories[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            let hasExtraDuckSlot = currentPerks.contains(where: { $0.factoryExtraDuckSlot })
+            if !hasExtraDuckSlot && factories[index].assignedDuckIds.count > 1 {
+                factories[index].assignedDuckIds = [factories[index].assignedDuckIds[0]]
+            }
+            
+            // Si on retire un perk qui donnait un slot perk extra, retirer le 2ème perk
+            let hasExtraPerkSlot = currentPerks.contains(where: { $0.factoryExtraPerkSlot })
+            if !hasExtraPerkSlot && factories[index].equippedPerkIds.count > 1 {
+                factories[index].equippedPerkIds = [factories[index].equippedPerkIds[0]]
+            }
+            
+            invalidateEarningsCache()
+            saveGame()
+            return
+        }
+        
+        // Retirer d'un canard
+        if let index = inventory.firstIndex(where: { $0.id == targetId }) {
+            inventory[index].equippedPerkIds.removeAll { $0 == perkId }
+            
+            // Si on retire un perk qui donnait un slot perk extra, retirer le 2ème perk
+            let currentPerks = inventory[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            let hasExtraPerkSlot = currentPerks.contains(where: { $0.duckExtraPerkSlot })
+            if !hasExtraPerkSlot && inventory[index].equippedPerkIds.count > 1 {
+                inventory[index].equippedPerkIds = [inventory[index].equippedPerkIds[0]]
+            }
+            
+            saveGame()
+            return
+        }
+    }
+    
+    /// Calcule le nombre max de canards autorisés dans une usine
+    func maxDuckSlots(for factory: DuckFactory) -> Int {
+        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return perks.contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
+    }
+    
+    /// Calcule le nombre max de perks autorisés sur une usine
+    func maxPerkSlots(for factory: DuckFactory) -> Int {
+        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return perks.contains(where: { $0.factoryExtraPerkSlot }) ? 2 : 1
+    }
+    
+    /// Calcule le nombre max de canards autorisés sur une usine
+    func maxDucks(for factory: DuckFactory) -> Int {
+        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return perks.contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
+    }
+    
+    /// Calcule le nombre max de perks autorisés sur un canard
+    func maxDuckPerkSlots(for duck: Duck) -> Int {
+        let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return perks.contains(where: { $0.duckExtraPerkSlot }) ? 2 : 1
+    }
+    
+    /// Retourne TOUS les perks pour un type donné (pour l'affichage)
+    func perks(for type: PerkType) -> [Perk] {
+        return perksInventory.filter { $0.type == type }
+    }
+    
+    func isPerkEquippedAnywhere(_ id: UUID) -> Bool {
+        if factories.contains(where: { $0.equippedPerkIds.contains(id) }) { return true }
+        if inventory.contains(where: { $0.equippedPerkIds.contains(id) }) { return true }
+        return false
     }
     
     // MARK: - Ritual
@@ -623,7 +774,6 @@ extension GameManager {
             } else {
                 // Succès
                 inventory[index].ritualSuccesses += 1
-                inventory[index].fusionLevel += 5
             }
             emitMissionEvent(.upgradeDuckMutation)
         } else {

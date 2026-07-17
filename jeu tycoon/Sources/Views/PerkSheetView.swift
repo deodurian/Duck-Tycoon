@@ -13,19 +13,22 @@ struct PerkSheetView: View {
                 Color(red: 0.05, green: 0.0, blue: 0.12).ignoresSafeArea()
                 
                 VStack(spacing: 0) {
+                    let factoryPerksCount = gameManager.perksInventory.filter { $0.type == .factory }.count
+                    let duckPerksCount = gameManager.perksInventory.filter { $0.type == .duck }.count
+                    
                     Picker("Type de Perks", selection: $selectedTab) {
-                        Text("Usines").tag(0)
-                        Text("Canards").tag(1)
+                        Text("Usines (\(factoryPerksCount))").tag(0)
+                        Text("Canards (\(duckPerksCount))").tag(1)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding()
                     
                     ScrollView {
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                        LazyVStack(spacing: 15) {
                             let typeFilter: PerkType = selectedTab == 0 ? .factory : .duck
                             let filteredPerks = gameManager.perksInventory.filter { $0.type == typeFilter }
                             ForEach(filteredPerks) { perk in
-                                PerkCardView(perk: perk)
+                                PerkCardView(perk: perk, showRecycle: true)
                             }
                             if filteredPerks.isEmpty {
                                 Text("Aucun perk de ce type.")
@@ -37,7 +40,7 @@ struct PerkSheetView: View {
                     }
                 }
             }
-            .navigationTitle("Inventaire de Perks")
+            .navigationTitle("Inventaire de Perks (\(gameManager.perksInventory.count))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -61,28 +64,103 @@ struct PerkSheetView: View {
 
 struct PerkCardView: View {
     let perk: Perk
+    var showRecycle: Bool = false
+    
+    @Environment(GameManager.self) private var gameManager
+    @State private var showingRecycleAlert = false
+    
+    var isEquipped: Bool {
+        if gameManager.factories.contains(where: { $0.equippedPerkIds.contains(perk.id) }) { return true }
+        if gameManager.inventory.contains(where: { $0.equippedPerkIds.contains(perk.id) }) { return true }
+        return false
+    }
+    
+    var recycleYield: Int {
+        switch perk.rarity {
+        case .commun: return 50
+        case .peuCommun: return 200
+        case .rare: return 1000
+        case .epique: return 5000
+        case .legendaire: return 25000
+        case .mythique: return 100000
+        }
+    }
     
     var body: some View {
-        VStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "star.fill")
-                .font(.system(size: 30))
-                .foregroundColor(perk.type == .factory ? .cyan : .yellow)
-                .padding()
+                .font(.system(size: 18))
+                .foregroundColor(perk.type == .factory ? .cyan : Color(red: 0.1, green: 0.5, blue: 0.1))
+                .padding(8)
                 .background(Color.white.opacity(0.1))
                 .clipShape(Circle())
             
-            Text(perk.name)
-                .font(.headline)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(perk.name)
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                    
+                    if isEquipped {
+                        Text("ÉQUIPÉ")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.blue)
+                            .cornerRadius(4)
+                    }
+                }
+                
+                Text(perk.description)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.7))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 8) {
+                Text(perk.rarity.rawValue)
+                    .font(.caption.bold())
+                    .foregroundColor(perk.rarity.color)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(perk.rarity.color.opacity(0.2))
+                    .cornerRadius(8)
+                
+                if showRecycle && !isEquipped {
+                    Button(action: { showingRecycleAlert = true }) {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                            .padding(8)
+                            .background(Color.red.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+                    .alert("Recycler ce Perk ?", isPresented: $showingRecycleAlert) {
+                        Button("Annuler", role: .cancel) { }
+                        Button("Recycler", role: .destructive) {
+                            gameManager.recyclePerk(id: perk.id)
+                        }
+                    } message: {
+                        Text("Vous obtiendrez \(recycleYield) 🧬")
+                    }
+                }
+            }
         }
-        .padding()
-        .frame(maxWidth: .infinity, minHeight: 180)
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(16)
+        .padding(10)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.05), perk.rarity.color.opacity(0.05)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .cornerRadius(10)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(perk.rarity.color.opacity(0.8), lineWidth: 3)
         )
     }
 }
