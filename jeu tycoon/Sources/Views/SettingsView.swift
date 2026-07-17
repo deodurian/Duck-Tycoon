@@ -12,6 +12,9 @@ struct SettingsView: View {
     
     @State private var isRestoring = false
     
+    /// Callback appelé quand la langue change, pour que ContentView puisse rafraîchir ses vues
+    var onLanguageChanged: (() -> Void)? = nil
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -47,17 +50,7 @@ struct SettingsView: View {
                                     Text("Langue")
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: Binding(
-                                        get: { appLanguage },
-                                        set: { newValue in
-                                            Task {
-                                                try? await Task.sleep(nanoseconds: 100_000_000)
-                                                await MainActor.run {
-                                                    appLanguage = newValue
-                                                }
-                                            }
-                                        }
-                                    )) {
+                                    Picker("", selection: $appLanguage) {
                                         ForEach(AppLanguage.allCases) { lang in
                                             Text(lang.rawValue).tag(lang)
                                         }
@@ -73,17 +66,7 @@ struct SettingsView: View {
                                     Text("Format des Nombres")
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: Binding(
-                                        get: { numberFormatStyle },
-                                        set: { newValue in
-                                            Task {
-                                                try? await Task.sleep(nanoseconds: 100_000_000)
-                                                await MainActor.run {
-                                                    numberFormatStyle = newValue
-                                                }
-                                            }
-                                        }
-                                    )) {
+                                    Picker("", selection: $numberFormatStyle) {
                                         ForEach(NumberFormatStyle.allCases) { style in
                                             Text(style.rawValue).tag(style)
                                         }
@@ -174,6 +157,13 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.")
+            }
+            .onChange(of: appLanguage) { _, _ in
+                // Fermer la sheet et déclencher le rafraîchissement
+                dismiss()
+                // Le callback sera appelé quand la sheet sera complètement fermée
+                // grâce au onDismiss du .sheet dans ContentView
+                onLanguageChanged?()
             }
         }
     }
