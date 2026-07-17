@@ -130,6 +130,11 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         )
+        .navigationBarHidden(true)
+        .navigationDestination(for: Duck.self) { duck in
+            DuckDetailView(duck: duck)
+                .environment(gameManager)
+        }
         } // closes ZStack
         } // closes NavigationStack
         .id(appLanguage)
@@ -144,11 +149,6 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .navigationBarHidden(true)
-        .navigationDestination(for: Duck.self) { duck in
-            DuckDetailView(duck: duck)
-                .environment(gameManager)
-        }
     }
 }
 
