@@ -1,4 +1,6 @@
-import SwiftUI
+import sys
+
+content = """import SwiftUI
 import StoreKit
 
 struct IAPShopView: View {
@@ -276,3 +278,9 @@ struct VirtualShopItemCard: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
+"""
+
+with open("/Users/dorian/Downloads/jeu tycoon /jeu tycoon/jeu tycoon/Sources/Views/IAPShopView.swift", "w") as f:
+    f.write(content)
+
+print("IAPShopView rewritten successfully")

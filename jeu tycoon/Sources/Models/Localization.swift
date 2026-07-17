@@ -700,7 +700,9 @@ let translations: [AppLanguage: [String: String]] = [
         "canard": "canard",
         "Défaut (K, M, B)": "Défaut (K, M, B)",
         "Standard (a, b, c)": "Standard (a, b, c)",
-        "Scientifique (e3, e6)": "Scientifique (e3, e6)"
+        "Scientifique (e3, e6)": "Scientifique (e3, e6)",
+
+        "Pas assez de gemmes !": "Pas assez de gemmes !"
     ],
     .en: [
         "Jouer": "Play",
@@ -1369,7 +1371,9 @@ let translations: [AppLanguage: [String: String]] = [
         "canard": "duck",
         "Défaut (K, M, B)": "Default (K, M, B)",
         "Standard (a, b, c)": "Standard (a, b, c)",
-        "Scientifique (e3, e6)": "Scientific (e3, e6)"
+        "Scientifique (e3, e6)": "Scientific (e3, e6)",
+
+        "Pas assez de gemmes !": "Not enough gems!"
     ],
     .es: [
         "Jouer": "Jugar",
@@ -2038,6 +2042,8 @@ let translations: [AppLanguage: [String: String]] = [
         "canard": "pato",
         "Défaut (K, M, B)": "Predeterminado (K, M, B)",
         "Standard (a, b, c)": "Estándar (a, b, c)",
-        "Scientifique (e3, e6)": "Científico (e3, e6)"
+        "Scientifique (e3, e6)": "Científico (e3, e6)",
+
+        "Pas assez de gemmes !": "¡No hay suficientes gemas!"
     ]
 ]

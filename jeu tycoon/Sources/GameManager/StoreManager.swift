@@ -2,38 +2,22 @@ import StoreKit
 import SwiftUI
 
 enum IAPProductType {
-    case money(amount: Double)
-    case moneyOverTime(hours: Int)
-    case dna(amount: Int)
     case gems(amount: Int)
     
     var title: String {
         switch self {
-        case .money(let amount): return "+\(BigNumber(amount).formattedString())"
-        case .moneyOverTime(let hours): return "\(hours)H de revenus"
-        case .dna(let amount): return "+\(amount.formattedString())"
         case .gems(let amount): return "+\(amount)"
         }
     }
     
     var iconName: String {
         switch self {
-        case .money, .moneyOverTime: return "💰"
-        case .dna: return "🧬"
         case .gems: return "💎"
         }
     }
     
     var simulatedPrice: String {
         switch self {
-        case .moneyOverTime(let hours):
-            return "€\(Double(hours) * 0.99)"
-        case .money(let amount):
-            let tier = log10(amount) - 3 // pseudo pricing
-            return "€\(max(0.99, (tier * 1.5).roundedToSixSignificantDigits()))"
-        case .dna(let amount):
-            let tier = log10(Double(amount)) - 1
-            return "€\(max(0.99, (tier * 2.0).roundedToSixSignificantDigits()))"
         case .gems(let amount):
             let tier = Double(amount) / 100.0
             return "€\(max(0.99, tier.roundedToSixSignificantDigits()))"
@@ -46,6 +30,35 @@ struct StoreProductDefinition {
     let type: IAPProductType
 }
 
+enum VirtualShopProduct {
+    case money(amount: Double, gemCost: Int)
+    case moneyOverTime(hours: Int, gemCost: Int)
+    case dna(amount: Int, gemCost: Int)
+    
+    var title: String {
+        switch self {
+        case .money(let amount, _): return "+\(BigNumber(amount).formattedString())"
+        case .moneyOverTime(let hours, _): return "\(hours)H de revenus"
+        case .dna(let amount, _): return "+\(amount.formattedString())"
+        }
+    }
+    
+    var iconName: String {
+        switch self {
+        case .money, .moneyOverTime: return "💰"
+        case .dna: return "🧬"
+        }
+    }
+    
+    var gemCost: Int {
+        switch self {
+        case .money(_, let cost): return cost
+        case .moneyOverTime(_, let cost): return cost
+        case .dna(_, let cost): return cost
+        }
+    }
+}
+
 @Observable
 class StoreManager {
     static let shared = StoreManager()
@@ -54,29 +67,8 @@ class StoreManager {
     var products: [Product] = []
     var isPurchasing = false
     
-    // Définition de tous les produits de la boutique
+    // Définition de tous les produits IAP de la boutique
     let definitions: [StoreProductDefinition] = [
-        // Argent fixe
-        StoreProductDefinition(id: "com.jeutycoon.money.1", type: .money(amount: 10_000)),
-        StoreProductDefinition(id: "com.jeutycoon.money.2", type: .money(amount: 100_000)),
-        StoreProductDefinition(id: "com.jeutycoon.money.3", type: .money(amount: 1_000_000)),
-        StoreProductDefinition(id: "com.jeutycoon.money.4", type: .money(amount: 10_000_000)),
-        StoreProductDefinition(id: "com.jeutycoon.money.5", type: .money(amount: 100_000_000)),
-        StoreProductDefinition(id: "com.jeutycoon.money.6", type: .money(amount: 1_000_000_000)),
-        
-        // Argent sur la durée
-        StoreProductDefinition(id: "com.jeutycoon.money.time.1", type: .moneyOverTime(hours: 1)),
-        StoreProductDefinition(id: "com.jeutycoon.money.time.2", type: .moneyOverTime(hours: 4)),
-        StoreProductDefinition(id: "com.jeutycoon.money.time.3", type: .moneyOverTime(hours: 12)),
-        
-        // ADN
-        StoreProductDefinition(id: "com.jeutycoon.dna.1", type: .dna(amount: 100)),
-        StoreProductDefinition(id: "com.jeutycoon.dna.2", type: .dna(amount: 500)),
-        StoreProductDefinition(id: "com.jeutycoon.dna.3", type: .dna(amount: 2500)),
-        StoreProductDefinition(id: "com.jeutycoon.dna.4", type: .dna(amount: 10_000)),
-        StoreProductDefinition(id: "com.jeutycoon.dna.5", type: .dna(amount: 50_000)),
-        StoreProductDefinition(id: "com.jeutycoon.dna.6", type: .dna(amount: 250_000)),
-        
         // Gemmes
         StoreProductDefinition(id: "com.jeutycoon.gems.1", type: .gems(amount: 50)),
         StoreProductDefinition(id: "com.jeutycoon.gems.2", type: .gems(amount: 250)),
@@ -84,6 +76,30 @@ class StoreManager {
         StoreProductDefinition(id: "com.jeutycoon.gems.4", type: .gems(amount: 2500)),
         StoreProductDefinition(id: "com.jeutycoon.gems.5", type: .gems(amount: 6500)),
         StoreProductDefinition(id: "com.jeutycoon.gems.6", type: .gems(amount: 15000))
+    ]
+    
+    // Définition de tous les produits Virtuels (achetables en Gemmes)
+    let virtualProducts: [VirtualShopProduct] = [
+        // Argent fixe
+        .money(amount: 10_000, gemCost: 50),
+        .money(amount: 100_000, gemCost: 250),
+        .money(amount: 1_000_000, gemCost: 1200),
+        .money(amount: 10_000_000, gemCost: 2500),
+        .money(amount: 100_000_000, gemCost: 6500),
+        .money(amount: 1_000_000_000, gemCost: 15000),
+        
+        // Argent sur la durée
+        .moneyOverTime(hours: 1, gemCost: 50),
+        .moneyOverTime(hours: 4, gemCost: 250),
+        .moneyOverTime(hours: 12, gemCost: 1200),
+        
+        // ADN
+        .dna(amount: 100, gemCost: 50),
+        .dna(amount: 500, gemCost: 250),
+        .dna(amount: 2500, gemCost: 1200),
+        .dna(amount: 10_000, gemCost: 2500),
+        .dna(amount: 50_000, gemCost: 6500),
+        .dna(amount: 250_000, gemCost: 15000)
     ]
     
     private var updatesTask: Task<Void, Never>? = nil
@@ -170,32 +186,44 @@ class StoreManager {
         guard let def = definitions.first(where: { $0.id == productId }) else { return }
         
         switch def.type {
-        case .money(let amount):
-            gameManager.money += BigNumber(amount)
-        case .moneyOverTime(let hours):
-            // Calculer les revenus actuels de toutes les usines
-            var eps: BigNumber = .zero
-            for factory in gameManager.factories {
-                if !factory.assignedDuckIds.isEmpty {
-                    let ducks = factory.assignedDuckIds.compactMap { id in gameManager.inventory.first { $0.id == id } }
-                    let displayValues = ducks.map { gameManager.displaySellValue(for: $0) }
-                    let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
-                    eps += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks)
-                }
-            }
-            let seconds = Double(hours * 3600)
-            let total = eps * seconds
-            if total > .zero {
-                gameManager.money += total
-            } else {
-                gameManager.money += BigNumber(Double(hours * 100))
-            }
-        case .dna(let amount):
-            gameManager.addMutationPoints(BigNumber(Double(amount)))
         case .gems(let amount):
             gameManager.gems += BigNumber(Double(amount))
         }
         
         gameManager.saveGame()
+    }
+    
+    func purchaseVirtualProduct(_ product: VirtualShopProduct, gameManager: GameManager) -> Bool {
+        let cost = BigNumber(Double(product.gemCost))
+        if gameManager.gems >= cost {
+            gameManager.gems -= cost
+            
+            switch product {
+            case .money(let amount, _):
+                gameManager.money += BigNumber(amount)
+            case .moneyOverTime(let hours, _):
+                var eps: BigNumber = .zero
+                for factory in gameManager.factories {
+                    if !factory.assignedDuckIds.isEmpty {
+                        let ducks = factory.assignedDuckIds.compactMap { id in gameManager.inventory.first { $0.id == id } }
+                        let displayValues = ducks.map { gameManager.displaySellValue(for: $0) }
+                        let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
+                        eps += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks)
+                    }
+                }
+                let seconds = Double(hours * 3600)
+                let total = eps * seconds
+                if total > .zero {
+                    gameManager.money += total
+                } else {
+                    gameManager.money += BigNumber(Double(hours * 100))
+                }
+            case .dna(let amount, _):
+                gameManager.addMutationPoints(BigNumber(Double(amount)))
+            }
+            gameManager.saveGame()
+            return true
+        }
+        return false
     }
 }
