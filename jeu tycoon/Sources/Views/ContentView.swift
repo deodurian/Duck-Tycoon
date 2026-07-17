@@ -73,7 +73,8 @@ struct ContentView: View {
     @AppStorage("appLanguage") private var appLanguage = "Français"
     
     var body: some View {
-        NavigationStack(path: $navPath) {
+        Group {
+            NavigationStack(path: $navPath) {
             ZStack(alignment: .top) {
             LinearGradient(
                 colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
@@ -129,6 +130,10 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         )
+        } // closes ZStack
+        } // closes NavigationStack
+        .id(appLanguage)
+        } // closes Group
         .sheet(isPresented: $showingSettings) {
             SettingsView()
                 .environment(gameManager)
@@ -144,10 +149,7 @@ struct ContentView: View {
             DuckDetailView(duck: duck)
                 .environment(gameManager)
         }
-        }
-        .id(appLanguage)
     }
-}
 }
 
 struct CustomTabBar: View {
