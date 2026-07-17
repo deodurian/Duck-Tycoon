@@ -8,12 +8,16 @@ struct SettingsView: View {
     @State private var showingResetConfirmation = false
     @State private var cheatAmount: String = ""
     @AppStorage("numberFormatStyle") private var numberFormatStyle: NumberFormatStyle = .scientific
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .fr
+    
+    // Lecture directe depuis le LocalizationManager @Observable
+    private var selectedLanguage: Binding<AppLanguage> {
+        Binding(
+            get: { LocalizationManager.shared.language },
+            set: { LocalizationManager.shared.language = $0 }
+        )
+    }
     
     @State private var isRestoring = false
-    
-    /// Callback appelé quand la langue change, pour que ContentView puisse rafraîchir ses vues
-    var onLanguageChanged: (() -> Void)? = nil
     
     var body: some View {
         NavigationStack {
@@ -50,7 +54,7 @@ struct SettingsView: View {
                                     Text("Langue")
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: $appLanguage) {
+                                    Picker("", selection: selectedLanguage) {
                                         ForEach(AppLanguage.allCases) { lang in
                                             Text(lang.rawValue).tag(lang)
                                         }
@@ -157,13 +161,6 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.")
-            }
-            .onChange(of: appLanguage) { _, _ in
-                // Fermer la sheet et déclencher le rafraîchissement
-                dismiss()
-                // Le callback sera appelé quand la sheet sera complètement fermée
-                // grâce au onDismiss du .sheet dans ContentView
-                onLanguageChanged?()
             }
         }
     }

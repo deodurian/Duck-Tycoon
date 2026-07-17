@@ -71,9 +71,6 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var navPath = NavigationPath()
     
-    // Forcer le rafraîchissement des vues quand la langue change
-    @State private var languageRefreshID = UUID()
-    
     var body: some View {
         NavigationStack(path: $navPath) {
             ZStack(alignment: .top) {
@@ -110,7 +107,6 @@ struct ContentView: View {
                         EmptyView()
                     }
                 }
-                .id(languageRefreshID)
                 .padding(.bottom, 90)
                 
                 CustomTabBar(selectedTab: $selectedTab)
@@ -140,9 +136,7 @@ struct ContentView: View {
         } // closes ZStack
         } // closes NavigationStack
         .sheet(isPresented: $showingSettings) {
-            SettingsView(onLanguageChanged: {
-                languageRefreshID = UUID()
-            })
+            SettingsView()
                 .environment(gameManager)
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in

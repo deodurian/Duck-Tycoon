@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 enum AppLanguage: String, CaseIterable, Identifiable {
     case fr = "Français"
@@ -7,12 +8,19 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+@Observable
 class LocalizationManager {
     static let shared = LocalizationManager()
     
     var language: AppLanguage {
+        didSet {
+            UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
+        }
+    }
+    
+    init() {
         let saved = UserDefaults.standard.string(forKey: "appLanguage") ?? "Français"
-        return AppLanguage(rawValue: saved) ?? .fr
+        self.language = AppLanguage(rawValue: saved) ?? .fr
     }
     
     func tr(_ key: String) -> String {
