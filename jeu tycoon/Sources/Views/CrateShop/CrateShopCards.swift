@@ -457,7 +457,7 @@ struct ProbabilityPopup: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Probabilités - \(crate.type.rawValue)")
+                Text("\(tr("Probabilités -")) \(tr(crate.type.rawValue))")
                     .font(.headline.bold())
                 Spacer()
                 Button(action: { withAnimation { isPresented = false } }) {

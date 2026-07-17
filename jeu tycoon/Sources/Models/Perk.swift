@@ -74,7 +74,7 @@ struct Perk: Identifiable, Codable, Hashable {
         if type == .factory {
             switch family {
             case .income: return tr("Boost Revenu")
-            case .synergy: return "\(tr("Synergie")) \(target?.displayName ?? "")"
+            case .synergy: return "\(tr("Synergie")) \(tr(target?.displayName ?? ""))"
             case .discount: return tr("Réduction Coût")
             case .sacrifice: return tr("Sacrifice")
             case .fusion: return tr("Boost Fusion")

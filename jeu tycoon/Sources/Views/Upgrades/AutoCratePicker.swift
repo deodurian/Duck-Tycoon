@@ -9,11 +9,11 @@ struct AutoCratePicker: View {
         Menu {
             Button(tr("Désactivé")) { gameManager.autoCrateTargetId = nil }
             ForEach(Crate.allCrates, id: \.type.rawValue) { crate in
-                Button(crate.type.rawValue) { gameManager.autoCrateTargetId = crate.type.rawValue }
+                Button(tr(crate.type.rawValue)) { gameManager.autoCrateTargetId = crate.type.rawValue }
             }
         } label: {
             HStack {
-                Text("Cible: \(gameManager.autoCrateTargetId ?? "Aucune")")
+                Text("\(tr("Cible")) : \(gameManager.autoCrateTargetId == nil ? tr("Aucune") : tr(gameManager.autoCrateTargetId!))")
                     .font(.system(size: 10, weight: .bold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

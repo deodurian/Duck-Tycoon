@@ -53,7 +53,7 @@ struct IAPShopView: View {
                         
                         // Section 3 : Gemmes
                         ShopSectionView(
-                            title: "Gemmes",
+                            title: tr("Gemmes"),
                             icon: "diamond.fill",
                             color: .cyan,
                             definitions: storeManager.definitions.filter { def in

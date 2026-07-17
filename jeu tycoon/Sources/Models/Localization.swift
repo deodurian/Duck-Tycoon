@@ -693,7 +693,16 @@ let translations: [AppLanguage: [String: String]] = [
         "Augmente de 150% la production si un canard Fusion 1-4 est équipé": "Augmente de 150% la production si un canard Fusion 1-4 est équipé",
         "Si équipé à un canard Peu Commun : reçoit 10 niveaux": "Si équipé à un canard Peu Commun : reçoit 10 niveaux",
         "Si équipé à un canard C/PC/Rare : reçoit 35 niveaux": "Si équipé à un canard C/PC/Rare : reçoit 35 niveaux",
-        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux"
+        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux",
+
+        "Gemmes": "Gemmes",
+        "canards au total": "canards au total",
+        "canards": "canards",
+        "canard": "canard",
+        "Chargement des canards...": "Chargement des canards...",
+        "Défaut (K, M, B)": "Défaut (K, M, B)",
+        "Standard (a, b, c)": "Standard (a, b, c)",
+        "Scientifique (e3, e6)": "Scientifique (e3, e6)",
     ],
     .en: [
         "Jouer": "Play",
@@ -1355,7 +1364,16 @@ let translations: [AppLanguage: [String: String]] = [
         "Augmente de 150% la production si un canard Fusion 1-4 est équipé": "Increases production by 150% if a Fusion 1-4 duck is equipped",
         "Si équipé à un canard Peu Commun : reçoit 10 niveaux": "If equipped on an Uncommon duck: receives 10 levels",
         "Si équipé à un canard C/PC/Rare : reçoit 35 niveaux": "If equipped on a C/UC/Rare duck: receives 35 levels",
-        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "If equipped on an Epic/Leg/Myth duck: receives 40 levels"
+        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "If equipped on an Epic/Leg/Myth duck: receives 40 levels",
+
+        "Gemmes": "Gems",
+        "canards au total": "ducks in total",
+        "canards": "ducks",
+        "canard": "duck",
+        "Chargement des canards...": "Loading ducks...",
+        "Défaut (K, M, B)": "Default (K, M, B)",
+        "Standard (a, b, c)": "Standard (a, b, c)",
+        "Scientifique (e3, e6)": "Scientific (e3, e6)",
     ],
     .es: [
         "Jouer": "Jugar",
@@ -2017,6 +2035,15 @@ let translations: [AppLanguage: [String: String]] = [
         "Augmente de 150% la production si un canard Fusion 1-4 est équipé": "Aumenta la producción un 150% si se equipa un pato Fusión 1-4",
         "Si équipé à un canard Peu Commun : reçoit 10 niveaux": "Si se equipa a un pato Poco Común: recibe 10 niveles",
         "Si équipé à un canard C/PC/Rare : reçoit 35 niveaux": "Si se equipa a un pato C/PC/Raro: recibe 35 niveles",
-        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "Si se equipa a un pato Épico/Leg/Mít: recibe 40 niveles"
+        "Si équipé à un canard Épique/Lég/Myth : reçoit 40 niveaux": "Si se equipa a un pato Épico/Leg/Mít: recibe 40 niveles",
+
+        "Gemmes": "Gemas",
+        "canards au total": "patos en total",
+        "canards": "patos",
+        "canard": "pato",
+        "Chargement des canards...": "Cargando patos...",
+        "Défaut (K, M, B)": "Predeterminado (K, M, B)",
+        "Standard (a, b, c)": "Estándar (a, b, c)",
+        "Scientifique (e3, e6)": "Científico (e3, e6)",
     ]
 ]

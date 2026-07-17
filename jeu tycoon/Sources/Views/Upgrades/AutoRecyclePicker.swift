@@ -12,11 +12,11 @@ struct AutoRecyclePicker: View {
         Menu {
             Button(tr("Désactivé")) { autoRecycleRarityRaw = "None" }
             ForEach(DuckRarity.allCases, id: \.self) { rarity in
-                Button(rarity.rawValue) { autoRecycleRarityRaw = rarity.rawValue }
+                Button(tr(rarity.rawValue)) { autoRecycleRarityRaw = rarity.rawValue }
             }
         } label: {
             HStack {
-                Text("Filtre: \(autoRecycleRarityRaw)")
+                Text("\(tr("Filtre")) : \(autoRecycleRarityRaw == "None" ? tr("Désactivé") : tr(autoRecycleRarityRaw))")
                     .font(.system(size: 10, weight: .bold))
                 Spacer()
                 Image(systemName: "chevron.up.chevron.down")

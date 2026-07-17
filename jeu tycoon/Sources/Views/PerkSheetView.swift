@@ -40,7 +40,7 @@ struct PerkSheetView: View {
                     }
                 }
             }
-            .navigationTitle("Inventaire de Perks (\(gameManager.perksInventory.count))")
+            .navigationTitle("\(tr("Inventaire de Perks")) (\(gameManager.perksInventory.count))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

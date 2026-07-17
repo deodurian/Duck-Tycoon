@@ -304,7 +304,7 @@ struct InventoryView: View {
             
             ScrollView {
                 if isLoading {
-                    ProgressView("Chargement des canards...")
+                    ProgressView(tr("Chargement des canards..."))
                         .padding(.top, 50)
                 } else {
                     LazyVGrid(columns: columns, spacing: 8) {
