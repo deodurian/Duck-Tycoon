@@ -52,8 +52,7 @@ struct SettingsView: View {
                                             Text(lang.rawValue).tag(lang)
                                         }
                                     }
-                                    .accentColor(.white)
-                                    .pickerStyle(MenuPickerStyle())
+                                    .pickerStyle(.segmented)
                                 }
                                 .padding()
                                 .background(Color.white.opacity(0.05))
@@ -68,8 +67,7 @@ struct SettingsView: View {
                                             Text(style.rawValue).tag(style)
                                         }
                                     }
-                                    .accentColor(.white)
-                                    .pickerStyle(MenuPickerStyle())
+                                    .pickerStyle(.segmented)
                                 }
                                 .padding()
                                 .background(Color.white.opacity(0.05))
