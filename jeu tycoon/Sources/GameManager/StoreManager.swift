@@ -81,25 +81,25 @@ class StoreManager {
     // Définition de tous les produits Virtuels (achetables en Gemmes)
     let virtualProducts: [VirtualShopProduct] = [
         // Argent fixe
-        .money(amount: 10_000, gemCost: 50),
-        .money(amount: 100_000, gemCost: 250),
-        .money(amount: 1_000_000, gemCost: 1200),
-        .money(amount: 10_000_000, gemCost: 2500),
-        .money(amount: 100_000_000, gemCost: 6500),
-        .money(amount: 1_000_000_000, gemCost: 15000),
+        .money(amount: 10_000, gemCost: 10),
+        .money(amount: 100_000, gemCost: 50),
+        .money(amount: 1_000_000, gemCost: 200),
+        .money(amount: 10_000_000, gemCost: 500),
+        .money(amount: 100_000_000, gemCost: 1200),
+        .money(amount: 1_000_000_000, gemCost: 2500),
         
         // Argent sur la durée
-        .moneyOverTime(hours: 1, gemCost: 50),
-        .moneyOverTime(hours: 4, gemCost: 250),
-        .moneyOverTime(hours: 12, gemCost: 1200),
+        .moneyOverTime(hours: 1, gemCost: 10),
+        .moneyOverTime(hours: 4, gemCost: 50),
+        .moneyOverTime(hours: 12, gemCost: 200),
         
         // ADN
-        .dna(amount: 100, gemCost: 50),
-        .dna(amount: 500, gemCost: 250),
-        .dna(amount: 2500, gemCost: 1200),
-        .dna(amount: 10_000, gemCost: 2500),
-        .dna(amount: 50_000, gemCost: 6500),
-        .dna(amount: 250_000, gemCost: 15000)
+        .dna(amount: 100, gemCost: 10),
+        .dna(amount: 500, gemCost: 50),
+        .dna(amount: 2500, gemCost: 200),
+        .dna(amount: 10_000, gemCost: 500),
+        .dna(amount: 50_000, gemCost: 1200),
+        .dna(amount: 250_000, gemCost: 2500)
     ]
     
     private var updatesTask: Task<Void, Never>? = nil
