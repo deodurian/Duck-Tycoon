@@ -343,7 +343,7 @@ struct RitualView: View {
                     }
             }
         }
-        .alert("Règles du Rituel", isPresented: $showInfoAlert) {
+        .alert(tr("Règles du Rituel"), isPresented: $showInfoAlert) {
             Button(tr("Compris"), role: .cancel) {}
         } message: {
             Text(tr("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"))

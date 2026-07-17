@@ -372,7 +372,7 @@ struct InventoryView: View {
                     .environment(gameManager)
             }
         }
-        .alert("Niveaux, Mutations & Tailles", isPresented: $showStatsInfo) {
+        .alert(tr("Niveaux, Mutations & Tailles"), isPresented: $showStatsInfo) {
             Button(tr("Compris"), role: .cancel) {}
         } message: {
             Text(tr("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3"))

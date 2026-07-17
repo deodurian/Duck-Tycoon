@@ -213,7 +213,7 @@ struct DuckDetailView: View {
             .padding()
             }
         }
-        .alert("Confirmer le recyclage", isPresented: $showingRecycleAlert) {
+        .alert(tr("Confirmer le recyclage"), isPresented: $showingRecycleAlert) {
             Button(tr("Annuler"), role: .cancel) { }
             Button(tr("Oui, Recycler"), role: .destructive) {
                 gameManager.recycleDucks(ids: [currentDuck.id])
@@ -395,7 +395,7 @@ struct BulkRecycleSheet: View {
                     Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Comment ça marche ?", isPresented: $showInfo) {
+            .alert(tr("Comment ça marche ?"), isPresented: $showInfo) {
                 Button(tr("OK"), role: .cancel) { }
             } message: {
                 Text(tr("Recyclage en Lot : S'applique à la rareté sélectionnée et toutes les raretés inférieures. Pour la rareté exacte sélectionnée, s'applique au niveau choisi et à ses niveaux inférieurs.\n\nRecycler la rareté : Détruit TOUS les canards non-assignés de la rareté sélectionnée, quel que soit leur niveau."))

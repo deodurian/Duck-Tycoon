@@ -137,7 +137,7 @@ struct LevelSheetView: View {
                     Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Comment gagner de l'XP ?", isPresented: $showInfo) {
+            .alert(tr("Comment gagner de l'XP ?"), isPresented: $showInfo) {
                 Button(tr("Compris"), role: .cancel) { }
             } message: {
                 Text(tr("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."))

@@ -53,7 +53,7 @@ struct PerkSheetView: View {
                     Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Que sont les Perks ?", isPresented: $showInfo) {
+            .alert(tr("Que sont les Perks ?"), isPresented: $showInfo) {
                 Button(tr("Compris"), role: .cancel) { }
             } message: {
                 Text(tr("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"))

@@ -76,7 +76,7 @@ struct PrestigeView: View {
                 }
             }
         }
-        .alert("Confirmation de Prestige", isPresented: $showingPrestigeAlert) {
+        .alert(tr("Confirmation de Prestige"), isPresented: $showingPrestigeAlert) {
             Button(tr("Annuler"), role: .cancel) { }
             Button(tr("Confirmer"), role: .destructive) {
                 let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
