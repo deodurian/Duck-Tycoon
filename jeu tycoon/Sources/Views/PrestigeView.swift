@@ -51,7 +51,7 @@ struct PrestigeView: View {
                                 selectedTab = tab
                             }
                         }) {
-                            Text(tab.rawValue)
+                            Text(tr(tab.rawValue))
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundColor(selectedTab == tab ? .black : .yellow.opacity(0.7))
                                 .frame(maxWidth: .infinity)
@@ -275,7 +275,7 @@ struct PrestigeView: View {
             Text(value)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-            Text(title)
+            Text(tr(title))
                 .font(.caption2)
                 .foregroundColor(.gray)
         }
@@ -293,7 +293,7 @@ struct PrestigeView: View {
                 .foregroundColor(locked ? .gray : color)
                 .frame(width: 24)
             
-            Text(label)
+            Text(tr(label))
                 .font(.subheadline)
                 .foregroundColor(locked ? .gray : .white)
             
@@ -429,7 +429,7 @@ private struct PrestigeUpgradeCard: View {
     var body: some View {
         VStack(spacing: 6) {
             // Nom
-            Text(upgrade.name)
+            Text(tr(upgrade.name))
                 .font(.caption.weight(.bold))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)

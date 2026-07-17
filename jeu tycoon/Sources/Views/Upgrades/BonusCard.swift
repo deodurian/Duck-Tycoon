@@ -41,7 +41,7 @@ struct BonusCard: View {
                         .font(.system(size: 15))
                         .foregroundColor(rarityColor)
                 }
-                Text(def.name)
+                Text(tr(def.name))
                     .font(.caption.bold())
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
@@ -50,7 +50,7 @@ struct BonusCard: View {
             
             // Effet et Niveau
             HStack {
-                Text(def.effectDescription)
+                Text(tr(def.effectDescription))
                     .font(.system(size: 10))
                     .foregroundColor(.gray)
                 Spacer()

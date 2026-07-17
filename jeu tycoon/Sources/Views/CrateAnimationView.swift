@@ -208,7 +208,7 @@ struct CrateAnimationView: View {
             Spacer()
             
             // Title with rarity-colored glow
-            Text(bestRarity.revealTitle)
+            Text(tr(bestRarity.revealTitle))
                 .font(.system(size: 28, weight: .black, design: .rounded))
                 .foregroundColor(.white)
                 .shadow(color: bestRarity.color.opacity(0.8), radius: 10)

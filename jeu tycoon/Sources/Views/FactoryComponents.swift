@@ -71,7 +71,7 @@ struct FactoryRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(factory.name)
+                    Text(factory.name.replacingOccurrences(of: "Usine", with: tr("Usine")))
                         .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
@@ -127,7 +127,7 @@ struct FactoryRow: View {
                                         HStack(spacing: 3) {
                                             Image(systemName: "star.fill")
                                                 .font(.system(size: 7))
-                                            Text(perk.name)
+                                            Text(tr(perk.name))
                                                 .font(.system(size: 10, weight: .semibold))
                                         }
                                         .foregroundColor(perk.rarity.color)
@@ -395,7 +395,7 @@ struct FactoryRow: View {
             gameManager.upgradeFactoryLevel(factoryId: factory.id, levels: levels)
         }) {
             VStack(spacing: 2) {
-                Text(label)
+                Text(tr(label))
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                 Text(cost.formattedString())
                     .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -519,7 +519,7 @@ struct DuckSelectionSheet: View {
                         Menu {
                             Picker(tr("Trier par"), selection: $sortOption) {
                                 ForEach(InventorySortOption.allCases, id: \.self) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(tr(option.rawValue)).tag(option)
                                 }
                             }
                         } label: {

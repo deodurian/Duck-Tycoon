@@ -48,7 +48,7 @@ struct AutoFactoryCard: View {
                         .foregroundColor(level == maxLevel ? .green : .orange)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(factory.name)
+                    Text(factory.name.replacingOccurrences(of: "Usine", with: tr("Usine")))
                         .font(.caption.bold())
                         .lineLimit(1)
                     

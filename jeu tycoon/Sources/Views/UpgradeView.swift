@@ -56,7 +56,7 @@ struct UpgradeView: View {
                             VStack(spacing: 4) {
                                 Image(systemName: tab.icon)
                                     .font(.system(size: 14))
-                                Text(tab.rawValue)
+                                Text(tr(tab.rawValue))
                                     .font(.system(size: 11, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)

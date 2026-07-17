@@ -36,7 +36,7 @@ struct StartScreenView: View {
                             .modifier(BlinkEffect())
                     } else if phase == .loading {
                         VStack(spacing: 15) {
-                            Text(loadingText)
+                            Text(tr(loadingText))
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .animation(.none, value: loadingText)

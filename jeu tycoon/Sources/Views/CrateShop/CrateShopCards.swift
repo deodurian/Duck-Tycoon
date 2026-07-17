@@ -52,7 +52,7 @@ struct PremiumCrateCard: View {
                         }
                     }
                     
-                    Text(crate.type.shortName)
+                    Text(tr(crate.type.shortName))
                         .font(.system(size: 15, weight: .black, design: .rounded))
                         .foregroundColor(crate.type.textColor)
                 }
@@ -485,7 +485,7 @@ struct ProbabilityPopup: View {
                                         Circle()
                                             .fill(item.rarity.color)
                                             .frame(width: 10, height: 10)
-                                        Text(item.rarity.rawValue)
+                                        Text(tr(item.rarity.rawValue))
                                             .bold()
                                             .foregroundColor(item.rarity.color)
                                         Text("(x\(String(format: "%g", item.rarity.multiplier)))")
@@ -553,7 +553,7 @@ struct ProbabilityPopup: View {
     private func probRow(name: String, percentage: Double, color: Color, multiplier: Double? = nil, isLast: Bool = false) -> some View {
         VStack(spacing: 0) {
             HStack {
-                Text(name)
+                Text(tr(name))
                     .foregroundColor(color)
                     .bold(color != .primary)
                 if let m = multiplier {
@@ -612,7 +612,7 @@ struct BulkCrateOpeningSheet: View {
                         .shadow(color: .blue.opacity(0.5), radius: 10)
                     Text(tr("Ouverture Multiple"))
                         .font(.title2.bold())
-                    Text(crate.type.rawValue)
+                    Text(tr(crate.type.rawValue))
                         .font(.headline)
                         .foregroundColor(.gray)
                 }
@@ -646,7 +646,7 @@ struct BulkCrateOpeningSheet: View {
                             }) {
                             let label = val.formattedString()
                             let isSelected = selectedAmount == val
-                            Text(label)
+                            Text(tr(label))
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)

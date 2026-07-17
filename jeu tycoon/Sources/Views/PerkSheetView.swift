@@ -97,7 +97,7 @@ struct PerkCardView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(perk.name)
+                    Text(tr(perk.name))
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
                     
@@ -112,7 +112,7 @@ struct PerkCardView: View {
                     }
                 }
                 
-                Text(perk.description)
+                Text(tr(perk.description))
                     .font(.system(size: 10))
                     .foregroundColor(.white.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
@@ -121,7 +121,7 @@ struct PerkCardView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 8) {
-                Text(perk.rarity.rawValue)
+                Text(tr(perk.rarity.rawValue))
                     .font(.caption.bold())
                     .foregroundColor(perk.rarity.color)
                     .padding(.horizontal, 8)

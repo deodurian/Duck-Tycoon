@@ -60,7 +60,7 @@ struct SettingsView: View {
                                     Spacer()
                                     Picker("", selection: selectedLanguage) {
                                         ForEach(AppLanguage.allCases) { lang in
-                                            Text(lang.rawValue).tag(lang)
+                                            Text(tr(lang.rawValue)).tag(lang)
                                         }
                                     }
                                     .accentColor(.white)
@@ -76,7 +76,7 @@ struct SettingsView: View {
                                     Spacer()
                                     Picker("", selection: $numberFormatStyle) {
                                         ForEach(NumberFormatStyle.allCases) { style in
-                                            Text(style.rawValue).tag(style)
+                                            Text(tr(style.rawValue)).tag(style)
                                         }
                                     }
                                     .accentColor(.white)

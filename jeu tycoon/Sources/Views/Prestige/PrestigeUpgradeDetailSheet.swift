@@ -21,7 +21,7 @@ struct PrestigeUpgradeDetailSheet: View {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 8) {
-                    Text(upgrade.name)
+                    Text(tr(upgrade.name))
                         .font(.title2.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(colors: [.yellow, .orange], startPoint: .leading, endPoint: .trailing)
@@ -42,7 +42,7 @@ struct PrestigeUpgradeDetailSheet: View {
                 .padding(.top, 24)
                 
                 // Description
-                Text(upgrade.description)
+                Text(tr(upgrade.description))
                     .font(.body)
                     .foregroundColor(.white.opacity(0.85))
                     .multilineTextAlignment(.center)

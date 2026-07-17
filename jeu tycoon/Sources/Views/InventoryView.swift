@@ -281,13 +281,13 @@ struct InventoryView: View {
                     Menu {
                         Picker(tr("Trier par"), selection: $sortOption) {
                             ForEach(InventorySortOption.allCases, id: \.self) { option in
-                                Text(option.rawValue).tag(option)
+                                Text(tr(option.rawValue)).tag(option)
                             }
                         }
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.up.arrow.down")
-                            Text(sortOption.rawValue)
+                            Text(tr(sortOption.rawValue))
                         }
                         .font(.subheadline)
                         .padding(.horizontal, 10)

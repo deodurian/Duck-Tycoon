@@ -43,7 +43,7 @@ struct RevealDuckCard: View {
                     .frame(width: isCompact ? 45 : 80, height: isCompact ? 45 : 80)
                     .shadow(color: .white.opacity(0.5), radius: 5)
                 
-                Text(duck.rarity.rawValue)
+                Text(tr(duck.rarity.rawValue))
                     .font(isCompact ? .caption.bold() : .headline.bold())
                     .foregroundColor(.white)
                     .lineLimit(1)
@@ -53,7 +53,7 @@ struct RevealDuckCard: View {
                     // Show size and mutation if special
                     HStack(spacing: 4) {
                         if duck.size != .petit {
-                            Text(duck.size.rawValue)
+                            Text(tr(duck.size.rawValue))
                                 .font(.caption2)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -61,7 +61,7 @@ struct RevealDuckCard: View {
                                 .cornerRadius(4)
                         }
                         if duck.mutation != .aucune {
-                            Text(duck.mutation.rawValue)
+                            Text(tr(duck.mutation.rawValue))
                                 .font(.caption2)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -115,7 +115,7 @@ struct AggregatedDuckCard: View {
                 .frame(width: 50, height: 50)
                 .shadow(color: .white.opacity(0.4), radius: 3)
             
-            Text(rarity.rawValue)
+            Text(tr(rarity.rawValue))
                 .font(.caption2.bold())
                 .foregroundColor(.white)
                 .lineLimit(1)

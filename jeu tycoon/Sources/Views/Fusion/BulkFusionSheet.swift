@@ -83,7 +83,7 @@ struct BulkFusionSheet: View {
                                                 .opacity(selectedRarity == rarity ? 1.0 : 0.7)
                                         }
                                         
-                                        Text(rarity.rawValue)
+                                        Text(tr(rarity.rawValue))
                                             .font(.subheadline)
                                             .fontWeight(selectedRarity == rarity ? .bold : .medium)
                                             .foregroundColor(selectedRarity == rarity ? rarity.color : .primary)

@@ -93,7 +93,7 @@ struct ShopSectionView: View {
             HStack {
                 Image(systemName: icon)
                     .foregroundColor(color)
-                Text(title)
+                Text(tr(title))
                     .font(.title2)
                     .bold()
                     .foregroundColor(.white)
@@ -140,7 +140,7 @@ struct ShopItemCard: View {
                 Text(definition.type.iconName)
                     .font(.system(size: 30))
                 
-                Text(definition.type.title)
+                Text(tr(definition.type.title))
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)

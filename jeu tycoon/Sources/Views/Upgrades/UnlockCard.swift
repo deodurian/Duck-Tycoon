@@ -31,7 +31,7 @@ struct UnlockCard: View {
                         .font(.system(size: 15))
                         .foregroundColor(isPurchased ? .green : .orange)
                 }
-                Text(def.name)
+                Text(tr(def.name))
                     .font(.caption.bold())
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
@@ -39,7 +39,7 @@ struct UnlockCard: View {
             }
             
             // Description
-            Text(def.effectDescription)
+            Text(tr(def.effectDescription))
                 .font(.system(size: 10))
                 .foregroundColor(.gray)
                 .lineLimit(2)

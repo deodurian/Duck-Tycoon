@@ -114,7 +114,7 @@ struct DuckDetailView: View {
                         HStack {
                             Image(systemName: "star.fill")
                                 .foregroundColor(perk.rarity.color)
-                            Text(perk.name)
+                            Text(tr(perk.name))
                                 .font(.subheadline.bold())
                                 .foregroundColor(.primary)
                         }
@@ -444,7 +444,7 @@ struct InventorySummaryView: View {
                         Circle()
                             .fill(selected.color)
                             .frame(width: 14, height: 14)
-                        Text(selected.rawValue)
+                        Text(tr(selected.rawValue))
                             .font(.headline)
                             .foregroundColor(selected.color)
                         Spacer()
@@ -504,7 +504,7 @@ struct InventorySummaryView: View {
                                     .animation(.spring(response: 0.3), value: isSelected)
                                 
                                 // Label rareté
-                                Text(rarity.shortName)
+                                Text(tr(rarity.shortName))
                                     .font(.system(size: 9, weight: .medium))
                                     .foregroundColor(isSelected ? rarity.color : .gray)
                                     .lineLimit(1)
@@ -588,7 +588,7 @@ struct RaritySelectionButton: View {
                         .opacity(selectedRarity == rarity ? 1.0 : 0.7)
                 }
                 
-                Text(rarity.rawValue)
+                Text(tr(rarity.rawValue))
                     .font(.subheadline)
                     .fontWeight(selectedRarity == rarity ? .bold : .medium)
                     .foregroundColor(selectedRarity == rarity ? rarity.color : .primary)
@@ -625,7 +625,7 @@ struct DuckUpgradeButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Text(title)
+                Text(tr(title))
                     .font(.headline)
                     .foregroundColor(.primary)
                 
@@ -644,7 +644,7 @@ struct DuckUpgradeButton: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                 } else {
-                    Text(maxLabel)
+                    Text(tr(maxLabel))
                         .font(.subheadline)
                         .foregroundColor(.gray)
                         .bold()

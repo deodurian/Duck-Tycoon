@@ -49,7 +49,7 @@ struct MissionSheetView: View {
                     VStack(spacing: 15) {
                         Picker(tr("Type de mission"), selection: $selectedTab) {
                             ForEach(MissionTypeTab.allCases, id: \.self) { tab in
-                                Text(tab.rawValue).tag(tab)
+                                Text(tr(tab.rawValue)).tag(tab)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -80,7 +80,7 @@ struct MissionRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(mission.title)
+                Text(tr(mission.title))
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -111,7 +111,7 @@ struct MissionRowView: View {
                 }
             }
             
-            Text(mission.description)
+            Text(tr(mission.description))
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
             
