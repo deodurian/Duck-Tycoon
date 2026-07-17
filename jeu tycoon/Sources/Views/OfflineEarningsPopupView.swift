@@ -12,19 +12,19 @@ struct OfflineEarningsPopupView: View {
                     .highPriorityGesture(DragGesture(minimumDistance: 0))
                 
                 VStack(spacing: 25) {
-                    Text("De Retour !")
+                    Text(tr("De Retour !"))
                         .font(.system(size: 34, weight: .black, design: .rounded))
                         .foregroundColor(.white)
                         .shadow(color: .blue, radius: 5)
                     
-                    Text("Pendant votre absence\n(\(formatTime(earnings.seconds)))")
+                    Text("\(tr("Pendant votre absence"))\n(\(formatTime(earnings.seconds)))")
                         .multilineTextAlignment(.center)
                         .font(.headline)
                         .foregroundColor(.gray)
                     
                     VStack(spacing: 15) {
                         HStack {
-                            Text("💰")
+                            Text(tr("💰"))
                                 .font(.title)
                             Text(earnings.money.formattedString())
                                 .font(.title2.bold())
@@ -36,7 +36,7 @@ struct OfflineEarningsPopupView: View {
                         .cornerRadius(12)
                         
                         HStack {
-                            Text("🧬")
+                            Text(tr("🧬"))
                                 .font(.title)
                             Text(earnings.dna.formattedString())
                                 .font(.title2.bold())
@@ -48,7 +48,7 @@ struct OfflineEarningsPopupView: View {
                         .cornerRadius(12)
                         
                         HStack {
-                            Text("⭐")
+                            Text(tr("⭐"))
                                 .font(.title)
                             Text("\(earnings.xp)\(tr(" XP"))")
                                 .font(.title2.bold())
@@ -72,7 +72,7 @@ struct OfflineEarningsPopupView: View {
                             }
                         }) {
                             HStack {
-                                Text("Récupérer X2")
+                                Text(tr("Récupérer X2"))
                                     .font(.headline.bold())
                                 Spacer()
                                 Image(systemName: "play.tv.fill")
@@ -92,7 +92,7 @@ struct OfflineEarningsPopupView: View {
                                 gameManager.claimOfflineEarnings(multiplier: 1.0)
                             }
                         }) {
-                            Text("Récupérer")
+                            Text(tr("Récupérer"))
                                 .font(.subheadline.bold())
                                 .padding()
                                 .frame(maxWidth: .infinity)

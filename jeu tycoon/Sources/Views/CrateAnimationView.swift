@@ -99,7 +99,7 @@ struct CrateAnimationView: View {
             if showTapHint {
                 VStack {
                     Spacer()
-                    Text("Appuyer pour continuer")
+                    Text(tr("Appuyer pour continuer"))
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.6))
                         .padding(.bottom, 60)

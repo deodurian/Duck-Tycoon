@@ -20,7 +20,7 @@ struct PerkSelectionSheet: View {
                         let equippedIds = getEquippedPerks()
                         if !equippedIds.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Perks Équipés")
+                                Text(tr("Perks Équipés"))
                                     .font(.headline)
                                     .foregroundColor(.gray)
                                     .padding(.horizontal)
@@ -53,7 +53,7 @@ struct PerkSelectionSheet: View {
                         
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("Perks Disponibles")
+                                Text(tr("Perks Disponibles"))
                                     .font(.headline)
                                     .foregroundColor(.gray)
                                 
@@ -67,7 +67,7 @@ struct PerkSelectionSheet: View {
                             .padding(.horizontal)
                             
                             if selectionPerks.isEmpty {
-                                Text("Aucun perk disponible de ce type.")
+                                Text(tr("Aucun perk disponible de ce type."))
                                     .foregroundColor(.gray)
                                     .padding()
                             } else {
@@ -107,7 +107,7 @@ struct PerkSelectionSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
         }

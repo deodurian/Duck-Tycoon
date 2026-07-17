@@ -32,7 +32,7 @@ struct PrestigeUpgradeDetailSheet: View {
                         Text("Palier \(upgrade.tier)")
                             .font(.caption.weight(.semibold))
                             .foregroundColor(.gray)
-                        Text("•")
+                        Text(tr("•"))
                             .foregroundColor(.gray)
                         Text("\(upgrade.cost) ⭐️")
                             .font(.caption.weight(.semibold))
@@ -55,7 +55,7 @@ struct PrestigeUpgradeDetailSheet: View {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.title3)
-                        Text("Compétence Acquise")
+                        Text(tr("Compétence Acquise"))
                             .font(.headline.weight(.bold))
                     }
                     .foregroundColor(.green)
@@ -106,7 +106,7 @@ struct PrestigeUpgradeDetailSheet: View {
                         .padding(.horizontal, 24)
                         
                         if !canAfford {
-                            Text("Étoiles libres insuffisantes.")
+                            Text(tr("Étoiles libres insuffisantes."))
                                 .font(.caption)
                                 .foregroundColor(.red.opacity(0.7))
                         }

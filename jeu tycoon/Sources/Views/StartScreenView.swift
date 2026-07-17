@@ -23,7 +23,7 @@ struct StartScreenView: View {
                 VStack {
                     Spacer()
                     
-                    Text("DUCK TYCOON")
+                    Text(tr("DUCK TYCOON"))
                         .font(.system(size: 48, weight: .heavy, design: .rounded))
                         .foregroundColor(.yellow)
                         .shadow(color: .orange, radius: 5, x: 0, y: 3)
@@ -65,7 +65,7 @@ struct StartScreenView: View {
                     Spacer()
                     
                     HStack {
-                        Text("v1.0.0")
+                        Text(tr("v1.0.0"))
                             .font(.caption)
                             .foregroundColor(.gray)
                         Spacer()

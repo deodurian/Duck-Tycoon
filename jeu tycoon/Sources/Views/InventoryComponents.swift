@@ -76,7 +76,7 @@ struct DuckDetailView: View {
                     .cornerRadius(8)
             }
             
-            Text("Lvl \(dynamicStats.level)")
+            Text("\(tr("Lv.")) \(dynamicStats.level)")
                 .font(.headline)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
@@ -89,12 +89,12 @@ struct DuckDetailView: View {
                 .minimumScaleFactor(0.5)
             
             HStack {
-                Text("Taille: \(dynamicStats.size.rawValue)")
+                Text("\(tr("Taille:")) \(dynamicStats.size.rawValue)")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)
                 
-                Text("Mutation: \(dynamicStats.mutation.rawValue)")
+                Text("\(tr("Mutation:")) \(dynamicStats.mutation.rawValue)")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)
@@ -427,7 +427,7 @@ struct InventorySummaryView: View {
                         .foregroundStyle(
                             LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
                         )
-                    Text("canards au total")
+                    Text(tr("canards au total"))
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
@@ -448,7 +448,7 @@ struct InventorySummaryView: View {
                             .font(.headline)
                             .foregroundColor(selected.color)
                         Spacer()
-                        Text("\(count) canard\(count > 1 ? "s" : "")")
+                        Text("\(count) \(tr(count > 1 ? "canards" : "canard"))")
                             .font(.headline)
                             .bold()
                         

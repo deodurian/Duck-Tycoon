@@ -45,7 +45,7 @@ struct BulkFusionSheet: View {
         NavigationStack {
             ScrollView {
                 HStack {
-                    Text("Auto-Fusion")
+                    Text(tr("Auto-Fusion"))
                         .font(.largeTitle.bold())
                     Button(action: { showInfo = true }) {
                         Image(systemName: "info.circle")
@@ -58,7 +58,7 @@ struct BulkFusionSheet: View {
                 VStack(spacing: 24) {
                     // Selection section
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("Rareté cible")
+                        Text(tr("Rareté cible"))
                             .font(.headline)
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -123,7 +123,7 @@ struct BulkFusionSheet: View {
                         VStack(spacing: 15) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("Fusions possibles")
+                                    Text(tr("Fusions possibles"))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                     Text("\(costInfo.fusionsCount)")
@@ -131,14 +131,14 @@ struct BulkFusionSheet: View {
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 5) {
-                                    Text("Coût de l'opération")
+                                    Text(tr("Coût de l'opération"))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                     VStack(alignment: .trailing) {
                                         Text("\(costInfo.totalCost.formattedString()) 💰")
                                             .font(.title2.bold())
                                             .foregroundColor(gameManager.money >= costInfo.totalCost ? .primary : .red)
-                                        Text("(Taxe 100%)")
+                                        Text(tr("(Taxe 100%)"))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
@@ -156,7 +156,7 @@ struct BulkFusionSheet: View {
                                         }
                                     }
                                 }) {
-                                    Text("TOUT FUSIONNER")
+                                    Text(tr("TOUT FUSIONNER"))
                                         .font(.headline.bold())
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
@@ -177,7 +177,7 @@ struct BulkFusionSheet: View {
                     // Mega-Fusion section
                     if gameManager.isUnlocked(.megaFusion) {
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Méga-Fusion")
+                            Text(tr("Méga-Fusion"))
                                 .font(.headline)
                                 .foregroundColor(.purple)
                             
@@ -186,14 +186,14 @@ struct BulkFusionSheet: View {
                                     .padding()
                             } else {
                                 HStack {
-                                    Text("\(megaCostInfo.fusionsCount) fusions estimées")
+                                    Text("\(megaCostInfo.fusionsCount)\(tr(" fusions estimées"))")
                                         .font(.subheadline.bold())
                                     Spacer()
                                     VStack(alignment: .trailing) {
                                         Text("\(megaCostInfo.totalCost.formattedString()) 💰")
                                             .font(.title2.bold())
                                             .foregroundColor(gameManager.money >= megaCostInfo.totalCost ? .primary : .red)
-                                        Text("(Taxe 100%)")
+                                        Text(tr("(Taxe 100%)"))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
@@ -209,7 +209,7 @@ struct BulkFusionSheet: View {
                                             dismiss()
                                         }
                                     }) {
-                                        Text("LANCER MÉGA-FUSION")
+                                        Text(tr("LANCER MÉGA-FUSION"))
                                             .font(.headline.bold())
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 14)
@@ -238,11 +238,11 @@ struct BulkFusionSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
             .alert("Comment ça marche ?", isPresented: $showInfo) {
-                Button("OK", role: .cancel) { }
+                Button(tr("OK"), role: .cancel) { }
             } message: {
                 Text("Auto-Fusion : S'applique uniquement à la rareté sélectionnée. Assemble tous les groupes de 3 canards identiques.\n\nMéga-Fusion : Fusionne TOUS les canards de l'inventaire en cascade jusqu'à épuisement des canards ou de l'argent.")
             }

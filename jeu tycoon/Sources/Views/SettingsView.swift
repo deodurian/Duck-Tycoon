@@ -144,7 +144,7 @@ struct SettingsView: View {
                         }
                         Spacer(minLength: 40)
                         
-                        Text("CanardFactory v1.0")
+                        Text(tr("CanardFactory v1.0"))
                             .font(.caption)
                             .foregroundColor(.gray)
                     }

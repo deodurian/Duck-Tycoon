@@ -15,13 +15,13 @@ struct IAPShopView: View {
             
             VStack(spacing: 0) {
                 // En-tête
-                Text("Banque")
+                Text(tr("Banque"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .padding(.top, 10)
                 
-                Text("Achats Premium")
+                Text(tr("Achats Premium"))
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.bottom, 10)

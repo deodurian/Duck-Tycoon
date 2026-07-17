@@ -17,8 +17,8 @@ struct PerkSheetView: View {
                     let duckPerksCount = gameManager.perksInventory.filter { $0.type == .duck }.count
                     
                     Picker(tr("Type de Perks"), selection: $selectedTab) {
-                        Text("Usines (\(factoryPerksCount))").tag(0)
-                        Text("Canards (\(duckPerksCount))").tag(1)
+                        Text("\(tr("Usines")) (\(factoryPerksCount))").tag(0)
+                        Text("\(tr("Canards")) (\(duckPerksCount))").tag(1)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding()
@@ -31,7 +31,7 @@ struct PerkSheetView: View {
                                 PerkCardView(perk: perk, showRecycle: true)
                             }
                             if filteredPerks.isEmpty {
-                                Text("Aucun perk de ce type.")
+                                Text(tr("Aucun perk de ce type."))
                                     .foregroundColor(.gray)
                                     .padding()
                             }
@@ -50,13 +50,13 @@ struct PerkSheetView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
             .alert("Que sont les Perks ?", isPresented: $showInfo) {
-                Button("Compris", role: .cancel) { }
+                Button(tr("Compris"), role: .cancel) { }
             } message: {
-                Text("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !")
+                Text(tr("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"))
             }
         }
     }
@@ -102,7 +102,7 @@ struct PerkCardView: View {
                         .foregroundColor(.white)
                     
                     if isEquipped {
-                        Text("ÉQUIPÉ")
+                        Text(tr("ÉQUIPÉ"))
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
@@ -138,12 +138,12 @@ struct PerkCardView: View {
                             .clipShape(Circle())
                     }
                     .alert("Recycler ce Perk ?", isPresented: $showingRecycleAlert) {
-                        Button("Annuler", role: .cancel) { }
-                        Button("Recycler", role: .destructive) {
+                        Button(tr("Annuler"), role: .cancel) { }
+                        Button(tr("Recycler"), role: .destructive) {
                             gameManager.recyclePerk(id: perk.id)
                         }
                     } message: {
-                        Text("Vous obtiendrez \(recycleYield) 🧬")
+                        Text("\(tr("Vous obtiendrez")) \(recycleYield) 🧬")
                     }
                 }
             }

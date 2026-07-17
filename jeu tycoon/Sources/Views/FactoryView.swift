@@ -19,8 +19,8 @@ struct FactoryView: View {
                 HStack(spacing: 12) {
                     Button(action: { showingLevelSheet = true }) {
                         HStack {
-                            Text("⭐")
-                            Text("Niv. \(gameManager.playerLevel)")
+                            Text(tr("⭐"))
+                            Text("\(tr("Niv.")) \(gameManager.playerLevel)")
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                         }
                         .padding(.horizontal, 12)
@@ -32,8 +32,8 @@ struct FactoryView: View {
                     
                     Button(action: { showingQuestSheet = true }) {
                         HStack {
-                            Text("🎯")
-                            Text("Missions")
+                            Text(tr("🎯"))
+                            Text(tr("Missions"))
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                         }
                         .padding(.horizontal, 12)
@@ -45,8 +45,8 @@ struct FactoryView: View {
                     
                     Button(action: { showingPerkSheet = true }) {
                         HStack {
-                            Text("🎒")
-                            Text("Perks")
+                            Text(tr("🎒"))
+                            Text(tr("Perks"))
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                         }
                         .padding(.horizontal, 12)
@@ -63,14 +63,14 @@ struct FactoryView: View {
                 
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Usines")
+                        Text(tr("Usines"))
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(
                                 LinearGradient(colors: [.white, .white.opacity(0.7)], startPoint: .leading, endPoint: .trailing)
                             )
                         
                         let activeCount = gameManager.factories.filter { !$0.assignedDuckIds.isEmpty }.count
-                        Text("\(activeCount) usine\(activeCount > 1 ? "s" : "") actives")
+                        Text("\(activeCount) \(tr(activeCount > 1 ? "usines actives" : "usine active"))")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -135,7 +135,7 @@ struct FactoryView: View {
                         }
                         
                         VStack(spacing: 3) {
-                            Text("Nouvelle Usine")
+                            Text(tr("Nouvelle Usine"))
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                                 .foregroundColor(canAfford ? .white : .gray)
                             

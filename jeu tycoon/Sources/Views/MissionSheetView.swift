@@ -66,7 +66,7 @@ struct MissionSheetView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
         }
@@ -88,7 +88,7 @@ struct MissionRowView: View {
                     Button(action: {
                         gameManager.claimMission(id: mission.id)
                     }) {
-                        Text("Réclamer")
+                        Text(tr("Réclamer"))
                             .font(.caption.bold())
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
@@ -97,13 +97,13 @@ struct MissionRowView: View {
                             .cornerRadius(8)
                     }
                 } else if mission.status == .claimed {
-                    Text("Terminé")
+                    Text(tr("Terminé"))
                         .font(.caption)
                         .foregroundColor(.gray)
                 } else {
                     HStack(spacing: 2) {
                         Text(mission.currentProgress.formattedString())
-                        Text("/")
+                        Text(tr("/"))
                         Text(mission.targetProgress.formattedString())
                     }
                     .font(.caption)

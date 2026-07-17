@@ -39,7 +39,7 @@ struct UpgradeView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Améliorations")
+                Text(tr("Améliorations"))
                     .font(.largeTitle.bold())
                 Spacer()
             }
@@ -116,7 +116,7 @@ struct UpgradeView: View {
                                     HStack(spacing: 8) {
                                         Image(systemName: "gearshape.2.fill")
                                             .foregroundColor(.orange)
-                                        Text("Auto-Amélioration Usine")
+                                        Text(tr("Auto-Amélioration Usine"))
                                             .font(.headline.weight(.bold))
                                     }
                                     .padding(.horizontal)
@@ -136,10 +136,10 @@ struct UpgradeView: View {
                                         .foregroundStyle(
                                             LinearGradient(colors: [.gray.opacity(0.5), .gray.opacity(0.3)], startPoint: .top, endPoint: .bottom)
                                         )
-                                    Text("Débloqué via l'Arbre Stellaire")
+                                    Text(tr("Débloqué via l'Arbre Stellaire"))
                                         .font(.headline)
                                         .foregroundColor(.gray)
-                                    Text("Achetez « Automatisation Initiale » dans le Prestige.")
+                                    Text(tr("Achetez « Automatisation Initiale » dans le Prestige."))
                                         .font(.caption)
                                         .foregroundColor(.gray.opacity(0.7))
                                         .multilineTextAlignment(.center)

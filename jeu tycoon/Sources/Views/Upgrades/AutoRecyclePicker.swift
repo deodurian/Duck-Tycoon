@@ -10,7 +10,7 @@ struct AutoRecyclePicker: View {
     
     var body: some View {
         Menu {
-            Button("Désactivé") { autoRecycleRarityRaw = "None" }
+            Button(tr("Désactivé")) { autoRecycleRarityRaw = "None" }
             ForEach(DuckRarity.allCases, id: \.self) { rarity in
                 Button(rarity.rawValue) { autoRecycleRarityRaw = rarity.rawValue }
             }

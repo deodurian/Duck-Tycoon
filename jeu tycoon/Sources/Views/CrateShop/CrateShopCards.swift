@@ -91,7 +91,7 @@ struct PremiumCrateCard: View {
             .padding(.bottom, 8)
             
             if gameManager.isUnlocked(.holdToOpen) {
-                Text("Maintenir = boucle")
+                Text(tr("Maintenir = boucle"))
                     .font(.system(size: 7, weight: .medium))
                     .foregroundColor(crate.type.textColor.opacity(0.5))
                     .padding(.bottom, 6)
@@ -163,7 +163,7 @@ struct PremiumCrateCard: View {
                     VStack(spacing: 8) {
                         ProgressView()
                             .tint(.white)
-                        Text("Génération...")
+                        Text(tr("Génération..."))
                             .font(.caption)
                             .foregroundColor(.white)
                     }
@@ -276,7 +276,7 @@ struct PremiumCrateCard: View {
                 if !gameManager.isUnlocked(.multipleOpenMax) {
                     Image(systemName: "lock.fill").font(.system(size: 9))
                 }
-                Text("Multiple")
+                Text(tr("Multiple"))
                     .font(.system(size: 11, weight: .bold))
             }
             .frame(maxWidth: .infinity)
@@ -473,7 +473,7 @@ struct ProbabilityPopup: View {
                 VStack(spacing: 20) {
                     // Rareté
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Rareté")
+                        Text(tr("Rareté"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -509,7 +509,7 @@ struct ProbabilityPopup: View {
                     
                     // Taille
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Taille")
+                        Text(tr("Taille"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -526,7 +526,7 @@ struct ProbabilityPopup: View {
                     
                     // Mutation
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Mutation")
+                        Text(tr("Mutation"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -610,7 +610,7 @@ struct BulkCrateOpeningSheet: View {
                             LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
                         )
                         .shadow(color: .blue.opacity(0.5), radius: 10)
-                    Text("Ouverture Multiple")
+                    Text(tr("Ouverture Multiple"))
                         .font(.title2.bold())
                     Text(crate.type.rawValue)
                         .font(.headline)
@@ -620,7 +620,7 @@ struct BulkCrateOpeningSheet: View {
                 
                 // Selection Info
                 VStack(spacing: 5) {
-                    Text("Quantité sélectionnée")
+                    Text(tr("Quantité sélectionnée"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -667,7 +667,7 @@ struct BulkCrateOpeningSheet: View {
                     Button(action: {
                         selectedAmount = 0 // 0 means MAX
                     }) {
-                        Text("MAXIMUM")
+                        Text(tr("MAXIMUM"))
                             .font(.headline.bold())
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -694,7 +694,7 @@ struct BulkCrateOpeningSheet: View {
                         dismiss()
                     }
                 }) {
-                    Text("CONFIRMER L'ACHAT")
+                    Text(tr("CONFIRMER L'ACHAT"))
                         .font(.headline.bold())
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -717,7 +717,7 @@ struct BulkCrateOpeningSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") {
+                    Button(tr("Fermer")) {
                         dismiss()
                     }
                     .font(.headline)

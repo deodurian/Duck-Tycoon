@@ -21,14 +21,14 @@ struct RitualResultOverlay: View {
                         )
                         .shadow(color: .yellow, radius: 20)
                     
-                    Text("RITUEL DORÉ !")
+                    Text(tr("RITUEL DORÉ !"))
                         .font(.system(size: 34, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: [.yellow, Color(hue: 0.10, saturation: 0.9, brightness: 1.0)], startPoint: .top, endPoint: .bottom)
                         )
                         .shadow(color: .yellow.opacity(0.8), radius: 15)
                     
-                    Text("×10")
+                    Text(tr("×10"))
                         .font(.system(size: 60, weight: .black, design: .rounded))
                         .foregroundColor(.yellow)
                         .shadow(color: .yellow, radius: 10)
@@ -40,14 +40,14 @@ struct RitualResultOverlay: View {
                         )
                         .shadow(color: .green, radius: 20)
                     
-                    Text("RITUEL RÉUSSI !")
+                    Text(tr("RITUEL RÉUSSI !"))
                         .font(.system(size: 34, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: [.green, .mint], startPoint: .top, endPoint: .bottom)
                         )
                         .shadow(color: .green.opacity(0.8), radius: 15)
                     
-                    Text("×2")
+                    Text(tr("×2"))
                         .font(.system(size: 60, weight: .black, design: .rounded))
                         .foregroundColor(.green)
                         .shadow(color: .green, radius: 10)
@@ -57,12 +57,12 @@ struct RitualResultOverlay: View {
                         .foregroundColor(.red)
                         .shadow(color: .red, radius: 20)
                     
-                    Text("DÉTRUIT...")
+                    Text(tr("DÉTRUIT..."))
                         .font(.system(size: 34, weight: .black, design: .rounded))
                         .foregroundColor(.red)
                         .shadow(color: .red.opacity(0.8), radius: 15)
                     
-                    Text("💀")
+                    Text(tr("💀"))
                         .font(.system(size: 60))
                 }
             }

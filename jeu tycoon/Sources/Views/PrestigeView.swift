@@ -31,7 +31,7 @@ struct PrestigeView: View {
             
             VStack(spacing: 0) {
                 // En-tête avec glow
-                Text("Le Prestige")
+                Text(tr("Le Prestige"))
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -77,14 +77,14 @@ struct PrestigeView: View {
             }
         }
         .alert("Confirmation de Prestige", isPresented: $showingPrestigeAlert) {
-            Button("Annuler", role: .cancel) { }
+            Button(tr("Annuler"), role: .cancel) { }
             Button(tr("Confirmer"), role: .destructive) {
                 let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
                 impactHeavy.impactOccurred()
                 gameManager.executePrestige()
             }
         } message: {
-            Text("Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire.")
+            Text(tr("Êtes-vous sûr ? Vous allez recommencer à zéro, mais vous conserverez vos étoiles pour de puissants bonus passifs permanents et l'Arbre Stellaire."))
         }
         // Feuille de détails de compétence
         .sheet(item: $selectedUpgrade) { upgrade in
@@ -138,7 +138,7 @@ struct PrestigeView: View {
                         HStack {
                             Image(systemName: "sparkles")
                                 .foregroundColor(.yellow)
-                            Text("Bonus Passifs")
+                            Text(tr("Bonus Passifs"))
                                 .font(.headline.weight(.bold))
                                 .foregroundColor(.white)
                         }
@@ -174,7 +174,7 @@ struct PrestigeView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.yellow.opacity(0.15), lineWidth: 1))
                     .padding(.horizontal)
                 } else {
-                    Text("Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs.")
+                    Text(tr("Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs."))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.gray)
                         .font(.body)
@@ -191,7 +191,7 @@ struct PrestigeView: View {
                             .font(.system(size: 30))
                             .foregroundColor(.gray.opacity(0.6))
                         
-                        Text("Atteindre 10B d'argent")
+                        Text(tr("Atteindre 10B d'argent"))
                             .font(.headline)
                             .foregroundColor(.gray)
                         
@@ -217,7 +217,7 @@ struct PrestigeView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "sparkle")
                                 .foregroundColor(.yellow)
-                            Text("Prestige Disponible !")
+                            Text(tr("Prestige Disponible !"))
                                 .font(.title3.weight(.bold))
                                 .foregroundColor(.yellow)
                             Image(systemName: "sparkle")
@@ -237,7 +237,7 @@ struct PrestigeView: View {
                         }) {
                             HStack {
                                 Image(systemName: "arrow.counterclockwise.circle.fill")
-                                Text("Effectuer un Prestige")
+                                Text(tr("Effectuer un Prestige"))
                                     .font(.headline.weight(.bold))
                             }
                             .foregroundColor(.black)
@@ -321,7 +321,7 @@ struct PrestigeView: View {
                             .foregroundColor(.yellow)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
-                        Text("libres")
+                        Text(tr("libres"))
                             .font(.subheadline)
                             .foregroundColor(.yellow.opacity(0.7))
                     }
@@ -329,7 +329,7 @@ struct PrestigeView: View {
                     Spacer()
                     
                     HStack(spacing: 4) {
-                        Text("Dépensées:")
+                        Text(tr("Dépensées:"))
                             .font(.caption)
                             .foregroundColor(.gray)
                         Text("\(gameManager.spentStars.formattedString())")
@@ -442,7 +442,7 @@ private struct PrestigeUpgradeCard: View {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 12))
-                    Text("ACQUIS")
+                    Text(tr("ACQUIS"))
                         .font(.system(size: 10, weight: .heavy))
                 }
                 .foregroundColor(.black.opacity(0.8))

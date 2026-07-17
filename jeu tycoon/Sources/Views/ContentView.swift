@@ -13,7 +13,7 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("💰")
+                Text(tr("💰"))
             }
             
             HStack(spacing: 2) {
@@ -22,7 +22,7 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("🧬")
+                Text(tr("🧬"))
             }
             
             if gameManager.hasPrestiged {
@@ -32,7 +32,7 @@ struct TopBarView: View {
                         .bold()
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
-                    Text("⭐️")
+                    Text(tr("⭐️"))
                 }
             }
             
@@ -42,7 +42,7 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("💎")
+                Text(tr("💎"))
             }
             
             Spacer(minLength: 0)

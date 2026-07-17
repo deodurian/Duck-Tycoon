@@ -78,7 +78,7 @@ struct BonusCard: View {
                     // Bouton x1
                     Button(action: { gameManager.buyUpgrade(def) }) {
                         VStack(spacing: 1) {
-                            Text("×1")
+                            Text(tr("×1"))
                                 .font(.system(size: 8, weight: .heavy))
                             HStack(spacing: 2) {
                                 Text(nextCost.formattedString())

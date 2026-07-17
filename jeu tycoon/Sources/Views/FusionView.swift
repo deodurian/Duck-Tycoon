@@ -99,7 +99,7 @@ struct FusionView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.down")
-                        Text("Fermer")
+                        Text(tr("Fermer"))
                     }
                     .font(.headline)
                     .foregroundColor(.gray)
@@ -116,7 +116,7 @@ struct FusionView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: gameManager.isUnlocked(.autoFusion) ? "bolt.fill" : "lock.fill")
-                        Text("Auto")
+                        Text(tr("Auto"))
                     }
                     .font(.headline)
                     .padding(.horizontal, 12)
@@ -133,11 +133,11 @@ struct FusionView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text("\(gameManager.inventory.count) Canards")
+                        Text("\(gameManager.inventory.count) \(tr("Canards"))")
                             .font(.subheadline)
                             .foregroundColor(.primary)
                     }
-                    Text("Tous affichés")
+                    Text(tr("Tous affichés"))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -167,7 +167,7 @@ struct FusionView: View {
                     ProgressView("Chargement...")
                         .padding(.top, 50)
                 } else if displayInventory.isEmpty {
-                    Text("Aucun canard disponible.")
+                    Text(tr("Aucun canard disponible."))
                         .foregroundColor(.gray)
                         .padding(.top, 50)
                 } else {
@@ -235,12 +235,12 @@ struct FusionView: View {
             // Zone de fusion en bas
             VStack(spacing: 15) {
                 if selectedDuckIds.count == 3 {
-                    Text("Prix futur : \(futurePrice.formattedString()) 💰 / sec")
+                    Text("\(tr("Prix futur : "))\(futurePrice.formattedString()) 💰 / sec")
                         .font(.headline)
                         .foregroundColor(.green)
                         .bold()
                 } else {
-                    Text("Sélectionnez 3 canards de même rareté et niveau")
+                    Text(tr("Sélectionnez 3 canards de même rareté et niveau"))
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
@@ -264,7 +264,7 @@ struct FusionView: View {
                                     .stroke(Color.gray, style: StrokeStyle(lineWidth: 2, dash: [5]))
                                     .frame(width: 55, height: 55)
                                 
-                                Text("?")
+                                Text(tr("?"))
                                     .foregroundColor(.gray)
                                     .font(.title)
                             }
@@ -274,10 +274,10 @@ struct FusionView: View {
                 
                 if selectedDuckIds.count == 3 {
                     VStack(spacing: 4) {
-                        Text("Coût de fusion: \(fusionCost.formattedString()) 💰")
+                        Text("\(tr("Coût de fusion: "))\(fusionCost.formattedString()) 💰")
                             .font(.headline)
                             .foregroundColor(gameManager.money >= fusionCost ? .primary : .red)
-                        Text("(Taxe 5%)")
+                        Text(tr("(Taxe 5%)"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -306,7 +306,7 @@ struct FusionView: View {
                 }) {
                     HStack(spacing: 8) {
                         Image(systemName: "wand.and.stars")
-                        Text("FUSIONNER")
+                        Text(tr("FUSIONNER"))
                     }
                     .font(.headline)
                     .bold()
