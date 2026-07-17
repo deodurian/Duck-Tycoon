@@ -11,7 +11,7 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
     case legendaire = "Légendaire"
     case mythique = "Mythique"
     
-    nonisolated var localizedName: String {
+    @MainActor var localizedName: String {
         return tr(self.rawValue)
     }
     
