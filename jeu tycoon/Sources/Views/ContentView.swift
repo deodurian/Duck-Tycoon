@@ -70,6 +70,7 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var selectedTab = 0
     @State private var navPath = NavigationPath()
+    @AppStorage("appLanguage") private var appLanguage = "Français"
     
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -144,6 +145,7 @@ struct ContentView: View {
                 .environment(gameManager)
         }
         }
+        .id(appLanguage)
     }
 }
 }
