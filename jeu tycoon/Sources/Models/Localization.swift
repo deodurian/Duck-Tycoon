@@ -685,7 +685,11 @@ let translations: [AppLanguage: [String: String]] = [
         "Banque": "Banque",
         "Informations": "Informations",
         "Fusion": "Fusion",
-        "Recyclage": "Recyclage"
+        "Recyclage": "Recyclage",
+        "Perks Équipés": "Perks Équipés",
+        "Perks Disponibles": "Perks Disponibles",
+        "emplacements": "emplacements",
+        "Recycler ce Perk ?": "Recycler ce Perk ?"
     ],
     .en: [
         "Jouer": "Play",
@@ -1338,7 +1342,11 @@ let translations: [AppLanguage: [String: String]] = [
         "Banque": "Bank",
         "Informations": "Details",
         "Fusion": "Fusion",
-        "Recyclage": "Recycle"
+        "Recyclage": "Recycle",
+        "Perks Équipés": "Equipped Perks",
+        "Perks Disponibles": "Available Perks",
+        "emplacements": "slots",
+        "Recycler ce Perk ?": "Recycle this Perk?"
     ],
     .es: [
         "Jouer": "Jugar",
@@ -1991,6 +1999,10 @@ let translations: [AppLanguage: [String: String]] = [
         "Banque": "Banco",
         "Informations": "Detalles",
         "Fusion": "Fusión",
-        "Recyclage": "Reciclaje"
+        "Recyclage": "Reciclaje",
+        "Perks Équipés": "Perks Equipados",
+        "Perks Disponibles": "Perks Disponibles",
+        "emplacements": "ranuras",
+        "Recycler ce Perk ?": "¿Reciclar este Perk?"
     ]
 ]

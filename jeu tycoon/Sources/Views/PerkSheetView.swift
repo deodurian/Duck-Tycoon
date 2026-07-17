@@ -137,7 +137,7 @@ struct PerkCardView: View {
                             .background(Color.red.opacity(0.15))
                             .clipShape(Circle())
                     }
-                    .alert("Recycler ce Perk ?", isPresented: $showingRecycleAlert) {
+                    .alert(tr("Recycler ce Perk ?"), isPresented: $showingRecycleAlert) {
                         Button(tr("Annuler"), role: .cancel) { }
                         Button(tr("Recycler"), role: .destructive) {
                             gameManager.recyclePerk(id: perk.id)
