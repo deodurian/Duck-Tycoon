@@ -47,12 +47,23 @@ struct SettingsView: View {
                                     Text("Langue")
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: $appLanguage) {
+                                    Picker("", selection: Binding(
+                                        get: { appLanguage },
+                                        set: { newValue in
+                                            Task {
+                                                try? await Task.sleep(nanoseconds: 100_000_000)
+                                                await MainActor.run {
+                                                    appLanguage = newValue
+                                                }
+                                            }
+                                        }
+                                    )) {
                                         ForEach(AppLanguage.allCases) { lang in
                                             Text(lang.rawValue).tag(lang)
                                         }
                                     }
-                                    .pickerStyle(.segmented)
+                                    .accentColor(.white)
+                                    .pickerStyle(MenuPickerStyle())
                                 }
                                 .padding()
                                 .background(Color.white.opacity(0.05))
@@ -62,12 +73,23 @@ struct SettingsView: View {
                                     Text("Format des Nombres")
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: $numberFormatStyle) {
+                                    Picker("", selection: Binding(
+                                        get: { numberFormatStyle },
+                                        set: { newValue in
+                                            Task {
+                                                try? await Task.sleep(nanoseconds: 100_000_000)
+                                                await MainActor.run {
+                                                    numberFormatStyle = newValue
+                                                }
+                                            }
+                                        }
+                                    )) {
                                         ForEach(NumberFormatStyle.allCases) { style in
                                             Text(style.rawValue).tag(style)
                                         }
                                     }
-                                    .pickerStyle(.segmented)
+                                    .accentColor(.white)
+                                    .pickerStyle(MenuPickerStyle())
                                 }
                                 .padding()
                                 .background(Color.white.opacity(0.05))
