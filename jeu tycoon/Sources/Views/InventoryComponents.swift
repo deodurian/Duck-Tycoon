@@ -89,12 +89,12 @@ struct DuckDetailView: View {
                 .minimumScaleFactor(0.5)
             
             HStack {
-                Text("\(tr("Taille:")) \(dynamicStats.size.rawValue)")
+                Text("\(tr("Taille:")) \(tr(dynamicStats.size.rawValue))")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)
                 
-                Text("\(tr("Mutation:")) \(dynamicStats.mutation.rawValue)")
+                Text("\(tr("Mutation:")) \(tr(dynamicStats.mutation.rawValue))")
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(5)

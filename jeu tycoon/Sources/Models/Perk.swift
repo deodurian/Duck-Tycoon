@@ -73,27 +73,27 @@ struct Perk: Identifiable, Codable, Hashable {
     var name: String {
         if type == .factory {
             switch family {
-            case .income: return "Boost Revenu"
-            case .synergy: return "Synergie \(target?.displayName ?? "")"
-            case .discount: return "Réduction Coût"
-            case .sacrifice: return "Sacrifice"
-            case .fusion: return "Boost Fusion"
-            case .extraSlot: return "Emplacement+"
-            case .extraDuck: return "Canard+"
-            case .mythicFactory: return "Omnipotence Usine"
-            default: return "Perk Usine"
+            case .income: return tr("Boost Revenu")
+            case .synergy: return "\(tr("Synergie")) \(target?.displayName ?? "")"
+            case .discount: return tr("Réduction Coût")
+            case .sacrifice: return tr("Sacrifice")
+            case .fusion: return tr("Boost Fusion")
+            case .extraSlot: return tr("Emplacement+")
+            case .extraDuck: return tr("Canard+")
+            case .mythicFactory: return tr("Omnipotence Usine")
+            default: return tr("Perk Usine")
             }
         } else {
             switch family {
-            case .value: return "Boost Valeur"
-            case .levelBoost: return "Gènes \(target?.displayName ?? "")"
-            case .size: return "Croissance"
-            case .mutation: return "Mutagène"
-            case .fusionWeight: return "Poids Fusion"
-            case .recycleMut: return "Recyclage+"
-            case .extraSlot: return "Emplacement+"
-            case .mythicDuck: return "Dieu Canard"
-            default: return "Perk Canard"
+            case .value: return tr("Boost Valeur")
+            case .levelBoost: return "\(tr("Gènes")) \(target?.displayName ?? "")"
+            case .size: return tr("Croissance")
+            case .mutation: return tr("Mutagène")
+            case .fusionWeight: return tr("Poids Fusion")
+            case .recycleMut: return tr("Recyclage+")
+            case .extraSlot: return tr("Emplacement+")
+            case .mythicDuck: return tr("Dieu Canard")
+            default: return tr("Perk Canard")
             }
         }
     }
@@ -101,26 +101,26 @@ struct Perk: Identifiable, Codable, Hashable {
     var description: String {
         if type == .factory {
             switch family {
-            case .income: return "Donne \(Int(factoryIncomeBonus * 100))% d'argent en plus à l'usine"
-            case .synergy: return "Donne \(Int(factoryIncomeConditionalBonus(duckRarity: expectedRarityForTarget, duckFusionLevel: nil) * 100))% d'argent en plus si un canard \(target?.displayName ?? "") est équipé"
-            case .discount: return "Baisse le prix des améliorations de l'usine de \(Int(factoryUpgradeDiscount * 100))%"
-            case .sacrifice: return "Réduit la prod de l'usine de \(Int(factoryDrawbackSelf * 100))% mais augmente de \(Int(factoryBonusOthers * 100))% toutes les autres usines sans ce perk"
-            case .fusion: return "Augmente de \(Int(factoryIncomeConditionalBonus(duckRarity: nil, duckFusionLevel: expectedFusionForTarget) * 100))% la production si un canard \(target?.displayName ?? "") est équipé"
-            case .extraSlot: return "Rajoute un emplacement de perk et donne \(Int(factoryExtraPerkBonus * 100))% d'argent en plus"
-            case .extraDuck: return "Permet un 2ème canard et donne \(Int(factoryExtraDuckBonus * 100))% d'argent en plus"
-            case .mythicFactory: return "+500% argent, -55% prix amélioration, +10% argent par usine active"
+            case .income: return tr("Donne \(Int(factoryIncomeBonus * 100))% d'argent en plus a l'usine")
+            case .synergy: return tr("Donne \(Int(factoryIncomeConditionalBonus(duckRarity: expectedRarityForTarget, duckFusionLevel: nil) * 100))% d'argent en plus si un canard \(target?.displayName ?? "") est équipé")
+            case .discount: return tr("Baisse le prix des améliorations de l'usine de \(Int(factoryUpgradeDiscount * 100))%")
+            case .sacrifice: return tr("Réduit de \(Int(factoryDrawbackSelf * 100))% la production mais augmente de \(Int(factoryBonusOthers * 100))% les autres usines")
+            case .fusion: return tr("Augmente de \(Int(factoryIncomeConditionalBonus(duckRarity: nil, duckFusionLevel: expectedFusionForTarget) * 100))% la production si un canard \(target?.displayName ?? "") est équipé")
+            case .extraSlot: return tr("Permet de rajouter un 2ème perk a l'usine et donne \(Int(factoryExtraPerkBonus * 100))% d'argent en plus")
+            case .extraDuck: return tr("Permet de mettre un 2ème canard dans l'usine et donne un bonus de \(Int(factoryExtraDuckBonus * 100))%")
+            case .mythicFactory: return tr("+500% argent, -55% prix amélioration, +10% argent par usine active")
             default: return ""
             }
         } else {
             switch family {
-            case .value: return "Augmente de \(Int(duckValueBonus * 100))% la valeur du canard"
-            case .levelBoost: return "Donne \(duckConditionalLevels(duckRarity: expectedRarityForTarget)) niveaux si équipé sur un canard \(target?.displayName ?? "")"
-            case .size: return "Augmente de \(duckSizeIncrease) la taille du canard"
-            case .mutation: return "Augmente de \(duckMutationIncrease) la mutation du canard"
-            case .fusionWeight: return "Compte le canard \(duckFusionWeight) fois lors d'une fusion (Perk conservé)"
-            case .recycleMut: return "Multiplie par \(Int(duckRecycleMutationMultiplier)) la valeur en 🧬 du canard (Perk détruit)"
-            case .extraSlot: return "Permet un 2ème perk et donne \(Int(duckExtraPerkBonus * 100))% de valeur au canard"
-            case .mythicDuck: return "+500% valeur, max stats, 2ème perk, compte 32 fois en fusion"
+            case .value: return tr("Augmente de \(Int(duckValueBonus * 100))% la valeur du canard")
+            case .levelBoost: return tr("Si équipé à un canard \(target?.displayName ?? "") : reçoit \(duckConditionalLevels(duckRarity: expectedRarityForTarget)) niveaux")
+            case .size: return tr("Augmente de \(duckSizeIncrease) la taille du canard")
+            case .mutation: return tr("Augmente de \(duckMutationIncrease) la mutation du canard")
+            case .fusionWeight: return tr("Compte le canard \(duckFusionWeight) fois lors d'une fusion (Perk conservé)")
+            case .recycleMut: return tr("Multiplie par \(Int(duckRecycleMutationMultiplier)) la valeur en 🧬 du canard (Perk détruit)")
+            case .extraSlot: return tr("Permet de mettre un 2ème perk et augmente de \(Int(duckExtraPerkBonus * 100))% la valeur")
+            case .mythicDuck: return tr("+500% valeur, max stats, 2ème perk, compte 32 fois en fusion")
             default: return ""
             }
         }

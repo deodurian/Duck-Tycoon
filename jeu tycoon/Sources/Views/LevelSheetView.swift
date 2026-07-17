@@ -61,9 +61,9 @@ struct LevelSheetView: View {
                             let db = currentLevel / 100
                             if db > 0 {
                                 let mult = Int(pow(2.0, Double(db)))
-                                return "Revenus : +\(mb)% et x\(mult)"
+                                return "\(tr("Revenus")) : +\(mb)% et x\(mult)"
                             } else {
-                                return "Revenus : +\(mb)%"
+                                return "\(tr("Revenus")) : +\(mb)%"
                             }
                         }()
                         
@@ -71,7 +71,7 @@ struct LevelSheetView: View {
                             let part1 = Double(currentLevel / 5) * 1.0
                             let part2 = Double(currentLevel / 10) * 5.0
                             let mb = Int(part1 + part2)
-                            return "Mutation : +\(mb)%"
+                            return "\(tr("Mutation")) : +\(mb)%"
                         }()
                         
                         VStack(alignment: .leading, spacing: 8) {

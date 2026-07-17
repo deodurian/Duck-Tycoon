@@ -60,7 +60,7 @@ struct PerkSelectionSheet: View {
                                 Spacer()
                                 
                                 let maxSlots = getMaxSlots()
-                                Text("\(equippedIds.count)/\(maxSlots) emplacements")
+                                Text("\(equippedIds.count)/\(maxSlots) \(tr("emplacements"))")
                                     .font(.caption)
                                     .foregroundColor(equippedIds.count >= maxSlots ? .red : .green)
                             }
