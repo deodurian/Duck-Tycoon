@@ -27,7 +27,7 @@ struct TopBarView: View {
             
             if gameManager.hasPrestiged {
                 HStack(spacing: 2) {
-                    Text(gameManager.currentStars.formattedString())
+                    Text(gameManager.unspentStars.formattedString())
                         .font(.headline)
                         .bold()
                         .lineLimit(1)

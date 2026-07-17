@@ -88,6 +88,12 @@ struct GameState: Codable, Sendable {
         
         self.purchasedPrestigeUpgrades = try container.decodeIfPresent(Set<String>.self, forKey: .purchasedPrestigeUpgrades) ?? []
         
+        // Migration logic for free stars
+        if self.unspentStars == .zero && self.totalStars > .zero {
+            let diff = self.totalStars - self.spentStars
+            self.unspentStars = diff > .zero ? diff : .zero
+        }
+        
         self.gems = try container.decodeIfPresent(BigNumber.self, forKey: .gems) ?? .zero
         
         self.playerLevel = try container.decodeIfPresent(Int.self, forKey: .playerLevel) ?? 1
