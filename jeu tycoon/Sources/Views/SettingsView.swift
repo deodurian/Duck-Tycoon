@@ -162,6 +162,9 @@ struct SettingsView: View {
             } message: {
                 Text(tr("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards."))
             }
+            .onChange(of: LocalizationManager.shared.language) { _, _ in
+                dismiss()
+            }
         }
     }
 }
