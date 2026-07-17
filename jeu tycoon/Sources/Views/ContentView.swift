@@ -151,44 +151,77 @@ struct ContentView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @Environment(\.colorScheme) var colorScheme
+    @Environment(GameManager.self) private var gameManager
     
-    let tabs = [
-        (title: "Usines", icon: "building.2.crop.circle"),
-        (title: "Canards", icon: "bird"),
-        (title: "Amélio.", icon: "bolt.circle.fill"),
-        (title: "Boutique", icon: "shippingbox"),
-        (title: "Rituel", icon: "flame"),
-        (title: "Prestige", icon: "star.fill"),
-        (title: "Banque", icon: "creditcard.fill")
+    let tabs: [(title: String, icon: String, color: Color)] = [
+        ("Usines", "building.2.crop.circle", .green),
+        ("Canards", "bird", .yellow),
+        ("Amélio.", "bolt.circle.fill", .purple),
+        ("Boutique", "shippingbox", .orange),
+        ("Rituel", "flame", .red),
+        ("Prestige", "star.fill", .yellow),
+        ("Banque", "creditcard.fill", .cyan)
     ]
     
     @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    
+    private func isUnlocked(_ index: Int) -> Bool {
+        // Niveau requis pour chaque onglet (à ajuster plus tard)
+        switch index {
+        case 0: return true // Usines
+        case 1: return true // Canards
+        case 2: return gameManager.playerLevel >= 3 // Amélio.
+        case 3: return gameManager.playerLevel >= 2 // Boutique
+        case 4: return gameManager.playerLevel >= 10 // Rituel
+        case 5: return gameManager.playerLevel >= 20 // Prestige
+        case 6: return true // Banque
+        default: return true
+        }
+    }
     
     var body: some View {
         HStack(spacing: 0) {
             ForEach(0..<tabs.count, id: \.self) { index in
                 Button(action: {
-                    feedbackGenerator.prepare()
-                    feedbackGenerator.impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedTab = index
+                    let unlocked = isUnlocked(index)
+                    if unlocked {
+                        feedbackGenerator.prepare()
+                        feedbackGenerator.impactOccurred()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedTab = index
+                        }
+                    } else {
+                        let errorFeedback = UINotificationFeedbackGenerator()
+                        errorFeedback.notificationOccurred(.error)
                     }
                 }) {
+                    let unlocked = isUnlocked(index)
                     VStack(spacing: 4) {
-                        Image(systemName: tabs[index].icon)
-                            .font(.system(size: 20, weight: selectedTab == index ? .bold : .regular))
-                            .scaleEffect(selectedTab == index ? 1.2 : 1.0)
+                        if unlocked {
+                            Image(systemName: tabs[index].icon)
+                                .font(.system(size: 20, weight: selectedTab == index ? .bold : .regular))
+                                .scaleEffect(selectedTab == index ? 1.2 : 1.0)
+                        } else {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 20, weight: .regular))
+                        }
                         
                         if selectedTab == index {
                             Text(tr(tabs[index].title))
                                 .font(.system(size: 9, weight: .bold)) // Slightly smaller to fit 7 tabs
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
+                        } else if !unlocked {
+                            Text(tr(tabs[index].title))
+                                .font(.system(size: 7, weight: .regular))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
                         }
                     }
-                    .foregroundColor(selectedTab == index ? (colorScheme == .dark ? .white : .blue) : .gray)
+                    .foregroundColor(unlocked ? tabs[index].color.opacity(selectedTab == index ? 1.0 : 0.5) : .gray.opacity(0.3))
                     .frame(maxWidth: .infinity)
                 }
+                .disabled(!isUnlocked(index))
             }
         }
         .padding(.horizontal, 10)
