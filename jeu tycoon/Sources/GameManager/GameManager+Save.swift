@@ -194,17 +194,39 @@ extension GameManager {
     }
     
     func resetProgression() {
-        money = BigNumber(200.0)
-        mutationPoints = .zero
-        inventory = []
-        factories = [DuckFactory(name: "Usine 1")]
-        purchasedUpgrades = []
-        upgradeLevels = [:]
-        autoCrateTargetId = nil
-        autoFactoryLevels = [:]
-        // We do NOT reset currentStars, totalStars, spentStars, and purchasedPrestigeUpgrades here, only in full hard reset if needed, but for prestige we keep them.
+        let defaultState = GameState()
+        
+        self.money = defaultState.money
+        self.mutationPoints = defaultState.mutationPoints
+        self.inventory = defaultState.inventory
+        self.factories = defaultState.factories
+        self.purchasedUpgrades = defaultState.purchasedUpgrades
+        self.upgradeLevels = defaultState.upgradeLevels
+        self.autoCrateTargetId = defaultState.autoCrateTargetId
+        self.autoFactoryLevels = defaultState.autoFactoryLevels
+        
+        // Reset full (étoiles, niveaux, gemmes)
+        self.totalRecycledDucks = defaultState.totalRecycledDucks
+        self.totalFusionsDone = defaultState.totalFusionsDone
+        self.totalMaxedRepeatableUpgrades = defaultState.totalMaxedRepeatableUpgrades
+        
+        self.currentStars = defaultState.currentStars
+        self.totalStars = defaultState.totalStars
+        self.spentStars = defaultState.spentStars
+        self.unspentStars = defaultState.unspentStars
+        self.purchasedPrestigeUpgrades = defaultState.purchasedPrestigeUpgrades
+        self.gems = defaultState.gems
+        
+        self.playerLevel = defaultState.playerLevel
+        self.playerXP = defaultState.playerXP
+        self.missions = defaultState.missions
+        self.perksInventory = defaultState.perksInventory
+        
         lastSaveDate = Date()
+        
+        initializeTutorialMissions()
         evaluateAffordableCrates(reset: true)
+        invalidateEarningsCache()
         saveGame()
     }
     
