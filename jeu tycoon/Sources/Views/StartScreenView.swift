@@ -87,6 +87,11 @@ struct StartScreenView: View {
             phase = .loading
         }
         
+        // Pré-charger la publicité pendant cet écran de chargement
+        #if canImport(GoogleMobileAds)
+        _ = AdManager.shared
+        #endif
+        
         let loadingMessages = [
             "Initialisation du moteur...",
             "Génération des modèles 3D...",
