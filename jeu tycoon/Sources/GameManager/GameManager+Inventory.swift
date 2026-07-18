@@ -358,13 +358,13 @@ extension GameManager {
                     if d1.fusionLevel != d2.fusionLevel { return d1.fusionLevel > d2.fusionLevel }
                     return d1.sellValue > d2.sellValue
                 case .recycleValueDesc:
-                    return displayRecycleValue(for: d1) > displayRecycleValue(for: d2)
+                    return d1.recycleValue > d2.recycleValue
                 case .recycleValueAsc:
-                    return displayRecycleValue(for: d1) < displayRecycleValue(for: d2)
+                    return d1.recycleValue < d2.recycleValue
                 case .sellValueAsc:
-                    return displaySellValue(for: d1) < displaySellValue(for: d2)
+                    return d1.sellValue < d2.sellValue
                 case .sellValueDesc:
-                    return displaySellValue(for: d1) > displaySellValue(for: d2)
+                    return d1.sellValue > d2.sellValue
                 case .rarity:
                     return d1.rarity.multiplier > d2.rarity.multiplier
                 }
