@@ -1,14 +1,17 @@
 import SwiftUI
+import Combine
 
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 
 @MainActor
-class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
+class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @unchecked Sendable {
     static let shared = AdManager()
     
     // Identifiant de test Google officiel pour les vidéos avec récompense
     private let rewardedAdUnitID = "ca-app-pub-7096586150673683/6259968771"
+    
+    @Published var isReady: Bool = false
     
     private var rewardedAd: RewardedAd?
     private var onRewardEarned: ((Bool) -> Void)?
@@ -19,15 +22,18 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
     }
     
     func loadRewardedAd() {
+        self.isReady = false
         let request = Request()
         RewardedAd.load(with: rewardedAdUnitID, request: request) { ad, error in
             Task { @MainActor in
                 if let error = error {
                     print("Erreur de chargement de la pub: \(error.localizedDescription)")
+                    AdManager.shared.isReady = false
                     return
                 }
                 AdManager.shared.rewardedAd = ad
                 AdManager.shared.rewardedAd?.fullScreenContentDelegate = AdManager.shared
+                AdManager.shared.isReady = true
                 print("Pub récompensée chargée avec succès.")
             }
         }
@@ -38,7 +44,6 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
         
         guard let rewardedAd = rewardedAd else {
             print("La pub n'est pas encore prête.")
-            // ERREUR ICI : on donnait la récompense (true) alors que la pub n'était pas prête !
             self.onRewardEarned?(false) 
             self.loadRewardedAd()
             return
@@ -71,6 +76,7 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
         print("La pub a été fermée.")
         self.rewardedAd = nil
+        self.isReady = false
         self.loadRewardedAd()
     }
     
@@ -78,6 +84,7 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
         print("Erreur d'affichage de la pub : \(error.localizedDescription)")
         self.onRewardEarned?(false)
         self.rewardedAd = nil
+        self.isReady = false
         self.loadRewardedAd()
     }
 }

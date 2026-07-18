@@ -2,8 +2,7 @@ import SwiftUI
 
 struct OfflineEarningsPopupView: View {
     @Environment(GameManager.self) private var gameManager
-    
-    @State private var showAdNotReadyAlert = false
+    @ObservedObject private var adManager = AdManager.shared
     
     var body: some View {
         if let earnings = gameManager.pendingOfflineEarnings {
@@ -64,31 +63,47 @@ struct OfflineEarningsPopupView: View {
                     .padding(.horizontal)
                     
                     VStack(spacing: 15) {
-                        Button(action: {
-                            AdManager.shared.showRewardedAd { earned in
-                                if earned {
-                                    withAnimation {
-                                        gameManager.claimOfflineEarnings(multiplier: 2.0)
+                        if adManager.isReady {
+                            Button(action: {
+                                AdManager.shared.showRewardedAd { earned in
+                                    if earned {
+                                        withAnimation {
+                                            gameManager.claimOfflineEarnings(multiplier: 2.0)
+                                        }
                                     }
-                                } else {
-                                    showAdNotReadyAlert = true
                                 }
+                            }) {
+                                HStack {
+                                    Text(tr("Récupérer X2"))
+                                        .font(.headline.bold())
+                                    Spacer()
+                                    Image(systemName: "play.tv.fill")
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
+                                )
+                                .foregroundColor(.white)
+                                .cornerRadius(15)
+                                .shadow(color: .orange.opacity(0.5), radius: 5)
                             }
-                        }) {
-                            HStack {
-                                Text(tr("Récupérer X2"))
-                                    .font(.headline.bold())
-                                Spacer()
-                                Image(systemName: "play.tv.fill")
+                        } else {
+                            Button(action: {}) {
+                                HStack {
+                                    Text(tr("Chargement de la pub..."))
+                                        .font(.headline.bold())
+                                    Spacer()
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.gray)
+                                .foregroundColor(.white)
+                                .cornerRadius(15)
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(15)
-                            .shadow(color: .orange.opacity(0.5), radius: 5)
+                            .disabled(true)
                         }
                         
                         Button(action: {
@@ -115,13 +130,6 @@ struct OfflineEarningsPopupView: View {
             }
             .transition(.scale.combined(with: .opacity))
             .zIndex(100)
-            .alert(isPresented: $showAdNotReadyAlert) {
-                Alert(
-                    title: Text(tr("Publicité non prête")),
-                    message: Text(tr("La vidéo est en cours de téléchargement. Veuillez réessayer dans quelques secondes.")),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
         }
     }
     
