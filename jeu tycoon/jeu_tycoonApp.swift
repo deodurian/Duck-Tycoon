@@ -7,7 +7,7 @@ import GoogleMobileAds
 struct jeu_tycoonApp: App {
     init() {
         #if canImport(GoogleMobileAds)
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start { _ in }
         #endif
     }
     

@@ -199,7 +199,7 @@ enum DuckSize: String, Codable, CaseIterable, Comparable {
     }
     
     // Coût d'amélioration de base
-    var upgradeCostBase: BigNumber {
+    nonisolated var upgradeCostBase: BigNumber {
         switch self {
         case .petit: return BigNumber(20.0) // Pour passer à moyen
         case .moyen: return BigNumber(60.0) // Pour passer à grand
@@ -208,7 +208,7 @@ enum DuckSize: String, Codable, CaseIterable, Comparable {
         }
     }
     
-    var next: DuckSize? {
+    nonisolated var next: DuckSize? {
         switch self {
         case .petit: return .moyen
         case .moyen: return .grand
@@ -296,7 +296,7 @@ enum DuckMutation: String, Codable, CaseIterable, Comparable {
         }
     }
     
-    var upgradeCostBase: BigNumber {
+    nonisolated var upgradeCostBase: BigNumber {
         switch self {
         case .aucune: return BigNumber(50.0) // Pour passer à doré
         case .dore: return BigNumber(200.0) // Pour passer à radioactif
@@ -305,7 +305,7 @@ enum DuckMutation: String, Codable, CaseIterable, Comparable {
         }
     }
     
-    var next: DuckMutation? {
+    nonisolated var next: DuckMutation? {
         switch self {
         case .aucune: return .dore
         case .dore: return .radioactif
