@@ -1383,6 +1383,7 @@ let translations: [AppLanguage: [String: String]] = [
         "Récupérer la récompense": "Claim Reward",
         "Quête en cours...": "Quest in progress...",
         "Histoire Terminée !": "Story Completed!",
+        "Chapitre": "Chapter",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "You have completed all story quests. Free mode is activated!",
         
         "La Production": "Production",
@@ -2099,6 +2100,7 @@ let translations: [AppLanguage: [String: String]] = [
         "Récupérer la récompense": "Reclamar recompensa",
         "Quête en cours...": "Misión en curso...",
         "Histoire Terminée !": "¡Historia Terminada!",
+        "Chapitre": "Capítulo",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "Has completado todas las misiones de la historia. ¡El modo libre está activado!",
         
         "La Production": "La Producción",
