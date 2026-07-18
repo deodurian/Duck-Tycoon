@@ -556,22 +556,23 @@ struct Duck: Identifiable, Codable, Hashable {
     }
     
     /// Coût en points de mutation pour améliorer la taille de ce canard
-    var sizeUpgradeCost: BigNumber? {
-        guard size.next != nil else { return nil }
-        // Le coût est la base * multiplicateur de la rareté du canard
-        return size.upgradeCostBase * rarity.multiplier
+    nonisolated func sizeUpgradeCost(with perks: [Perk]) -> BigNumber? {
+        let stats = getDynamicStats(with: perks)
+        guard stats.size.next != nil else { return nil }
+        return stats.size.upgradeCostBase * rarity.multiplier
     }
     
     /// Coût en points de mutation pour améliorer la mutation de ce canard
-    var mutationUpgradeCost: BigNumber? {
-        guard mutation.next != nil else { return nil }
-        return mutation.upgradeCostBase * rarity.multiplier
+    nonisolated func mutationUpgradeCost(with perks: [Perk]) -> BigNumber? {
+        let stats = getDynamicStats(with: perks)
+        guard stats.mutation.next != nil else { return nil }
+        return stats.mutation.upgradeCostBase * rarity.multiplier
     }
     
     /// Coût en argent pour augmenter le niveau de ce canard
-    var levelUpgradeCost: BigNumber? {
-        guard level < 100 else { return nil }
-        // Le prix augmente exponentiellement
-        return BigNumber(1000.0 * rarity.multiplier * pow(1.15, Double(level - 1)))
+    nonisolated func levelUpgradeCost(with perks: [Perk]) -> BigNumber? {
+        let stats = getDynamicStats(with: perks)
+        guard stats.level < 100 else { return nil }
+        return BigNumber(1000.0 * rarity.multiplier * pow(1.15, Double(stats.level - 1)))
     }
 }

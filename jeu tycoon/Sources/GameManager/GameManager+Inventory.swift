@@ -361,8 +361,6 @@ extension GameManager {
                     return d1.recycleValue > d2.recycleValue
                 case .recycleValueAsc:
                     return d1.recycleValue < d2.recycleValue
-                case .sellValueAsc:
-                    return d1.sellValue < d2.sellValue
                 case .sellValueDesc:
                     return d1.sellValue > d2.sellValue
                 case .rarity:
@@ -575,8 +573,9 @@ extension GameManager {
     func upgradeDuckSize(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
+        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
         
-        if let cost = duck.sizeUpgradeCost, mutationPoints >= cost, let nextSize = duck.size.next {
+        if let cost = duck.sizeUpgradeCost(with: duckPerks), mutationPoints >= cost, let nextSize = duck.size.next {
             mutationPoints -= cost
             duck.size = nextSize
             inventory[index] = duck
@@ -589,8 +588,9 @@ extension GameManager {
     func upgradeDuckMutation(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
+        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
         
-        if let cost = duck.mutationUpgradeCost, mutationPoints >= cost, let nextMutation = duck.mutation.next {
+        if let cost = duck.mutationUpgradeCost(with: duckPerks), mutationPoints >= cost, let nextMutation = duck.mutation.next {
             mutationPoints -= cost
             duck.mutation = nextMutation
             inventory[index] = duck
@@ -602,8 +602,9 @@ extension GameManager {
     func upgradeDuckLevel(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
+        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
         
-        if let cost = duck.levelUpgradeCost, money >= cost, duck.level < 100 {
+        if let cost = duck.levelUpgradeCost(with: duckPerks), money >= cost, duck.level < 100 {
             money -= cost
             duck.level += 1
             inventory[index] = duck

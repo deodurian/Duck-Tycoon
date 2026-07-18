@@ -190,35 +190,38 @@ struct DuckDetailView: View {
                                 .foregroundColor(.white.opacity(0.7))
                         }
 
+                        let dynamicSizeCost = currentDuck.sizeUpgradeCost(with: duckPerks)
                         DuckUpgradeButton(
                             title: tr("Améliorer Taille"),
-                            cost: currentDuck.sizeUpgradeCost,
+                            cost: dynamicSizeCost,
                             icon: "🧬",
                             color: .blue,
                             impact: sizeUpgradeImpact(),
-                            canAfford: currentDuck.sizeUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.sizeUpgradeCost ?? BigNumber(1e100)),
+                            canAfford: dynamicSizeCost != nil && gameManager.mutationPoints >= (dynamicSizeCost ?? BigNumber(1e100)),
                             maxLabel: tr("Niveau MAX"),
                             action: { gameManager.upgradeDuckSize(id: currentDuck.id) }
                         )
 
+                        let dynamicMutationCost = currentDuck.mutationUpgradeCost(with: duckPerks)
                         DuckUpgradeButton(
                             title: tr("Muter"),
-                            cost: currentDuck.mutationUpgradeCost,
+                            cost: dynamicMutationCost,
                             icon: "🧬",
                             color: .purple,
                             impact: mutationUpgradeImpact(),
-                            canAfford: currentDuck.mutationUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.mutationUpgradeCost ?? BigNumber(1e100)),
+                            canAfford: dynamicMutationCost != nil && gameManager.mutationPoints >= (dynamicMutationCost ?? BigNumber(1e100)),
                             maxLabel: tr("Niveau MAX"),
                             action: { gameManager.upgradeDuckMutation(id: currentDuck.id) }
                         )
 
+                        let dynamicLevelCost = currentDuck.levelUpgradeCost(with: duckPerks)
                         DuckUpgradeButton(
                             title: tr("Augmenter Niveau"),
-                            cost: currentDuck.levelUpgradeCost,
+                            cost: dynamicLevelCost,
                             icon: "💰",
                             color: .yellow,
                             impact: levelUpgradeImpact(),
-                            canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
+                            canAfford: dynamicLevelCost != nil && gameManager.money >= (dynamicLevelCost ?? BigNumber(Double.greatestFiniteMagnitude)),
                             maxLabel: tr("Niveau MAX (100)"),
                             action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
                         )
