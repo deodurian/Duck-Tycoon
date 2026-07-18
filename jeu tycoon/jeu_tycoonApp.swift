@@ -1,7 +1,16 @@
 import SwiftUI
+#if canImport(GoogleMobileAds)
+import GoogleMobileAds
+#endif
 
 @main
 struct jeu_tycoonApp: App {
+    init() {
+        #if canImport(GoogleMobileAds)
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        #endif
+    }
+    
     var body: some Scene {
         WindowGroup {
             RootView()
