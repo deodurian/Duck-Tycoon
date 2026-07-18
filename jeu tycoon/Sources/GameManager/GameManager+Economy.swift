@@ -156,7 +156,7 @@ extension GameManager {
     }
     
     var isFusionUnlocked: Bool {
-        return isUnlocked(.manualFusion) || hasPrestigeUpgrade("p3_fusion")
+        return currentStoryStep >= 3 || isUnlocked(.manualFusion) || hasPrestigeUpgrade("p3_fusion")
     }
     
     var isBulkRecycleUnlocked: Bool {

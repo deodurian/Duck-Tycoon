@@ -141,7 +141,6 @@ extension GameManager {
     var isBoutiqueUnlocked: Bool { currentStoryStep >= 1 }
     var isInventoryUnlocked: Bool { currentStoryStep >= 2 }
     var isAmelioUnlocked: Bool { currentStoryStep >= 2 } // unlocked at the beginning of step 2
-    var isFusionUnlocked: Bool { currentStoryStep >= 3 }
     var isBanqueUnlocked: Bool { currentStoryStep >= 4 } // also unlocks perks
     var isRituelUnlocked: Bool { currentStoryStep >= 5 }
     var isPrestigeUnlocked: Bool { currentStoryStep >= 6 && money >= BigNumber(10_000_000_000) }
