@@ -15,7 +15,7 @@ struct GameState: Codable, Sendable {
     var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
     
-    var inventory: [Duck] = [Duck(rarity: .commun, sizeLevel: 1, mutationLevel: 1, origin: "Départ", size: 1.0, isSpecial: false)]
+    var inventory: [Duck] = [Duck(rarity: .commun, size: .petit, mutation: .aucune)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     
     var lastSaveDate: Date = Date()
@@ -147,7 +147,7 @@ struct GameState: Codable, Sendable {
 class GameManager {
     var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
-    var inventory: [Duck] = [Duck(rarity: .commun, sizeLevel: 1, mutationLevel: 1, origin: "Départ", size: 1.0, isSpecial: false)]
+    var inventory: [Duck] = [Duck(rarity: .commun, size: .petit, mutation: .aucune)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     var lastSaveDate: Date = Date()
     
