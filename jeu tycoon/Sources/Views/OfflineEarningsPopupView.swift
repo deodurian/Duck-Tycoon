@@ -3,6 +3,8 @@ import SwiftUI
 struct OfflineEarningsPopupView: View {
     @Environment(GameManager.self) private var gameManager
     
+    @State private var showAdNotReadyAlert = false
+    
     var body: some View {
         if let earnings = gameManager.pendingOfflineEarnings {
             ZStack {
@@ -68,6 +70,8 @@ struct OfflineEarningsPopupView: View {
                                     withAnimation {
                                         gameManager.claimOfflineEarnings(multiplier: 2.0)
                                     }
+                                } else {
+                                    showAdNotReadyAlert = true
                                 }
                             }
                         }) {
@@ -111,6 +115,13 @@ struct OfflineEarningsPopupView: View {
             }
             .transition(.scale.combined(with: .opacity))
             .zIndex(100)
+            .alert(isPresented: $showAdNotReadyAlert) {
+                Alert(
+                    title: Text(tr("Publicité non prête")),
+                    message: Text(tr("La vidéo est en cours de téléchargement. Veuillez réessayer dans quelques secondes.")),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
         }
     }
     

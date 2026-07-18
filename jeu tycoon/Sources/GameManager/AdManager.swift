@@ -38,7 +38,8 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
         
         guard let rewardedAd = rewardedAd else {
             print("La pub n'est pas encore prête.")
-            self.onRewardEarned?(true)
+            // ERREUR ICI : on donnait la récompense (true) alors que la pub n'était pas prête !
+            self.onRewardEarned?(false) 
             self.loadRewardedAd()
             return
         }
@@ -60,7 +61,7 @@ class AdManager: NSObject, FullScreenContentDelegate, @unchecked Sendable {
             }
         } else {
             print("Erreur: Impossible de trouver la fenêtre principale pour afficher la pub.")
-            self.onRewardEarned?(true)
+            self.onRewardEarned?(false)
             self.loadRewardedAd()
         }
     }
