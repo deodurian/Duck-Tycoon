@@ -3,126 +3,130 @@ import SwiftUI
 struct LevelSheetView: View {
     @Environment(GameManager.self) private var gameManager
     @Environment(\.dismiss) var dismiss
-    
+
     @State private var showInfo = false
-    
+    @State private var animateRing = false
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.05, green: 0.0, blue: 0.12).ignoresSafeArea()
-                
-                VStack(spacing: 20) {
-                    let currentLevel = gameManager.playerLevel
-                    let requiredXP = PlayerLevelSystem.requiredXP(for: currentLevel)
-                    let currentXP = gameManager.playerXP
-                    let progress = min(1.0, Double(currentXP) / Double(requiredXP))
-                    
-                    VStack(spacing: 10) {
-                        Text("⭐ \(tr("Niveau")) \(currentLevel)")
-                            .font(.system(size: 40, weight: .black, design: .rounded))
-                            .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom))
-                        
-                        // Barre de progression
-                        GeometryReader { geometry in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .fill(Color.white.opacity(0.1))
-                                    .frame(height: 30)
-                                
-                                RoundedRectangle(cornerRadius: 15)
-                                    .fill(LinearGradient(colors: [.yellow, .orange], startPoint: .leading, endPoint: .trailing))
-                                    .frame(width: max(0, geometry.size.width * progress), height: 30)
+                LinearGradient(
+                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 18) {
+                        let currentLevel = gameManager.playerLevel
+                        let requiredXP = PlayerLevelSystem.requiredXP(for: currentLevel)
+                        let currentXP = gameManager.playerXP
+                        let progress = min(1.0, Double(currentXP) / Double(requiredXP))
+
+                        // Anneau de progression XP
+                        ZStack {
+                            Circle()
+                                .fill(RadialGradient(colors: [.yellow.opacity(0.12), .clear], center: .center, startRadius: 20, endRadius: 110))
+
+                            Circle()
+                                .stroke(Color.white.opacity(0.08), lineWidth: 14)
+
+                            Circle()
+                                .trim(from: 0, to: animateRing ? progress : 0)
+                                .stroke(
+                                    AngularGradient(colors: [.yellow, .orange, .yellow], center: .center),
+                                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                                )
+                                .rotationEffect(.degrees(-90))
+                                .shadow(color: .yellow.opacity(0.5), radius: 6)
+
+                            VStack(spacing: 2) {
+                                Text("⭐")
+                                    .font(.system(size: 30))
+                                Text("\(tr("Niveau")) \(currentLevel)")
+                                    .font(.system(size: 26, weight: .black, design: .rounded))
+                                    .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom))
+                                Text("\(currentXP.formattedString()) / \(requiredXP.formattedString()) \(tr("XP"))")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white.opacity(0.5))
                             }
                         }
-                        .frame(height: 30)
-                        .padding(.horizontal)
-                        
-                        Text("\(currentXP) / \(requiredXP) \(tr("XP"))")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    .background(Color.black.opacity(0.3))
-                    .cornerRadius(20)
-                    .padding(.horizontal)
-                    
-                    // Bonus actuels
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(tr("Bonus Actuels"))
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
+                        .frame(width: 190, height: 190)
+                        .padding(.top, 16)
+                        .onAppear {
+                            withAnimation(.easeOut(duration: 0.9).delay(0.15)) {
+                                animateRing = true
+                            }
+                        }
+
+                        // Bonus actuels
                         let moneyBonusText: String = {
                             let part1 = Double(currentLevel) * 1.0
                             let part2 = Double(currentLevel / 5) * 5.0
                             let part3 = Double(currentLevel / 10) * 25.0
                             let mb = Int(part1 + part2 + part3)
-                            
+
                             let db = currentLevel / 100
                             if db > 0 {
                                 let mult = Int(pow(2.0, Double(db)))
-                                return "\(tr("Revenus")) : +\(mb)% et x\(mult)"
+                                return "+\(mb)% et x\(mult)"
                             } else {
-                                return "\(tr("Revenus")) : +\(mb)%"
+                                return "+\(mb)%"
                             }
                         }()
-                        
+
                         let mutationBonusText: String = {
                             let part1 = Double(currentLevel / 5) * 1.0
                             let part2 = Double(currentLevel / 10) * 5.0
                             let mb = Int(part1 + part2)
-                            return "\(tr("Mutation")) : +\(mb)%"
+                            return "+\(mb)%"
                         }()
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .foregroundColor(.yellow)
-                                Text(moneyBonusText)
-                                    .foregroundColor(.white)
-                            }
-                            HStack {
-                                Image(systemName: "flask.fill")
-                                    .foregroundColor(.green)
-                                Text(mutationBonusText)
-                                    .foregroundColor(.white)
-                            }
+
+                        HStack(spacing: 12) {
+                            StatBonusCard(icon: "dollarsign.circle.fill", color: .yellow, title: tr("Revenus"), value: moneyBonusText)
+                            StatBonusCard(icon: "dna", color: .green, title: tr("Mutation"), value: mutationBonusText)
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
-                        
+                        .padding(.horizontal)
+
+                        // Prochain palier
                         let nextMilestone = ((currentLevel / 10) + 1) * 10
-                        
-                        Text("\(tr("Prochain Palier (Niveau")) \(nextMilestone))")
-                            .font(.headline)
-                            .foregroundColor(.orange)
-                            .padding(.top, 10)
-                        
-                        HStack {
-                            Image(systemName: "gift.fill")
-                                .foregroundColor(.orange)
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text(tr("+25% Revenus & +5% Mutation"))
-                                Text(tr("10 Gemmes"))
-                                Text(tr("1 Perk Usine & 1 Perk Canard"))
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "gift.fill")
+                                    .foregroundColor(.orange)
+                                Text("\(tr("Prochain Palier (Niveau")) \(nextMilestone))")
+                                    .font(.headline)
+                                    .foregroundColor(.orange)
+                                Spacer()
+                            }
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                MilestoneRewardRow(icon: "chart.line.uptrend.xyaxis", color: .yellow, text: tr("+25% Revenus & +5% Mutation"))
+                                MilestoneRewardRow(icon: "diamond.fill", color: .cyan, text: tr("10 Gemmes"))
+                                MilestoneRewardRow(icon: "star.fill", color: .purple, text: tr("1 Perk Usine & 1 Perk Canard"))
                                 if nextMilestone % 100 == 0 {
-                                    Text(tr("Revenus doublés !")).bold().foregroundColor(.yellow)
+                                    MilestoneRewardRow(icon: "flame.fill", color: .red, text: tr("Revenus doublés !"), highlight: true)
                                 }
                             }
-                            .foregroundColor(.white)
-                            Spacer()
                         }
-                        .padding()
-                        .background(Color.orange.opacity(0.1))
-                        .cornerRadius(12)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.orange.opacity(0.08))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(colors: [.orange.opacity(0.5), .orange.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                    lineWidth: 1
+                                )
+                        )
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
                 }
-                .padding(.top, 20)
             }
             .navigationTitle(tr("Niveau Joueur"))
             .navigationBarTitleDisplayMode(.inline)
@@ -142,6 +146,71 @@ struct LevelSheetView: View {
             } message: {
                 Text(tr("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."))
             }
+        }
+    }
+}
+
+// MARK: - Composants
+
+private struct StatBonusCard: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(RadialGradient(colors: [color.opacity(0.3), color.opacity(0.08)], center: .center, startRadius: 2, endRadius: 22))
+                    .frame(width: 42, height: 42)
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(color)
+            }
+
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.55))
+
+            Text(value)
+                .font(.system(size: 17, weight: .black, design: .rounded))
+                .foregroundColor(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(color.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+private struct MilestoneRewardRow: View {
+    let icon: String
+    let color: Color
+    let text: String
+    var highlight: Bool = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(color)
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(color.opacity(0.15)))
+
+            Text(text)
+                .font(highlight ? .subheadline.bold() : .subheadline)
+                .foregroundColor(highlight ? .yellow : .white.opacity(0.9))
+
+            Spacer(minLength: 0)
         }
     }
 }

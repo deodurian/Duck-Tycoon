@@ -42,7 +42,8 @@ struct UnlockCard: View {
             Text(tr(def.effectDescription))
                 .font(.system(size: 10))
                 .foregroundColor(.gray)
-                .lineLimit(2)
+                .lineLimit(3)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             // Menu de filtre si c'est le autoRecycleFilter acheté

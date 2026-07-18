@@ -355,16 +355,14 @@ extension GameManager {
             prestigeRitualBonus *= fixRitual * fixGolden
         }
         
-        var perkBonus = 1.0
         let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        let stats = duck.getDynamicStats(with: duckPerks)
-        perkBonus = stats.extraValueMultiplier
         
-        return duck.sellValue * earningsMultiplier * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus * perkBonus
+        return duck.calculateSellValue(with: duckPerks) * earningsMultiplier * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus
     }
     
     func displayRecycleValue(for duck: Duck) -> BigNumber {
-        return duck.recycleValue * mutationMultiplier
+        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return duck.calculateRecycleValue(with: duckPerks) * mutationMultiplier
     }
     
     func calculateCrateCostMoney(crate: Crate, amount: Int) -> BigNumber? {

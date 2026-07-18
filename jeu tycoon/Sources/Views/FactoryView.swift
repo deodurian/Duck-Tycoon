@@ -4,7 +4,6 @@ struct FactoryView: View {
     @Environment(GameManager.self) private var gameManager
     
     @State private var showingLevelSheet = false
-    @State private var showingQuestSheet = false
     @State private var showingPerkSheet = false
     
     let columns = [
@@ -27,19 +26,6 @@ struct FactoryView: View {
                         .padding(.vertical, 8)
                         .background(Color.yellow.opacity(0.2))
                         .foregroundColor(.yellow)
-                        .cornerRadius(12)
-                    }
-                    
-                    Button(action: { showingQuestSheet = true }) {
-                        HStack {
-                            Text(tr("🎯"))
-                            Text(tr("Missions"))
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.2))
-                        .foregroundColor(.blue)
                         .cornerRadius(12)
                     }
                     
@@ -165,10 +151,6 @@ struct FactoryView: View {
         .background(Color.clear)
         .sheet(isPresented: $showingLevelSheet) {
             LevelSheetView()
-                .environment(gameManager)
-        }
-        .sheet(isPresented: $showingQuestSheet) {
-            MissionSheetView()
                 .environment(gameManager)
         }
         .sheet(isPresented: $showingPerkSheet) {

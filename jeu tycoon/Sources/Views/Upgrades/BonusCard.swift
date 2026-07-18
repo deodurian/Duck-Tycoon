@@ -53,6 +53,8 @@ struct BonusCard: View {
                 Text(tr(def.effectDescription))
                     .font(.system(size: 10))
                     .foregroundColor(.gray)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
                 Spacer()
                 HStack(spacing: 2) {
                     Image(systemName: "chart.bar.fill")

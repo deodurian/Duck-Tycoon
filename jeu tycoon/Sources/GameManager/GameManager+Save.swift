@@ -91,7 +91,10 @@ extension GameManager {
         
         let offlineXpRate = PlayerLevelSystem.calculatePassiveXP(earningsPerSecond: earningsPerSecond)
         let totalOfflineXP = offlineXpRate * Int(secondsOffline)
-        
+
+        // Pas de popup s'il n'y a rien à réclamer (ex: premier lancement, aucun canard assigné)
+        guard totalOfflineEarnings > .zero || totalOfflineMutations > .zero || totalOfflineXP > 0 else { return }
+
         // On ne l'ajoute pas directement, on le stocke dans le popup
         pendingOfflineEarnings = OfflineEarnings(money: totalOfflineEarnings, dna: totalOfflineMutations, xp: totalOfflineXP, seconds: secondsOffline)
     }
@@ -191,9 +194,11 @@ extension GameManager {
         currentStoryStep = defaultState.currentStoryStep
         isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
         storyFlags = defaultState.storyFlags
-        
+
+        lastSaveDate = Date()
+        pendingOfflineEarnings = nil
+
         invalidateEarningsCache()
-        calculateOfflineEarnings()
         evaluateAffordableCrates(reset: true)
 
         saveGame()

@@ -143,5 +143,5 @@ extension GameManager {
     var isAmelioUnlocked: Bool { currentStoryStep >= 2 } // unlocked at the beginning of step 2
     var isBanqueUnlocked: Bool { currentStoryStep >= 4 } // also unlocks perks
     var isRituelUnlocked: Bool { currentStoryStep >= 5 }
-    var isPrestigeUnlocked: Bool { currentStoryStep >= 6 && money >= BigNumber(10_000_000_000) }
+    var isPrestigeUnlocked: Bool { currentStoryStep >= 6 && (hasPrestiged || money >= BigNumber(10_000_000_000)) }
 }

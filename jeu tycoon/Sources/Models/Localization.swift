@@ -1384,6 +1384,7 @@ let translations: [AppLanguage: [String: String]] = [
         "Quête en cours...": "Quest in progress...",
         "Histoire Terminée !": "Story Completed!",
         "Chapitre": "Chapter",
+        "Assigné à une usine": "Assigned to a factory",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "You have completed all story quests. Free mode is activated!",
         
         "La Production": "Production",
@@ -2101,6 +2102,7 @@ let translations: [AppLanguage: [String: String]] = [
         "Quête en cours...": "Misión en curso...",
         "Histoire Terminée !": "¡Historia Terminada!",
         "Chapitre": "Capítulo",
+        "Assigné à une usine": "Asignado a una fábrica",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "Has completado todas las misiones de la historia. ¡El modo libre está activado!",
         
         "La Production": "La Producción",

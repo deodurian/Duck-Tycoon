@@ -44,7 +44,9 @@ struct DuckDetailView: View {
     var body: some View {
         let duckPerks = currentDuck.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
         let dynamicStats = currentDuck.getDynamicStats(with: duckPerks)
-        
+        let rarityColor = currentDuck.rarity.color
+        let isAssigned = gameManager.isDuckAssigned(duckId: currentDuck.id)
+
         ZStack {
             LinearGradient(
                 colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
@@ -52,165 +54,207 @@ struct DuckDetailView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: 20) {
-            Image(currentDuck.rarity.imageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 120, height: 120)
-                .padding()
-                .background(Circle().fill(currentDuck.rarity.color.opacity(0.3)))
-            
-            Text("\(tr("Canard "))\(currentDuck.rarity.localizedName)")
-                .font(.system(.largeTitle, design: .rounded).weight(.black))
-                .foregroundColor(currentDuck.rarity.color)
-            
-            if currentDuck.fusionLevel > 0 {
-                Text("\(tr("Niveau de Fusion "))\(currentDuck.fusionLevel)/4")
-                    .font(.headline)
-                    .foregroundColor(currentDuck.fusionLevel == 4 ? .purple : .yellow)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.black)
-                    .cornerRadius(8)
-            }
-            
-            Text("\(tr("Lv.")) \(dynamicStats.level)")
-                .font(.headline)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-            
-            Text("\(tr("Génère : "))\(gameManager.displaySellValue(for: currentDuck).formattedString()) 💰\(tr(" / sec"))")
-                .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            
-            HStack {
-                Text("\(tr("Taille:")) \(tr(dynamicStats.size.rawValue))")
-                    .padding(5)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(5)
-                
-                Text("\(tr("Mutation:")) \(tr(dynamicStats.mutation.rawValue))")
-                    .padding(5)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(5)
-            }
-            .font(.caption)
-            
-            // Emplacement de Perk
-            VStack(spacing: 5) {
-                Text(tr("Perk Équipé"))
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                
-                Button(action: {
-                    showingPerkSelection = true
-                }) {
-                    if let perkId = currentDuck.equippedPerkIds.first, let perk = gameManager.perksInventory.first(where: { $0.id == perkId }) {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(perk.rarity.color)
-                            Text(tr(perk.name))
-                                .font(.subheadline.bold())
-                                .foregroundColor(.primary)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+
+                    // --- HÉROS : image dans un halo de rareté ---
+                    ZStack {
+                        Circle()
+                            .fill(RadialGradient(colors: [rarityColor.opacity(0.45), .clear], center: .center, startRadius: 20, endRadius: 95))
+                            .frame(width: 190, height: 190)
+                        Circle()
+                            .stroke(
+                                LinearGradient(colors: [rarityColor, rarityColor.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 3
+                            )
+                            .frame(width: 140, height: 140)
+                        Image(currentDuck.rarity.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 105, height: 105)
+                    }
+                    .padding(.top, 4)
+
+                    Text("\(tr("Canard "))\(currentDuck.rarity.localizedName)")
+                        .font(.system(.title, design: .rounded).weight(.black))
+                        .foregroundColor(rarityColor)
+
+                    // --- BADGES : niveau, fusion, rituels, assignation ---
+                    HStack(spacing: 8) {
+                        DuckBadge(text: "\(tr("Lv.")) \(dynamicStats.level)", color: .white)
+
+                        if currentDuck.fusionLevel > 0 {
+                            DuckBadge(text: "\(tr("Niveau de Fusion "))\(currentDuck.fusionLevel)/4", color: currentDuck.fusionLevel == 4 ? .purple : .yellow)
                         }
-                        .padding(8)
-                        .background(perk.rarity.color.opacity(0.1))
-                        .cornerRadius(8)
-                    } else {
-                        Text(tr("Aucun Perk équipé (Toucher pour choisir)"))
-                            .font(.subheadline)
-                            .foregroundColor(.gray.opacity(0.8))
+
+                        if currentDuck.totalRituals > 0 {
+                            DuckBadge(text: "🔥 \(currentDuck.totalRituals)", color: .pink)
+                        }
+
+                        if isAssigned {
+                            DuckBadge(text: "🏭 " + tr("Assigné à une usine"), color: .blue)
+                        }
+                    }
+
+                    // --- TUILES : revenus + recyclage ---
+                    HStack(spacing: 12) {
+                        DuckStatTile(
+                            icon: "💰",
+                            title: tr("Revenus"),
+                            value: "\(gameManager.displaySellValue(for: currentDuck).formattedString())/s",
+                            color: .yellow
+                        )
+                        DuckStatTile(
+                            icon: "🧬",
+                            title: tr("Recyclage"),
+                            value: "+\(gameManager.displayRecycleValue(for: currentDuck).formattedString())",
+                            color: .green
+                        )
+                    }
+
+                    // --- ATTRIBUTS : taille + mutation ---
+                    HStack(spacing: 8) {
+                        DuckBadge(text: "\(tr("Taille:")) \(tr(dynamicStats.size.rawValue))", color: .cyan)
+                        DuckBadge(text: "\(tr("Mutation:")) \(tr(dynamicStats.mutation.rawValue))", color: dynamicStats.mutation.color)
+                    }
+
+                    // --- PERKS ÉQUIPÉS ---
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.purple)
+                                Text(tr("Perks Équipés"))
+                                    .font(.headline)
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                            Spacer()
+                            let maxSlots = gameManager.maxDuckPerkSlots(for: currentDuck)
+                            Text("\(currentDuck.equippedPerkIds.count)/\(maxSlots) \(tr("emplacements"))")
+                                .font(.caption.bold())
+                                .foregroundColor(.green)
+                        }
+
+                        Button(action: { showingPerkSelection = true }) {
+                            VStack(spacing: 8) {
+                                if duckPerks.isEmpty {
+                                    Text(tr("Aucun Perk équipé (Toucher pour choisir)"))
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                } else {
+                                    ForEach(duckPerks) { perk in
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "star.fill")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(perk.rarity.color)
+                                            Text(tr(perk.name))
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.white)
+                                            Spacer()
+                                            Text(tr(perk.rarity.rawValue))
+                                                .font(.system(size: 10, weight: .black))
+                                                .foregroundColor(perk.rarity.color)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Capsule().fill(perk.rarity.color.opacity(0.15)))
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(RoundedRectangle(cornerRadius: 10).fill(perk.rarity.color.opacity(0.08)))
+                                    }
+                                }
+                            }
                             .padding(8)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.04)))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color.purple.opacity(0.25), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+
+                    // --- AMÉLIORATIONS ---
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.cyan)
+                            Text(tr("Améliorations"))
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+
+                        DuckUpgradeButton(
+                            title: tr("Améliorer Taille"),
+                            cost: currentDuck.sizeUpgradeCost,
+                            icon: "🧬",
+                            color: .blue,
+                            impact: sizeUpgradeImpact(),
+                            canAfford: currentDuck.sizeUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.sizeUpgradeCost ?? BigNumber(1e100)),
+                            maxLabel: tr("Niveau MAX"),
+                            action: { gameManager.upgradeDuckSize(id: currentDuck.id) }
+                        )
+
+                        DuckUpgradeButton(
+                            title: tr("Muter"),
+                            cost: currentDuck.mutationUpgradeCost,
+                            icon: "🧬",
+                            color: .purple,
+                            impact: mutationUpgradeImpact(),
+                            canAfford: currentDuck.mutationUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.mutationUpgradeCost ?? BigNumber(1e100)),
+                            maxLabel: tr("Niveau MAX"),
+                            action: { gameManager.upgradeDuckMutation(id: currentDuck.id) }
+                        )
+
+                        DuckUpgradeButton(
+                            title: tr("Augmenter Niveau"),
+                            cost: currentDuck.levelUpgradeCost,
+                            icon: "💰",
+                            color: .yellow,
+                            impact: levelUpgradeImpact(),
+                            canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
+                            maxLabel: tr("Niveau MAX (100)"),
+                            action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
+                        )
+                    }
+
+                    // --- RECYCLAGE ---
+                    Button(action: {
+                        showingRecycleAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("\(tr("Recycler (+ "))\(gameManager.displayRecycleValue(for: currentDuck).formattedString()) 🧬)")
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            isAssigned
+                            ? AnyShapeStyle(Color.gray.opacity(0.6))
+                            : AnyShapeStyle(LinearGradient(colors: [.red, Color(red: 0.6, green: 0.05, blue: 0.1)], startPoint: .top, endPoint: .bottom))
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(14)
+                        .shadow(color: isAssigned ? .clear : .red.opacity(0.35), radius: 8, y: 4)
+                    }
+                    .padding(.top, 4)
+
+                    if isAssigned {
+                        Text(tr("Ce canard sera retiré de l'usine si vous le recyclez."))
+                            .font(.caption)
+                            .foregroundColor(.orange)
                     }
                 }
-                .buttonStyle(PlainButtonStyle())
-            }
-            .padding(.top, 5)
-            
-            Divider()
-            
-            Text(tr("Améliorations (Coûte des 🧬)"))
-                .font(.title2)
-                .foregroundColor(.gray)
-            
-            HStack(spacing: 20) {
-                // Bouton Taille
-                DuckUpgradeButton(
-                    title: tr("Améliorer Taille"),
-                    cost: currentDuck.sizeUpgradeCost,
-                    icon: "🧬",
-                    color: .blue,
-                    impact: sizeUpgradeImpact(),
-                    canAfford: currentDuck.sizeUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.sizeUpgradeCost ?? BigNumber(1e100)),
-                    maxLabel: tr("Niveau MAX"),
-                    action: { gameManager.upgradeDuckSize(id: currentDuck.id) }
-                )
-                
-                // Bouton Mutation
-                DuckUpgradeButton(
-                    title: tr("Muter"),
-                    cost: currentDuck.mutationUpgradeCost,
-                    icon: "🧬",
-                    color: .purple,
-                    impact: mutationUpgradeImpact(),
-                    canAfford: currentDuck.mutationUpgradeCost != nil && gameManager.mutationPoints >= (currentDuck.mutationUpgradeCost ?? BigNumber(1e100)),
-                    maxLabel: tr("Niveau MAX"),
-                    action: { gameManager.upgradeDuckMutation(id: currentDuck.id) }
-                )
-            }
-            
-            Divider()
-            
-            Text(tr("Niveau (Coûte des 💰)"))
-                .font(.title2)
-                .foregroundColor(.gray)
-            
-            DuckUpgradeButton(
-                title: tr("Augmenter Niveau"),
-                cost: currentDuck.levelUpgradeCost,
-                icon: "💰",
-                color: .yellow,
-                impact: levelUpgradeImpact(),
-                canAfford: currentDuck.levelUpgradeCost != nil && gameManager.money >= (currentDuck.levelUpgradeCost ?? BigNumber(Double.greatestFiniteMagnitude)),
-                maxLabel: tr("Niveau MAX (100)"),
-                action: { gameManager.upgradeDuckLevel(id: currentDuck.id) }
-            )
-            
-            Spacer()
-            
-            let isAssigned = gameManager.isDuckAssigned(duckId: currentDuck.id)
-            
-            Button(action: {
-                showingRecycleAlert = true
-            }) {
-                HStack {
-                    Image(systemName: "trash")
-                    Text("\(tr("Recycler (+ "))\(gameManager.displayRecycleValue(for: currentDuck).formattedString()) 🧬)")
-                        .fontWeight(.bold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
-                .frame(maxWidth: .infinity)
                 .padding()
-                .background(isAssigned ? Color.gray : Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            
-            if isAssigned {
-                Text(tr("Ce canard sera retiré de l'usine si vous le recyclez."))
-                    .font(.caption)
-                    .foregroundColor(.orange)
-            }
-            }
-            .padding()
             }
         }
         .alert(tr("Confirmer le recyclage"), isPresented: $showingRecycleAlert) {
@@ -612,6 +656,51 @@ struct RaritySelectionButton: View {
     }
 }
 
+// MARK: - Composants du détail de canard
+
+struct DuckBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.caption.bold())
+            .foregroundColor(color == .white ? .white : color)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(color.opacity(0.15)))
+            .overlay(Capsule().stroke(color.opacity(0.35), lineWidth: 1))
+    }
+}
+
+struct DuckStatTile: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(icon)
+                .font(.title3)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.5))
+            Text(value)
+                .font(.system(size: 16, weight: .black, design: .rounded))
+                .foregroundColor(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(color.opacity(0.2), lineWidth: 1))
+    }
+}
+
 struct DuckUpgradeButton: View {
     let title: String
     let cost: BigNumber?
@@ -621,42 +710,71 @@ struct DuckUpgradeButton: View {
     let canAfford: Bool
     let maxLabel: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                Text(tr(title))
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                if let cost = cost, let impact = impact {
-                    Text("\(tr("Coût : "))\(cost.formattedString()) \(icon)")
-                        .font(.subheadline)
-                        .foregroundColor(color)
-                        .bold()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                    
-                    Text("+\(impact.formattedString()) 💰/s")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                        .bold()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(RadialGradient(colors: [color.opacity(0.35), color.opacity(0.08)], center: .center, startRadius: 2, endRadius: 20))
+                        .frame(width: 38, height: 38)
+                    Text(icon)
+                        .font(.system(size: 16))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tr(title))
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+
+                    if cost != nil, let impact = impact {
+                        Text("+\(impact.formattedString()) 💰/s")
+                            .font(.caption.bold())
+                            .foregroundColor(.green)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    } else {
+                        Text(tr(maxLabel))
+                            .font(.caption.bold())
+                            .foregroundColor(.gray)
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                if let cost = cost {
+                    HStack(spacing: 3) {
+                        Text(cost.formattedString())
+                            .font(.system(size: 13, weight: .bold))
+                        Text(icon)
+                            .font(.system(size: 11))
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule().fill(
+                            canAfford
+                            ? AnyShapeStyle(LinearGradient(colors: [color, color.opacity(0.75)], startPoint: .leading, endPoint: .trailing))
+                            : AnyShapeStyle(Color.gray.opacity(0.2))
+                        )
+                    )
+                    .foregroundColor(canAfford ? .white : .gray)
                 } else {
-                    Text(tr(maxLabel))
-                        .font(.subheadline)
+                    Text(tr("MAX"))
+                        .font(.system(size: 12, weight: .black))
                         .foregroundColor(.gray)
-                        .bold()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Color.gray.opacity(0.15)))
                 }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 100)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(15)
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
             .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(cost != nil && canAfford ? color : Color.gray.opacity(0.3), lineWidth: 2)
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(cost != nil && canAfford ? color.opacity(0.45) : Color.white.opacity(0.06), lineWidth: 1.5)
             )
         }
         .buttonStyle(PlainButtonStyle())

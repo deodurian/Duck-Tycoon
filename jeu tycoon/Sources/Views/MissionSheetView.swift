@@ -3,57 +3,26 @@ import SwiftUI
 struct MissionSheetView: View {
     @Environment(GameManager.self) private var gameManager
     @Environment(\.dismiss) var dismiss
-    @State private var selectedTab: MissionTypeTab = .intro
-    
-    enum MissionTypeTab: String, CaseIterable {
-        case intro = "Principales"
-        case daily = "Quotidiennes"
-    }
-    
+
+    // Les quêtes principales (tutoriel) sont remplacées par le Mode Histoire :
+    // seules les missions quotidiennes restent visibles ici.
     private var visibleMissions: [Mission] {
-        var result: [Mission] = []
-        
-        if selectedTab == .intro {
-            var activeMission: Mission? = nil
-            var claimedMissions: [Mission] = []
-            
-            for mission in gameManager.missions where mission.type == .intro {
-                if mission.status == .claimed {
-                    claimedMissions.append(mission)
-                } else if activeMission == nil {
-                    activeMission = mission
-                }
-            }
-            
-            // On place la mission active en haut, puis les terminées en dessous
-            if let active = activeMission {
-                result.append(active)
-            }
-            // On inverse les terminées pour voir les plus récentes en haut, ou on les laisse dans l'ordre chronologique.
-            // Laissons les dans l'ordre de base.
-            result.append(contentsOf: claimedMissions)
-            
-        } else {
-            result.append(contentsOf: gameManager.missions.filter { $0.type == .daily })
-        }
-        
-        return result
+        return gameManager.missions.filter { $0.type == .daily }
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(red: 0.05, green: 0.0, blue: 0.12).ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 15) {
-                        Picker(tr("Type de mission"), selection: $selectedTab) {
-                            ForEach(MissionTypeTab.allCases, id: \.self) { tab in
-                                Text(tr(tab.rawValue)).tag(tab)
-                            }
+                        HStack {
+                            Text(tr("Quotidiennes"))
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.6))
+                            Spacer()
                         }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal)
                         .padding(.top, 10)
                         ForEach(visibleMissions) { mission in
                             MissionRowView(mission: mission)

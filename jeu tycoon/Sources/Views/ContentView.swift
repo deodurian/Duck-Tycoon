@@ -94,9 +94,9 @@ struct ContentView: View {
                     case 1:
                         FactoryView()
                     case 2:
-                        CrateShopView()
-                    case 3:
                         InventoryView(selectedTab: $selectedTab, navPath: $navPath)
+                    case 3:
+                        CrateShopView()
                     case 4:
                         UpgradeView()
                     case 5:
@@ -156,24 +156,24 @@ struct CustomTabBar: View {
     @Environment(GameManager.self) private var gameManager
     
     let tabs: [(title: String, icon: String, color: Color)] = [
-        ("Histoire", "book.fill", .blue),
-        ("Usines", "building.2.crop.circle", .green),
+        ("Histoire", "book.fill", .green),
+        ("Usines", "building.2.crop.circle", .blue),
+        ("Canards", "bird", Color(red: 0.0, green: 0.35, blue: 0.12)),
         ("Boutique", "shippingbox", .orange),
-        ("Canards", "bird", .yellow),
-        ("Amélio.", "bolt.circle.fill", .purple),
-        ("Rituel", "flame", .red),
+        ("Amélio.", "bolt.circle.fill", .yellow),
+        ("Rituel", "flame", Color(red: 0.35, green: 0.05, blue: 0.55)),
         ("Prestige", "star.fill", .yellow),
-        ("Banque", "creditcard.fill", .cyan)
+        ("Banque", "creditcard.fill", Color(red: 0.55, green: 0.85, blue: 0.45))
     ]
-    
+
     @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-    
+
     private func isUnlocked(_ index: Int) -> Bool {
         switch index {
         case 0: return gameManager.isHistoireUnlocked
         case 1: return gameManager.isUsinesUnlocked
-        case 2: return gameManager.isBoutiqueUnlocked
-        case 3: return gameManager.isInventoryUnlocked
+        case 2: return gameManager.isInventoryUnlocked
+        case 3: return gameManager.isBoutiqueUnlocked
         case 4: return gameManager.isAmelioUnlocked
         case 5: return gameManager.isRituelUnlocked
         case 6: return gameManager.isPrestigeUnlocked
@@ -199,27 +199,16 @@ struct CustomTabBar: View {
                     }
                 }) {
                     let unlocked = isUnlocked(index)
+                    // Icône + libellé toujours affichés : la barre garde une taille constante
                     VStack(spacing: 4) {
-                        if unlocked {
-                            Image(systemName: tabs[index].icon)
-                                .font(.system(size: 20, weight: selectedTab == index ? .bold : .regular))
-                                .scaleEffect(selectedTab == index ? 1.2 : 1.0)
-                        } else {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 20, weight: .regular))
-                        }
-                        
-                        if selectedTab == index {
-                            Text(tr(tabs[index].title))
-                                .font(.system(size: 9, weight: .bold)) // Slightly smaller to fit 7 tabs
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        } else if !unlocked {
-                            Text(tr(tabs[index].title))
-                                .font(.system(size: 7, weight: .regular))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.5)
-                        }
+                        Image(systemName: unlocked ? tabs[index].icon : "lock.fill")
+                            .font(.system(size: 22, weight: selectedTab == index ? .bold : .regular))
+                            .scaleEffect(selectedTab == index ? 1.15 : 1.0)
+
+                        Text(tr(tabs[index].title))
+                            .font(.system(size: 9, weight: selectedTab == index ? .bold : .medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
                     .foregroundColor(unlocked ? tabs[index].color.opacity(selectedTab == index ? 1.0 : 0.5) : .gray.opacity(0.3))
                     .frame(maxWidth: .infinity)
@@ -228,7 +217,7 @@ struct CustomTabBar: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 12)
+        .padding(.vertical, 15)
         .background(
             RoundedRectangle(cornerRadius: 30)
                 .fill(.ultraThinMaterial)

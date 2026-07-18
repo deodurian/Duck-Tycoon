@@ -11,78 +11,103 @@ struct PerkSelectionSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.05, green: 0.0, blue: 0.12).ignoresSafeArea()
-                
+                LinearGradient(
+                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
                 ScrollView {
                     VStack(spacing: 20) {
-                        
+
                         // --- SECTION : PERKS ÉQUIPÉS ---
                         let equippedIds = getEquippedPerks()
                         if !equippedIds.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text(tr("Perks Équipés"))
-                                    .font(.headline)
-                                    .foregroundColor(.gray)
-                                    .padding(.horizontal)
-                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.blue)
+                                    Text(tr("Perks Équipés"))
+                                        .font(.headline)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                                .padding(.horizontal)
+
                                 ForEach(equippedIds, id: \.self) { perkId in
                                     if let perk = gameManager.perksInventory.first(where: { $0.id == perkId }) {
-                                        HStack {
-                                            PerkCardView(perk: perk)
-                                            
-                                            Button(action: {
-                                                gameManager.unequipPerk(perk.id, from: targetId)
-                                            }) {
-                                                Image(systemName: "minus.circle.fill")
-                                                    .font(.title)
-                                                    .foregroundColor(.red)
-                                                    .padding(.trailing)
+                                        PerkCardView(perk: perk)
+                                            .overlay(alignment: .topTrailing) {
+                                                Button(action: {
+                                                    gameManager.unequipPerk(perk.id, from: targetId)
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .font(.title2)
+                                                        .foregroundColor(.red)
+                                                        .background(Circle().fill(Color.black.opacity(0.6)))
+                                                }
+                                                .offset(x: 8, y: -8)
                                             }
-                                        }
-                                        .background(Color.red.opacity(0.1))
-                                        .cornerRadius(12)
                                     }
                                 }
+                                .padding(.horizontal)
                             }
                         }
-                        
+
                         // --- SECTION : PERKS DISPONIBLES ---
                         let perkType: PerkType = targetType == .factory ? .factory : .duck
                         let allTypePerks = gameManager.perks(for: perkType)
                         let selectionPerks = allTypePerks.filter { !equippedIds.contains($0.id) }
-                        
+
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text(tr("Perks Disponibles"))
-                                    .font(.headline)
-                                    .foregroundColor(.gray)
-                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.purple)
+                                    Text(tr("Perks Disponibles"))
+                                        .font(.headline)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+
                                 Spacer()
-                                
+
                                 let maxSlots = getMaxSlots()
+                                let isFull = equippedIds.count >= maxSlots
                                 Text("\(equippedIds.count)/\(maxSlots) \(tr("emplacements"))")
-                                    .font(.caption)
-                                    .foregroundColor(equippedIds.count >= maxSlots ? .red : .green)
+                                    .font(.caption.bold())
+                                    .foregroundColor(isFull ? .red : .green)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill((isFull ? Color.red : Color.green).opacity(0.12)))
+                                    .overlay(Capsule().stroke((isFull ? Color.red : Color.green).opacity(0.35), lineWidth: 1))
                             }
                             .padding(.horizontal)
-                            
+
                             if selectionPerks.isEmpty {
-                                Text(tr("Aucun perk disponible de ce type."))
-                                    .foregroundColor(.gray)
-                                    .padding()
+                                VStack(spacing: 12) {
+                                    Image(systemName: "sparkles.rectangle.stack")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.white.opacity(0.2))
+                                    Text(tr("Aucun perk disponible de ce type."))
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 40)
                             } else {
-                                LazyVStack(spacing: 15) {
+                                LazyVStack(spacing: 12) {
                                     ForEach(selectionPerks) { perk in
                                         let isEquippedAnywhere = gameManager.isPerkEquippedAnywhere(perk.id)
                                         let isSlotFull = equippedIds.count >= getMaxSlots()
-                                        
+
                                         PerkCardView(perk: perk, showRecycle: false)
                                             .opacity(isEquippedAnywhere || isSlotFull ? 0.4 : 1.0)
                                             .overlay(
                                                 Group {
                                                     if isEquippedAnywhere {
-                                                        Color.black.opacity(0.3)
-                                                            .cornerRadius(10)
+                                                        RoundedRectangle(cornerRadius: 14)
+                                                            .fill(Color.black.opacity(0.3))
                                                         Image(systemName: "lock.fill")
                                                             .font(.largeTitle)
                                                             .foregroundColor(.white.opacity(0.8))
@@ -97,6 +122,7 @@ struct PerkSelectionSheet: View {
                                             }
                                     }
                                 }
+                                .padding(.horizontal)
                             }
                         }
                     }

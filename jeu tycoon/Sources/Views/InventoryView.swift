@@ -342,8 +342,9 @@ struct InventoryView: View {
                 updateDisplayInventory()
             }
             // Mettre à jour l'inventaire si la taille de l'inventaire change (achats, fusions, etc.)
+            // L'onglet Canards est l'index 2 dans ContentView
             .onChange(of: gameManager.inventory.count) { _, _ in
-                if selectedTab == 1 {
+                if selectedTab == 2 {
                     if displayInventory.isEmpty {
                         updateDisplayInventory()
                     } else {
@@ -354,7 +355,7 @@ struct InventoryView: View {
                 }
             }
             .onChange(of: selectedTab) { oldValue, newValue in
-                if newValue == 1 && needsUpdate {
+                if newValue == 2 && needsUpdate {
                     silentUpdateDisplayInventory()
                     needsUpdate = false
                 }
@@ -378,7 +379,7 @@ struct InventoryView: View {
             Text(tr("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3"))
         }
         .onChange(of: selectedTab) { oldValue, newValue in
-            if newValue != 1 {
+            if newValue != 2 {
                 navPath = NavigationPath()
             }
         }

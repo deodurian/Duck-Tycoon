@@ -20,9 +20,19 @@ struct UpgradeView: View {
     
     var visibleUnlockChains: [[UpgradeID]] {
         var chains = unlockChains
-        chains.insert([.manualFusion, .autoFusion, .megaFusion], at: 0)
+        // Le Labo de Fusion (manualFusion) se débloque via l'Histoire, plus via la boutique
+        chains.insert([.autoFusion, .megaFusion], at: 0)
         chains.insert([.bulkRecycle], at: 4) // Position doesn't matter too much
-        return chains
+
+        // Tri par prix d'entrée croissant (coût du premier palier de chaque chaîne),
+        // pour un ordre stable qui ne change pas au fil des achats.
+        return chains.sorted { entryCost(for: $0) < entryCost(for: $1) }
+    }
+
+    private func entryCost(for chain: [UpgradeID]) -> Double {
+        guard let firstId = chain.first,
+              let def = UpgradeDefinition.all.first(where: { $0.id == firstId }) else { return .greatestFiniteMagnitude }
+        return def.baseCost
     }
     
     private let automatisationChains: [[UpgradeID]] = [
