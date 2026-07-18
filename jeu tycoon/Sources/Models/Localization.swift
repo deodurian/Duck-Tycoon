@@ -1373,7 +1373,52 @@ let translations: [AppLanguage: [String: String]] = [
         "Standard (a, b, c)": "Standard (a, b, c)",
         "Scientifique (e3, e6)": "Scientific (e3, e6)",
 
-        "Pas assez de gemmes !": "Not enough gems!"
+        "Pas assez de gemmes !": "Not enough gems!",
+        
+        // --- Story Mode ---
+        "Histoire & Objectifs": "Story & Objectives",
+        "Anthony le scientifique": "Anthony the Scientist",
+        "Objectif Actuel": "Current Objective",
+        "Récompense :": "Reward:",
+        "Récupérer la récompense": "Claim Reward",
+        "Quête en cours...": "Quest in progress...",
+        "Histoire Terminée !": "Story Completed!",
+        "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "You have completed all story quests. Free mode is activated!",
+        
+        "La Production": "Production",
+        "Assigner 1 canard dans l'usine": "Assign 1 duck to the factory",
+        "Débloque l'onglet Boutique": "Unlocks the Shop tab",
+        "Ho salut tu es le nouveau gérant de la ferme je suis Anthony le scientifique. Avec l’ancien gérant ça a mal tourné quand on faisait des expériences et toutes les infrastructures sont détruites. Il faut que l’on reconstruise ça ensemble. Pour commencer la production, mets le dernier canard dans l'usine.": "Oh hi, you're the new farm manager, I'm Anthony the scientist. Things went wrong with the old manager when we were doing experiments, and all the infrastructure is destroyed. We need to rebuild this together. To start production, put the last duck in the factory.",
+        
+        "Les Caisses": "The Crates",
+        "Ouvrir 1 caisse en bois": "Open 1 wooden crate",
+        "Débloque l'onglet Inventaire": "Unlocks the Inventory tab",
+        "Bravo, c’est la première étape d’un avenir radieux entre toi et les canards. Il nous faut maintenant plus de canards pour plus d’argent. J’ai fait livrer des caisses, va en ouvrir une en bois dans la boutique.": "Great job, this is the first step towards a bright future between you and the ducks. We now need more ducks for more money. I had some crates delivered, go open a wooden one in the shop.",
+        
+        "Le Laboratoire": "The Laboratory",
+        "Recycler 1 canard ET l'améliorer": "Recycle 1 duck AND upgrade it",
+        "50 ADN + Mécanique de Fusion": "50 DNA + Fusion Mechanic",
+        "Bon, pendant que tu ouvrais des caisses j’ai eu le temps de réparer le bâtiment des améliorations, tu vas pouvoir booster tes gains. J’ai remarqué qu’il y a des canards trop normaux dans l’inventaire. Tu peux les améliorer mais cela coûte des points de mutation, que l’on obtient en détruisant (recyclant) nos précieux canards.": "Well, while you were opening crates, I had time to repair the upgrades building, you'll be able to boost your earnings. I noticed there are some overly normal ducks in the inventory. You can upgrade them, but it costs mutation points, which we get by destroying (recycling) our precious ducks.",
+        
+        "La Fusion": "The Fusion",
+        "Effectuer 1 Fusion de canards": "Perform 1 Duck Fusion",
+        "Débloque l'onglet Banque + 1 Puce gratuite": "Unlocks the Bank tab + 1 Free Perk",
+        "L'usine commence à être surpeuplée ! Plutôt que de jeter nos canards, j'ai bricolé un compresseur moléculaire. Si tu as trois canards identiques, écrase-les ensemble pour créer une version améliorée !": "The factory is getting overcrowded! Rather than throwing our ducks away, I tinkered with a molecular compressor. If you have three identical ducks, crush them together to create an upgraded version!",
+        
+        "Les Perks": "The Perks",
+        "Équiper 1 Perk": "Equip 1 Perk",
+        "Débloque l'onglet Rituel": "Unlocks the Ritual tab",
+        "La technologie, c'est fantastique. J'ai conçu des \"Perks\" (Puces technologiques). On peut les greffer directement sur le cerveau de nos canards ou dans le système de ventilation des usines. Va équiper celle que je viens de te donner !": "Technology is fantastic. I designed \"Perks\" (Tech chips). We can graft them directly onto our ducks' brains or into the factories' ventilation system. Go equip the one I just gave you!",
+        
+        "L'Art Sombre": "The Dark Art",
+        "Effectuer 1 Rituel avec succès": "Perform 1 successful Ritual",
+        "Débloque le Prestige": "Unlocks Prestige",
+        "Euh... gérant ? En creusant pour agrandir le labo, on est tombés sur un vieil autel occulte. Il émet une énergie fascinante. J'ai une théorie : si on y sacrifie nos canards les plus rares, l'autel pourrait décupler leur valeur pour toujours. Prêt à tenter le diable ?": "Uhm... manager? While digging to expand the lab, we found an old occult altar. It emits a fascinating energy. I have a theory: if we sacrifice our rarest ducks there, the altar could multiply their value tenfold forever. Ready to tempt the devil?",
+        
+        "L'Anomalie": "The Anomaly",
+        "Atteindre 10 Milliards $ et faire un Prestige": "Reach 10 Billion $ and Prestige",
+        "10 Gemmes + Quêtes Secondaires": "10 Gems + Side Quests",
+        "[Anthony est paniqué] L'énergie occulte des rituels a fusionné avec la génétique des canards ! Un trou noir est en train de se former au centre de l'usine ! La seule solution pour sauver cette dimension est d'y précipiter toute notre entreprise. En échange, l'anomalie nous donnera des Étoiles d'Énergie Pure pour tout recommencer en mieux. On n'a pas le choix... clique sur Prestige !": "[Anthony is panicked] The occult energy of the rituals has merged with the ducks' genetics! A black hole is forming in the center of the factory! The only solution to save this dimension is to throw our entire business into it. In exchange, the anomaly will give us Stars of Pure Energy to start over better. We have no choice... click on Prestige!"
     ],
     .es: [
         "Jouer": "Jugar",
@@ -2044,6 +2089,51 @@ let translations: [AppLanguage: [String: String]] = [
         "Standard (a, b, c)": "Estándar (a, b, c)",
         "Scientifique (e3, e6)": "Científico (e3, e6)",
 
-        "Pas assez de gemmes !": "¡No hay suficientes gemas!"
+        "Pas assez de gemmes !": "¡No hay suficientes gemas!",
+        
+        // --- Story Mode ---
+        "Histoire & Objectifs": "Historia y Objetivos",
+        "Anthony le scientifique": "Anthony el científico",
+        "Objectif Actuel": "Objetivo Actual",
+        "Récompense :": "Recompensa:",
+        "Récupérer la récompense": "Reclamar recompensa",
+        "Quête en cours...": "Misión en curso...",
+        "Histoire Terminée !": "¡Historia Terminada!",
+        "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "Has completado todas las misiones de la historia. ¡El modo libre está activado!",
+        
+        "La Production": "La Producción",
+        "Assigner 1 canard dans l'usine": "Asignar 1 pato a la fábrica",
+        "Débloque l'onglet Boutique": "Desbloquea la pestaña de Tienda",
+        "Ho salut tu es le nouveau gérant de la ferme je suis Anthony le scientifique. Avec l’ancien gérant ça a mal tourné quand on faisait des expériences et toutes les infrastructures sont détruites. Il faut que l’on reconstruise ça ensemble. Pour commencer la production, mets le dernier canard dans l'usine.": "Hola, eres el nuevo gerente de la granja, soy Anthony el científico. Las cosas salieron mal con el antiguo gerente cuando hacíamos experimentos y toda la infraestructura está destruida. Necesitamos reconstruir esto juntos. Para iniciar la producción, pon el último pato en la fábrica.",
+        
+        "Les Caisses": "Las Cajas",
+        "Ouvrir 1 caisse en bois": "Abrir 1 caja de madera",
+        "Débloque l'onglet Inventaire": "Desbloquea la pestaña de Inventario",
+        "Bravo, c’est la première étape d’un avenir radieux entre toi et les canards. Il nous faut maintenant plus de canards pour plus d’argent. J’ai fait livrer des caisses, va en ouvrir une en bois dans la boutique.": "Bravo, este es el primer paso hacia un futuro brillante entre tú y los patos. Ahora necesitamos más patos para obtener más dinero. Hice que entregaran algunas cajas, ve a abrir una de madera en la tienda.",
+        
+        "Le Laboratoire": "El Laboratorio",
+        "Recycler 1 canard ET l'améliorer": "Reciclar 1 pato Y mejorarlo",
+        "50 ADN + Mécanique de Fusion": "50 ADN + Mecánica de Fusión",
+        "Bon, pendant que tu ouvrais des caisses j’ai eu le temps de réparer le bâtiment des améliorations, tu vas pouvoir booster tes gains. J’ai remarqué qu’il y a des canards trop normaux dans l’inventaire. Tu peux les améliorer mais cela coûte des points de mutation, que l’on obtient en détruisant (recyclant) nos précieux canards.": "Bueno, mientras abrías cajas tuve tiempo de reparar el edificio de mejoras, podrás potenciar tus ganancias. Noté que hay algunos patos demasiado normales en el inventario. Puedes mejorarlos, pero cuesta puntos de mutación, que obtenemos al destruir (reciclar) a nuestros preciados patos.",
+        
+        "La Fusion": "La Fusión",
+        "Effectuer 1 Fusion de canards": "Realizar 1 Fusión de patos",
+        "Débloque l'onglet Banque + 1 Puce gratuite": "Desbloquea la pestaña de Banco + 1 Chip gratis",
+        "L'usine commence à être surpeuplée ! Plutôt que de jeter nos canards, j'ai bricolé un compresseur moléculaire. Si tu as trois canards identiques, écrase-les ensemble pour créer une version améliorée !": "¡La fábrica se está sobrepoblando! En lugar de desechar a nuestros patos, armé un compresor molecular. ¡Si tienes tres patos idénticos, aplástalos juntos para crear una versión mejorada!",
+        
+        "Les Perks": "Los Perks",
+        "Équiper 1 Perk": "Equipar 1 Perk",
+        "Débloque l'onglet Rituel": "Desbloquea la pestaña de Ritual",
+        "La technologie, c'est fantastique. J'ai conçu des \"Perks\" (Puces technologiques). On peut les greffer directement sur le cerveau de nos canards ou dans le système de ventilation des usines. Va équiper celle que je viens de te donner !": "La tecnología es fantástica. Diseñé \"Perks\" (Chips tecnológicos). Podemos injertarlos directamente en los cerebros de nuestros patos o en el sistema de ventilación de las fábricas. ¡Ve a equipar el que acabo de darte!",
+        
+        "L'Art Sombre": "El Arte Oscuro",
+        "Effectuer 1 Rituel avec succès": "Realizar 1 Ritual con éxito",
+        "Débloque le Prestige": "Desbloquea el Prestigio",
+        "Euh... gérant ? En creusant pour agrandir le labo, on est tombés sur un vieil autel occulte. Il émet une énergie fascinante. J'ai une théorie : si on y sacrifie nos canards les plus rares, l'autel pourrait décupler leur valeur pour toujours. Prêt à tenter le diable ?": "Ehm... ¿gerente? Al cavar para expandir el laboratorio, encontramos un antiguo altar oculto. Emite una energía fascinante. Tengo una teoría: si sacrificamos a nuestros patos más raros allí, el altar podría multiplicar su valor por diez para siempre. ¿Listo para tentar al diablo?",
+        
+        "L'Anomalie": "La Anomalía",
+        "Atteindre 10 Milliards $ et faire un Prestige": "Alcanzar 10 Mil Millones $ y hacer un Prestigio",
+        "10 Gemmes + Quêtes Secondaires": "10 Gemas + Misiones Secundarias",
+        "[Anthony est paniqué] L'énergie occulte des rituels a fusionné avec la génétique des canards ! Un trou noir est en train de se former au centre de l'usine ! La seule solution pour sauver cette dimension est d'y précipiter toute notre entreprise. En échange, l'anomalie nous donnera des Étoiles d'Énergie Pure pour tout recommencer en mieux. On n'a pas le choix... clique sur Prestige !": "[Anthony está asustado] ¡La energía oculta de los rituales se ha fusionado con la genética de los patos! ¡Un agujero negro se está formando en el centro de la fábrica! La única solución para salvar esta dimensión es lanzar toda nuestra empresa hacia él. A cambio, la anomalía nos dará Estrellas de Energía Pura para empezar de nuevo mejor. No tenemos opción... ¡haz clic en Prestigio!"
     ]
 ]
