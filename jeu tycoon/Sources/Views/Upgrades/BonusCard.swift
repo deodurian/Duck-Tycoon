@@ -41,7 +41,7 @@ struct BonusCard: View {
                         .font(.system(size: 15))
                         .foregroundColor(rarityColor)
                 }
-                Text(def.name)
+                Text(tr(def.name))
                     .font(.caption.bold())
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
@@ -50,7 +50,7 @@ struct BonusCard: View {
             
             // Effet et Niveau
             HStack {
-                Text(def.effectDescription)
+                Text(tr(def.effectDescription))
                     .font(.system(size: 10))
                     .foregroundColor(.gray)
                 Spacer()
@@ -72,13 +72,13 @@ struct BonusCard: View {
             
             // Boutons
             if isMaxed {
-                UpgradeMaxedButton(text: "MAX", color: rarityColor, iconName: "crown.fill")
+                UpgradeMaxedButton(text: tr("MAX"), color: rarityColor, iconName: "crown.fill")
             } else {
                 HStack(spacing: 6) {
                     // Bouton x1
                     Button(action: { gameManager.buyUpgrade(def) }) {
                         VStack(spacing: 1) {
-                            Text("×1")
+                            Text(tr("×1"))
                                 .font(.system(size: 8, weight: .heavy))
                             HStack(spacing: 2) {
                                 Text(nextCost.formattedString())

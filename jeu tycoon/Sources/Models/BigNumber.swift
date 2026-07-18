@@ -388,7 +388,7 @@ extension BigNumber {
 }
 
 extension Double {
-    func safeInt() -> Int {
+    nonisolated func safeInt() -> Int {
         if self >= Double(Int.max) || self.isInfinite || self.isNaN {
             return Int.max
         } else if self <= Double(Int.min) {
@@ -399,7 +399,7 @@ extension Double {
 }
 
 extension Int {
-    mutating func addReportingOverflow(_ value: Int) {
+    nonisolated mutating func addReportingOverflow(_ value: Int) {
         let (newVal, overflow) = self.addingReportingOverflow(value)
         self = overflow ? Int.max : newVal
     }

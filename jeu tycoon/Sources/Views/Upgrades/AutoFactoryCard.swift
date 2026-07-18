@@ -48,7 +48,7 @@ struct AutoFactoryCard: View {
                         .foregroundColor(level == maxLevel ? .green : .orange)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(factory.name)
+                    Text(factory.name.replacingOccurrences(of: "Usine", with: tr("Usine")))
                         .font(.caption.bold())
                         .lineLimit(1)
                     
@@ -73,7 +73,7 @@ struct AutoFactoryCard: View {
             Spacer(minLength: 0)
             
             if level >= maxLevel {
-                UpgradeMaxedButton(text: "MAX", color: .green, iconName: "checkmark.circle.fill")
+                UpgradeMaxedButton(text: tr("MAX"), color: .green, iconName: "checkmark.circle.fill")
             } else {
                 UpgradeSinglePurchaseButton(
                     costStr: cost.formattedString(),

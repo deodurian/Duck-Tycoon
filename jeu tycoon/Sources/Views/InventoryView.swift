@@ -201,7 +201,7 @@ struct InventoryView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                        Text("Inventaire")
+                        Text(tr("Inventaire"))
                             .font(.largeTitle.bold())
                         
                         Button(action: { showStatsInfo = true }) {
@@ -223,7 +223,7 @@ struct InventoryView: View {
                     HStack(spacing: 4) {
                         Image(systemName: gameManager.isFusionUnlocked ? "flask.fill" : "lock.fill")
                             .font(.title3)
-                        Text("Labo")
+                        Text(tr("Labo"))
                             .font(.title3)
                             .bold()
                     }
@@ -242,7 +242,7 @@ struct InventoryView: View {
                     HStack(spacing: 4) {
                         Image(systemName: gameManager.isBulkRecycleUnlocked ? "arrow.3.trianglepath" : "lock.fill")
                             .font(.title3)
-                        Text("Recyclage")
+                        Text(tr("Recyclage"))
                             .font(.title3)
                             .bold()
                     }
@@ -261,7 +261,7 @@ struct InventoryView: View {
             HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
-                            Text("\(gameManager.inventory.count) / \(gameManager.maxInventoryCapacity) Canards")
+                            Text("\(gameManager.inventory.count) / \(gameManager.maxInventoryCapacity) \(tr("Canards"))")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -271,7 +271,7 @@ struct InventoryView: View {
                             }
                         }
                         if gameManager.maxInventoryCapacity >= 5000 {
-                            Text("Tous affichés")
+                            Text(tr("Tous affichés"))
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -279,15 +279,15 @@ struct InventoryView: View {
                     .padding(.leading, 15)
                     Spacer()
                     Menu {
-                        Picker("Trier par", selection: $sortOption) {
+                        Picker(tr("Trier par"), selection: $sortOption) {
                             ForEach(InventorySortOption.allCases, id: \.self) { option in
-                                Text(option.rawValue).tag(option)
+                                Text(tr(option.rawValue)).tag(option)
                             }
                         }
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.up.arrow.down")
-                            Text(sortOption.rawValue)
+                            Text(tr(sortOption.rawValue))
                         }
                         .font(.subheadline)
                         .padding(.horizontal, 10)
@@ -304,7 +304,7 @@ struct InventoryView: View {
             
             ScrollView {
                 if isLoading {
-                    ProgressView("Chargement des canards...")
+                    ProgressView(tr("Chargement des canards..."))
                         .padding(.top, 50)
                 } else {
                     LazyVGrid(columns: columns, spacing: 8) {
@@ -372,10 +372,10 @@ struct InventoryView: View {
                     .environment(gameManager)
             }
         }
-        .alert("Niveaux, Mutations & Tailles", isPresented: $showStatsInfo) {
-            Button("Compris", role: .cancel) {}
+        .alert(tr("Niveaux, Mutations & Tailles"), isPresented: $showStatsInfo) {
+            Button(tr("Compris"), role: .cancel) {}
         } message: {
-            Text("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3")
+            Text(tr("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3"))
         }
         .onChange(of: selectedTab) { oldValue, newValue in
             if newValue != 1 {

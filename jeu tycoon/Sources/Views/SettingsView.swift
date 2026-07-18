@@ -8,7 +8,18 @@ struct SettingsView: View {
     @State private var showingResetConfirmation = false
     @State private var cheatAmount: String = ""
     @AppStorage("numberFormatStyle") private var numberFormatStyle: NumberFormatStyle = .scientific
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .fr
+    
+    // Lecture directe depuis le LocalizationManager @Observable
+    private var selectedLanguage: Binding<AppLanguage> {
+        Binding(
+            get: { LocalizationManager.shared.language },
+            set: { newLang in
+                // Sauvegarder avant de rebooter l'app (car .id(language) sur le App root va détruire la vue)
+                gameManager.saveGame(sync: true)
+                LocalizationManager.shared.language = newLang
+            }
+        )
+    }
     
     @State private var isRestoring = false
     
@@ -29,7 +40,7 @@ struct SettingsView: View {
                             Image(systemName: "gearshape.fill")
                                 .font(.system(size: 50))
                                 .foregroundStyle(LinearGradient(colors: [.gray, .white], startPoint: .top, endPoint: .bottom))
-                            Text("Paramètres")
+                            Text(tr("Paramètres"))
                                 .font(.largeTitle.bold())
                                 .foregroundColor(.white)
                         }
@@ -37,19 +48,19 @@ struct SettingsView: View {
                         
                         // Affichage
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Affichage")
+                            Text(tr("Affichage"))
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
                             
                             VStack(spacing: 10) {
                                 HStack {
-                                    Text("Langue")
+                                    Text(tr("Langue"))
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Picker("", selection: $appLanguage) {
+                                    Picker("", selection: selectedLanguage) {
                                         ForEach(AppLanguage.allCases) { lang in
-                                            Text(lang.rawValue).tag(lang)
+                                            Text(tr(lang.rawValue)).tag(lang)
                                         }
                                     }
                                     .accentColor(.white)
@@ -60,12 +71,12 @@ struct SettingsView: View {
                                 .cornerRadius(12)
                                 
                                 HStack {
-                                    Text("Format des Nombres")
+                                    Text(tr("Format des Nombres"))
                                         .foregroundColor(.white)
                                     Spacer()
                                     Picker("", selection: $numberFormatStyle) {
                                         ForEach(NumberFormatStyle.allCases) { style in
-                                            Text(style.rawValue).tag(style)
+                                            Text(tr(style.rawValue)).tag(style)
                                         }
                                     }
                                     .accentColor(.white)
@@ -80,7 +91,7 @@ struct SettingsView: View {
                         
                         // Sauvegarde
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Progression")
+                            Text(tr("Progression"))
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
@@ -90,7 +101,7 @@ struct SettingsView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "trash")
-                                    Text("Réinitialiser ma progression")
+                                    Text(tr("Réinitialiser ma progression"))
                                     Spacer()
                                     Image(systemName: "chevron.right")
                                         .font(.caption)
@@ -105,7 +116,7 @@ struct SettingsView: View {
                         }
                         // Achats
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Achats Premium")
+                            Text(tr("Achats Premium"))
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
@@ -119,7 +130,7 @@ struct SettingsView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "arrow.triangle.2.circlepath")
-                                    Text(isRestoring ? "Restauration en cours..." : "Restaurer les achats")
+                                    Text(isRestoring ? tr("Restauration en cours...") : tr("Restaurer les achats"))
                                     Spacer()
                                 }
                                 .foregroundColor(.white)
@@ -133,7 +144,7 @@ struct SettingsView: View {
                         }
                         Spacer(minLength: 40)
                         
-                        Text("CanardFactory v1.0")
+                        Text(tr("CanardFactory v1.0"))
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -142,18 +153,21 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                         .foregroundColor(.white)
                 }
             }
-            .alert("Êtes-vous sûr ?", isPresented: $showingResetConfirmation) {
-                Button("Annuler", role: .cancel) { }
-                Button("Oui, tout effacer", role: .destructive) {
+            .alert(tr("Êtes-vous sûr ?"), isPresented: $showingResetConfirmation) {
+                Button(tr("Annuler"), role: .cancel) { }
+                Button(tr("Oui, tout effacer"), role: .destructive) {
                     gameManager.resetProgression()
                     dismiss()
                 }
             } message: {
-                Text("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards.")
+                Text(tr("Cette action est irréversible. Vous perdrez tout votre argent, vos usines et vos canards."))
+            }
+            .onChange(of: LocalizationManager.shared.language) { _, _ in
+                dismiss()
             }
         }
     }

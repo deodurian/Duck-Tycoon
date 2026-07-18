@@ -16,9 +16,9 @@ struct PerkSheetView: View {
                     let factoryPerksCount = gameManager.perksInventory.filter { $0.type == .factory }.count
                     let duckPerksCount = gameManager.perksInventory.filter { $0.type == .duck }.count
                     
-                    Picker("Type de Perks", selection: $selectedTab) {
-                        Text("Usines (\(factoryPerksCount))").tag(0)
-                        Text("Canards (\(duckPerksCount))").tag(1)
+                    Picker(tr("Type de Perks"), selection: $selectedTab) {
+                        Text("\(tr("Usines")) (\(factoryPerksCount))").tag(0)
+                        Text("\(tr("Canards")) (\(duckPerksCount))").tag(1)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding()
@@ -31,7 +31,7 @@ struct PerkSheetView: View {
                                 PerkCardView(perk: perk, showRecycle: true)
                             }
                             if filteredPerks.isEmpty {
-                                Text("Aucun perk de ce type.")
+                                Text(tr("Aucun perk de ce type."))
                                     .foregroundColor(.gray)
                                     .padding()
                             }
@@ -40,7 +40,7 @@ struct PerkSheetView: View {
                     }
                 }
             }
-            .navigationTitle("Inventaire de Perks (\(gameManager.perksInventory.count))")
+            .navigationTitle("\(tr("Inventaire de Perks")) (\(gameManager.perksInventory.count))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -50,13 +50,13 @@ struct PerkSheetView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Que sont les Perks ?", isPresented: $showInfo) {
-                Button("Compris", role: .cancel) { }
+            .alert(tr("Que sont les Perks ?"), isPresented: $showInfo) {
+                Button(tr("Compris"), role: .cancel) { }
             } message: {
-                Text("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !")
+                Text(tr("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"))
             }
         }
     }
@@ -97,12 +97,12 @@ struct PerkCardView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(perk.name)
+                    Text(tr(perk.name))
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
                     
                     if isEquipped {
-                        Text("ÉQUIPÉ")
+                        Text(tr("ÉQUIPÉ"))
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
@@ -112,7 +112,7 @@ struct PerkCardView: View {
                     }
                 }
                 
-                Text(perk.description)
+                Text(tr(perk.description))
                     .font(.system(size: 10))
                     .foregroundColor(.white.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
@@ -121,7 +121,7 @@ struct PerkCardView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 8) {
-                Text(perk.rarity.rawValue)
+                Text(tr(perk.rarity.rawValue))
                     .font(.caption.bold())
                     .foregroundColor(perk.rarity.color)
                     .padding(.horizontal, 8)
@@ -137,13 +137,13 @@ struct PerkCardView: View {
                             .background(Color.red.opacity(0.15))
                             .clipShape(Circle())
                     }
-                    .alert("Recycler ce Perk ?", isPresented: $showingRecycleAlert) {
-                        Button("Annuler", role: .cancel) { }
-                        Button("Recycler", role: .destructive) {
+                    .alert(tr("Recycler ce Perk ?"), isPresented: $showingRecycleAlert) {
+                        Button(tr("Annuler"), role: .cancel) { }
+                        Button(tr("Recycler"), role: .destructive) {
                             gameManager.recyclePerk(id: perk.id)
                         }
                     } message: {
-                        Text("Vous obtiendrez \(recycleYield) 🧬")
+                        Text("\(tr("Vous obtiendrez")) \(recycleYield) 🧬")
                     }
                 }
             }

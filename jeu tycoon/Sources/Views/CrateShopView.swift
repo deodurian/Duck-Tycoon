@@ -47,16 +47,16 @@ struct CrateShopView: View {
             VStack(spacing: 16) {
                 // Header
                 HStack(alignment: .lastTextBaseline) {
-                    Text("Boutique")
+                    Text(tr("Boutique"))
                         .font(.largeTitle.bold())
                     Spacer()
                     
                     // Inventory counter with pill badge
                     HStack(spacing: 4) {
-                        Text("🦆")
+                        Text(tr("🦆"))
                         Text("\(gameManager.inventory.count)")
                             .bold()
-                        Text("/")
+                        Text(tr("/"))
                             .foregroundColor(.gray)
                         Text("\(gameManager.maxInventoryCapacity)")
                     }

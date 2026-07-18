@@ -12,10 +12,10 @@ extension Double {
 
 /// Représente l'état complet du jeu pour la sauvegarde
 struct GameState: Codable, Sendable {
-    var money: BigNumber = BigNumber(150.0)
+    var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
     
-    var inventory: [Duck] = []
+    var inventory: [Duck] = [Duck(rarity: .commun, size: .petit, mutation: .aucune)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     
     var lastSaveDate: Date = Date()
@@ -41,6 +41,11 @@ struct GameState: Codable, Sendable {
     var playerLevel: Int = 1; var playerXP: Int = 0
     var missions: [Mission] = []; var perksInventory: [Perk] = []
     
+    // Story Mode
+    var currentStoryStep: Int = 0
+    var isStoryQuestReadyToClaim: Bool = false
+    var storyFlags: [String: Bool] = [:]
+    
     // Custom Codable implementation for backward compatibility
     enum CodingKeys: String, CodingKey {
         case money, mutationPoints, inventory, factories, lastSaveDate
@@ -50,6 +55,7 @@ struct GameState: Codable, Sendable {
         case currentStars, totalStars, spentStars, unspentStars, purchasedPrestigeUpgrades
         case gems
         case playerLevel, playerXP, missions, perksInventory
+        case currentStoryStep, isStoryQuestReadyToClaim, storyFlags
     }
     
     init() {}
@@ -57,7 +63,7 @@ struct GameState: Codable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.money = try container.decodeIfPresent(BigNumber.self, forKey: .money) ?? BigNumber(150.0)
+        self.money = try container.decodeIfPresent(BigNumber.self, forKey: .money) ?? .zero
         
         // Migration logic for mutationPoints (Int -> BigNumber)
         if let mpInt = try? container.decodeIfPresent(Int.self, forKey: .mutationPoints) {
@@ -88,6 +94,12 @@ struct GameState: Codable, Sendable {
         
         self.purchasedPrestigeUpgrades = try container.decodeIfPresent(Set<String>.self, forKey: .purchasedPrestigeUpgrades) ?? []
         
+        // Migration logic for free stars
+        if self.unspentStars == .zero && self.totalStars > .zero {
+            let diff = self.totalStars - self.spentStars
+            self.unspentStars = diff > .zero ? diff : .zero
+        }
+        
         self.gems = try container.decodeIfPresent(BigNumber.self, forKey: .gems) ?? .zero
         
         self.playerLevel = try container.decodeIfPresent(Int.self, forKey: .playerLevel) ?? 1
@@ -95,6 +107,10 @@ struct GameState: Codable, Sendable {
         self.missions = try container.decodeIfPresent([Mission].self, forKey: .missions) ?? []
         // Migration: Old perks were strings, new perks are custom structs. If we fail to decode [Perk], default to []
         self.perksInventory = try container.decodeIfPresent([Perk].self, forKey: .perksInventory) ?? []
+        
+        self.currentStoryStep = try container.decodeIfPresent(Int.self, forKey: .currentStoryStep) ?? 0
+        self.isStoryQuestReadyToClaim = try container.decodeIfPresent(Bool.self, forKey: .isStoryQuestReadyToClaim) ?? false
+        self.storyFlags = try container.decodeIfPresent([String: Bool].self, forKey: .storyFlags) ?? [:]
     }
     
     func encode(to encoder: Encoder) throws {
@@ -121,14 +137,17 @@ struct GameState: Codable, Sendable {
         try container.encode(playerXP, forKey: .playerXP)
         try container.encode(missions, forKey: .missions)
         try container.encode(perksInventory, forKey: .perksInventory)
+        try container.encode(currentStoryStep, forKey: .currentStoryStep)
+        try container.encode(isStoryQuestReadyToClaim, forKey: .isStoryQuestReadyToClaim)
+        try container.encode(storyFlags, forKey: .storyFlags)
     }
 }
 
 @Observable
 class GameManager {
-    var money: BigNumber = BigNumber(150.0)
+    var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
-    var inventory: [Duck] = []
+    var inventory: [Duck] = [Duck(rarity: .commun, size: .petit, mutation: .aucune)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     var lastSaveDate: Date = Date()
     
@@ -152,6 +171,11 @@ class GameManager {
     // Player Level, Missions, Perks
     var playerLevel: Int = 1; var playerXP: Int = 0
     var missions: [Mission] = []; var perksInventory: [Perk] = []
+    
+    // Story Mode
+    var currentStoryStep: Int = 0
+    var isStoryQuestReadyToClaim: Bool = false
+    var storyFlags: [String: Bool] = [:]
     
     // Hors Ligne
     struct OfflineEarnings {
@@ -212,6 +236,9 @@ class GameManager {
         st.playerXP = playerXP
         st.missions = missions
         st.perksInventory = perksInventory
+        st.currentStoryStep = currentStoryStep
+        st.isStoryQuestReadyToClaim = isStoryQuestReadyToClaim
+        st.storyFlags = storyFlags
         return st
     }
     

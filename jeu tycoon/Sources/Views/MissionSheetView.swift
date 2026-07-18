@@ -47,9 +47,9 @@ struct MissionSheetView: View {
                 
                 ScrollView {
                     VStack(spacing: 15) {
-                        Picker("Type de mission", selection: $selectedTab) {
+                        Picker(tr("Type de mission"), selection: $selectedTab) {
                             ForEach(MissionTypeTab.allCases, id: \.self) { tab in
-                                Text(tab.rawValue).tag(tab)
+                                Text(tr(tab.rawValue)).tag(tab)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -62,11 +62,11 @@ struct MissionSheetView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Missions")
+            .navigationTitle(tr("Missions"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
         }
@@ -80,7 +80,7 @@ struct MissionRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(mission.title)
+                Text(tr(mission.title))
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -88,7 +88,7 @@ struct MissionRowView: View {
                     Button(action: {
                         gameManager.claimMission(id: mission.id)
                     }) {
-                        Text("Réclamer")
+                        Text(tr("Réclamer"))
                             .font(.caption.bold())
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
@@ -97,13 +97,13 @@ struct MissionRowView: View {
                             .cornerRadius(8)
                     }
                 } else if mission.status == .claimed {
-                    Text("Terminé")
+                    Text(tr("Terminé"))
                         .font(.caption)
                         .foregroundColor(.gray)
                 } else {
                     HStack(spacing: 2) {
                         Text(mission.currentProgress.formattedString())
-                        Text("/")
+                        Text(tr("/"))
                         Text(mission.targetProgress.formattedString())
                     }
                     .font(.caption)
@@ -111,7 +111,7 @@ struct MissionRowView: View {
                 }
             }
             
-            Text(mission.description)
+            Text(tr(mission.description))
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
             

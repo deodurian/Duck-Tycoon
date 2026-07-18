@@ -52,7 +52,7 @@ struct PremiumCrateCard: View {
                         }
                     }
                     
-                    Text(crate.type.shortName)
+                    Text(tr(crate.type.shortName))
                         .font(.system(size: 15, weight: .black, design: .rounded))
                         .foregroundColor(crate.type.textColor)
                 }
@@ -91,7 +91,7 @@ struct PremiumCrateCard: View {
             .padding(.bottom, 8)
             
             if gameManager.isUnlocked(.holdToOpen) {
-                Text("Maintenir = boucle")
+                Text(tr("Maintenir = boucle"))
                     .font(.system(size: 7, weight: .medium))
                     .foregroundColor(crate.type.textColor.opacity(0.5))
                     .padding(.bottom, 6)
@@ -163,7 +163,7 @@ struct PremiumCrateCard: View {
                     VStack(spacing: 8) {
                         ProgressView()
                             .tint(.white)
-                        Text("Génération...")
+                        Text(tr("Génération..."))
                             .font(.caption)
                             .foregroundColor(.white)
                     }
@@ -276,7 +276,7 @@ struct PremiumCrateCard: View {
                 if !gameManager.isUnlocked(.multipleOpenMax) {
                     Image(systemName: "lock.fill").font(.system(size: 9))
                 }
-                Text("Multiple")
+                Text(tr("Multiple"))
                     .font(.system(size: 11, weight: .bold))
             }
             .frame(maxWidth: .infinity)
@@ -314,6 +314,11 @@ struct PremiumCrateCard: View {
         guard !isGenerating else { return }
         guard let cost = gameManager.calculateCrateCostMoney(crate: crate, amount: amount), gameManager.money >= cost else { return }
         gameManager.money -= cost
+        
+        if crate.type == .bois && amount == 1 {
+            gameManager.storyFlags["firstWoodenCrateOpened"] = true
+        }
+        
         gameManager.evaluateAffordableCrates(reset: true)
         openCrate(amount: amount)
     }
@@ -457,7 +462,7 @@ struct ProbabilityPopup: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Probabilités - \(crate.type.rawValue)")
+                Text("\(tr("Probabilités -")) \(tr(crate.type.rawValue))")
                     .font(.headline.bold())
                 Spacer()
                 Button(action: { withAnimation { isPresented = false } }) {
@@ -473,7 +478,7 @@ struct ProbabilityPopup: View {
                 VStack(spacing: 20) {
                     // Rareté
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Rareté")
+                        Text(tr("Rareté"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -485,7 +490,7 @@ struct ProbabilityPopup: View {
                                         Circle()
                                             .fill(item.rarity.color)
                                             .frame(width: 10, height: 10)
-                                        Text(item.rarity.rawValue)
+                                        Text(tr(item.rarity.rawValue))
                                             .bold()
                                             .foregroundColor(item.rarity.color)
                                         Text("(x\(String(format: "%g", item.rarity.multiplier)))")
@@ -509,7 +514,7 @@ struct ProbabilityPopup: View {
                     
                     // Taille
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Taille")
+                        Text(tr("Taille"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -526,7 +531,7 @@ struct ProbabilityPopup: View {
                     
                     // Mutation
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Mutation")
+                        Text(tr("Mutation"))
                             .font(.subheadline.bold())
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -553,7 +558,7 @@ struct ProbabilityPopup: View {
     private func probRow(name: String, percentage: Double, color: Color, multiplier: Double? = nil, isLast: Bool = false) -> some View {
         VStack(spacing: 0) {
             HStack {
-                Text(name)
+                Text(tr(name))
                     .foregroundColor(color)
                     .bold(color != .primary)
                 if let m = multiplier {
@@ -610,9 +615,9 @@ struct BulkCrateOpeningSheet: View {
                             LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
                         )
                         .shadow(color: .blue.opacity(0.5), radius: 10)
-                    Text("Ouverture Multiple")
+                    Text(tr("Ouverture Multiple"))
                         .font(.title2.bold())
-                    Text(crate.type.rawValue)
+                    Text(tr(crate.type.rawValue))
                         .font(.headline)
                         .foregroundColor(.gray)
                 }
@@ -620,7 +625,7 @@ struct BulkCrateOpeningSheet: View {
                 
                 // Selection Info
                 VStack(spacing: 5) {
-                    Text("Quantité sélectionnée")
+                    Text(tr("Quantité sélectionnée"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -646,7 +651,7 @@ struct BulkCrateOpeningSheet: View {
                             }) {
                             let label = val.formattedString()
                             let isSelected = selectedAmount == val
-                            Text(label)
+                            Text(tr(label))
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
@@ -667,7 +672,7 @@ struct BulkCrateOpeningSheet: View {
                     Button(action: {
                         selectedAmount = 0 // 0 means MAX
                     }) {
-                        Text("MAXIMUM")
+                        Text(tr("MAXIMUM"))
                             .font(.headline.bold())
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -694,7 +699,7 @@ struct BulkCrateOpeningSheet: View {
                         dismiss()
                     }
                 }) {
-                    Text("CONFIRMER L'ACHAT")
+                    Text(tr("CONFIRMER L'ACHAT"))
                         .font(.headline.bold())
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -717,7 +722,7 @@ struct BulkCrateOpeningSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") {
+                    Button(tr("Fermer")) {
                         dismiss()
                     }
                     .font(.headline)

@@ -46,7 +46,7 @@ struct RitualView: View {
             VStack(spacing: 16) {
                 // Titre
                 HStack(spacing: 8) {
-                    Text("Le Rituel Canarifique")
+                    Text(tr("Le Rituel Canarifique"))
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -197,7 +197,7 @@ struct RitualView: View {
                                     .foregroundStyle(
                                         LinearGradient(colors: [.purple.opacity(0.7), .blue.opacity(0.5)], startPoint: .top, endPoint: .bottom)
                                     )
-                                Text("Sélectionner")
+                                Text(tr("Sélectionner"))
                                     .font(.caption.weight(.medium))
                                     .foregroundColor(.gray)
                             }
@@ -215,7 +215,7 @@ struct RitualView: View {
                         // Barre de chance
                         VStack(spacing: 5) {
                             HStack {
-                                Text("Chance de réussite")
+                                Text(tr("Chance de réussite"))
                                     .font(.caption.weight(.medium))
                                     .foregroundColor(.gray)
                                 Spacer()
@@ -242,7 +242,7 @@ struct RitualView: View {
                         // Valeurs
                         HStack(spacing: 12) {
                             VStack(spacing: 2) {
-                                Text("Actuelle")
+                                Text(tr("Actuelle"))
                                     .font(.system(size: 9, weight: .medium))
                                     .foregroundColor(.gray)
                                 Text("\(gameManager.displaySellValue(for: duck).formattedString()) 💰")
@@ -255,7 +255,7 @@ struct RitualView: View {
                                 .foregroundColor(.purple)
                             
                             VStack(spacing: 2) {
-                                Text("x2")
+                                Text(tr("x2"))
                                     .font(.system(size: 9, weight: .heavy))
                                     .foregroundColor(.green)
                                 Text("\((gameManager.displaySellValue(for: duck) * 2.0).formattedString()) 💰")
@@ -269,10 +269,10 @@ struct RitualView: View {
                                     .foregroundColor(.yellow.opacity(0.6))
                                 
                                 VStack(spacing: 2) {
-                                    Text("x10")
+                                    Text(tr("x10"))
                                         .font(.system(size: 9, weight: .heavy))
                                         .foregroundColor(.yellow)
-                                    Text("Doré 🌟")
+                                    Text(tr("Doré 🌟"))
                                         .font(.caption.weight(.bold))
                                         .foregroundColor(.yellow)
                                 }
@@ -285,7 +285,7 @@ struct RitualView: View {
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.purple.opacity(0.2), lineWidth: 1))
                     .padding(.horizontal)
                 } else {
-                    Text("Sélectionnez un canard pour voir les détails")
+                    Text(tr("Sélectionnez un canard pour voir les détails"))
                         .foregroundColor(.gray)
                         .font(.subheadline)
                         .padding(.vertical, 14)
@@ -301,7 +301,7 @@ struct RitualView: View {
                         Image(systemName: "flame.fill")
                             .font(.title3)
                             .scaleEffect(flameFlicker ? 1.15 : 1.0)
-                        Text("LANCER LE RITUEL")
+                        Text(tr("LANCER LE RITUEL"))
                             .font(.title3.weight(.bold))
                         Image(systemName: "flame.fill")
                             .font(.title3)
@@ -343,10 +343,10 @@ struct RitualView: View {
                     }
             }
         }
-        .alert("Règles du Rituel", isPresented: $showInfoAlert) {
-            Button("Compris", role: .cancel) {}
+        .alert(tr("Règles du Rituel"), isPresented: $showInfoAlert) {
+            Button(tr("Compris"), role: .cancel) {}
         } message: {
-            Text("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !")
+            Text(tr("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"))
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
@@ -542,10 +542,10 @@ struct RitualDuckPickerSheet: View {
                     }
                     .padding()
                 }
-                .navigationTitle("Sélectionner un canard")
+                .navigationTitle(tr("Sélectionner un canard"))
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("Fermer") { dismiss() }
+                        Button(tr("Fermer")) { dismiss() }
                     }
                 }
             }

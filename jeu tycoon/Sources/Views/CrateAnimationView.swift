@@ -99,7 +99,7 @@ struct CrateAnimationView: View {
             if showTapHint {
                 VStack {
                     Spacer()
-                    Text("Appuyer pour continuer")
+                    Text(tr("Appuyer pour continuer"))
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.6))
                         .padding(.bottom, 60)
@@ -208,7 +208,7 @@ struct CrateAnimationView: View {
             Spacer()
             
             // Title with rarity-colored glow
-            Text(bestRarity.revealTitle)
+            Text(tr(bestRarity.revealTitle))
                 .font(.system(size: 28, weight: .black, design: .rounded))
                 .foregroundColor(.white)
                 .shadow(color: bestRarity.color.opacity(0.8), radius: 10)

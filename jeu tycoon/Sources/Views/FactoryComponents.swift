@@ -71,7 +71,7 @@ struct FactoryRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(factory.name)
+                    Text(factory.name.replacingOccurrences(of: "Usine", with: tr("Usine")))
                         .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
@@ -80,7 +80,7 @@ struct FactoryRow: View {
                         HStack(spacing: 3) {
                             Image(systemName: "arrow.up.circle.fill")
                                 .font(.system(size: 8))
-                            Text("Nv. \(factory.level)")
+                            Text("\(tr("Nv.")) \(factory.level)")
                                 .font(.system(size: 10, weight: .semibold))
                         }
                         .foregroundColor(isMaxLevel ? .yellow : .white.opacity(0.7))
@@ -94,7 +94,7 @@ struct FactoryRow: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "star.fill")
                                     .font(.system(size: 7))
-                                Text("Évo. \(factory.evolution)")
+                                Text("\(tr("Évo.")) \(factory.evolution)")
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .foregroundColor(evolutionColor)
@@ -114,7 +114,7 @@ struct FactoryRow: View {
                                     HStack(spacing: 3) {
                                         Image(systemName: "plus.circle")
                                             .font(.system(size: 7))
-                                        Text("Perk")
+                                        Text(tr("Perk"))
                                             .font(.system(size: 10, weight: .semibold))
                                     }
                                     .foregroundColor(.gray)
@@ -127,7 +127,7 @@ struct FactoryRow: View {
                                         HStack(spacing: 3) {
                                             Image(systemName: "star.fill")
                                                 .font(.system(size: 7))
-                                            Text(perk.name)
+                                            Text(tr(perk.name))
                                                 .font(.system(size: 10, weight: .semibold))
                                         }
                                         .foregroundColor(perk.rarity.color)
@@ -163,7 +163,7 @@ struct FactoryRow: View {
                                 VStack(spacing: 3) {
                                     Image(systemName: "plus")
                                         .font(.system(size: 16, weight: .medium))
-                                    Text("Canard")
+                                    Text(tr("Canard"))
                                         .font(.system(size: 7, weight: .medium))
                                 }
                                 .frame(width: 52, height: 52)
@@ -199,7 +199,7 @@ struct FactoryRow: View {
                 // Earnings
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 4) {
-                        Text("💰")
+                        Text(tr("💰"))
                             .font(.system(size: 11))
                         let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
                         let displayValues = assignedDucks.map { gameManager.displaySellValue(for: $0) }
@@ -212,7 +212,7 @@ struct FactoryRow: View {
                     
                     if factory.evolution > 0 {
                         HStack(spacing: 4) {
-                            Text("🧬")
+                            Text(tr("🧬"))
                                 .font(.system(size: 11))
                             Text("+\(factory.calculateMutationsPerSecond(assignedDucks: assignedDucks, globalBonus: gameManager.mutationMultiplier).formattedString())/s")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -251,7 +251,7 @@ struct FactoryRow: View {
                         .frame(width: 70, height: 4)
                     }
                 } else {
-                    Text("MAX")
+                    Text(tr("MAX"))
                         .font(.system(size: 11, weight: .black, design: .rounded))
                         .foregroundColor(.yellow)
                         .padding(.horizontal, 8)
@@ -281,7 +281,7 @@ struct FactoryRow: View {
                                 Image(systemName: "sparkles")
                                     .font(.system(size: 12))
                                 VStack(spacing: 1) {
-                                    Text("Évoluer")
+                                    Text(tr("Évoluer"))
                                         .font(.system(size: 12, weight: .bold, design: .rounded))
                                     Text(cost.formattedString())
                                         .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -311,7 +311,7 @@ struct FactoryRow: View {
                         HStack(spacing: 4) {
                             Image(systemName: "crown.fill")
                                 .font(.system(size: 12))
-                            Text("MAXIMUM")
+                            Text(tr("MAXIMUM"))
                                 .font(.system(size: 12, weight: .black, design: .rounded))
                         }
                         .frame(maxWidth: .infinity)
@@ -331,7 +331,7 @@ struct FactoryRow: View {
                     let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
                     let maxUpgrades = factory.maxUpgrades(with: gameManager.money, factoryPerks: factoryPerks, baseDiscount: gameManager.factoryCostDiscount)
                     let maxAmount = max(1, min(maxUpgrades, 100 - factory.level))
-                    upgradeButton(label: "Max", levels: maxAmount, isMax: true, maxUpgrades: maxUpgrades)
+                    upgradeButton(label: tr("Max"), levels: maxAmount, isMax: true, maxUpgrades: maxUpgrades)
                 }
             }
             .padding(.horizontal, 14)
@@ -395,7 +395,7 @@ struct FactoryRow: View {
             gameManager.upgradeFactoryLevel(factoryId: factory.id, levels: levels)
         }) {
             VStack(spacing: 2) {
-                Text(label)
+                Text(tr(label))
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                 Text(cost.formattedString())
                     .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -480,7 +480,7 @@ struct DuckSelectionSheet: View {
                     ProgressView("Chargement...")
                         .padding(.top, 50)
                 } else if displayInventory.isEmpty {
-                    Text("Aucun canard disponible.")
+                    Text(tr("Aucun canard disponible."))
                         .foregroundColor(.gray)
                         .padding(.top, 50)
                 } else {
@@ -512,27 +512,27 @@ struct DuckSelectionSheet: View {
                 .padding()
             }
             }
-            .navigationTitle("Choisir un canard")
+            .navigationTitle(tr("Choisir un canard"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         Menu {
-                            Picker("Trier par", selection: $sortOption) {
+                            Picker(tr("Trier par"), selection: $sortOption) {
                                 ForEach(InventorySortOption.allCases, id: \.self) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(tr(option.rawValue)).tag(option)
                                 }
                             }
                         } label: {
                             Image(systemName: "arrow.up.arrow.down")
                         }
                         
-                        Button("Fermer") {
+                        Button(tr("Fermer")) {
                             dismiss()
                         }
                     }
                 }
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Retirer") {
+                    Button(tr("Retirer")) {
                         gameManager.unassignDuck(from: factoryId)
                         dismiss()
                     }

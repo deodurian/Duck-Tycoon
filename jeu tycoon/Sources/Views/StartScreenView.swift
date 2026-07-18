@@ -23,20 +23,20 @@ struct StartScreenView: View {
                 VStack {
                     Spacer()
                     
-                    Text("DUCK TYCOON")
+                    Text(tr("DUCK TYCOON"))
                         .font(.system(size: 48, weight: .heavy, design: .rounded))
                         .foregroundColor(.yellow)
                         .shadow(color: .orange, radius: 5, x: 0, y: 3)
                         .padding(.bottom, 20)
                     
                     if phase == .waitingForTap {
-                        Text("Toucher pour continuer")
+                        Text(tr("Toucher pour continuer"))
                             .font(.headline)
                             .foregroundColor(.white.opacity(0.8))
                             .modifier(BlinkEffect())
                     } else if phase == .loading {
                         VStack(spacing: 15) {
-                            Text(loadingText)
+                            Text(tr(loadingText))
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .animation(.none, value: loadingText)
@@ -65,7 +65,7 @@ struct StartScreenView: View {
                     Spacer()
                     
                     HStack {
-                        Text("v1.0.0")
+                        Text(tr("v1.0.2"))
                             .font(.caption)
                             .foregroundColor(.gray)
                         Spacer()
@@ -111,14 +111,14 @@ struct StartScreenView: View {
                     }
                     
                     if Int.random(in: 0...2) == 0 || i == 1 {
-                        loadingText = loadingMessages.randomElement() ?? "Chargement..."
+                        loadingText = tr(loadingMessages.randomElement() ?? "Chargement...")
                     }
                 }
             }
             
             await MainActor.run {
                 loadingProgress = 1.0
-                loadingText = "Terminé !"
+                loadingText = tr("Terminé !")
             }
             
             try? await Task.sleep(nanoseconds: 300_000_000)

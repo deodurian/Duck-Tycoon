@@ -13,7 +13,7 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("💰")
+                Text(tr("💰"))
             }
             
             HStack(spacing: 2) {
@@ -22,17 +22,17 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("🧬")
+                Text(tr("🧬"))
             }
             
             if gameManager.hasPrestiged {
                 HStack(spacing: 2) {
-                    Text(gameManager.currentStars.formattedString())
+                    Text(gameManager.unspentStars.formattedString())
                         .font(.headline)
                         .bold()
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
-                    Text("⭐️")
+                    Text(tr("⭐️"))
                 }
             }
             
@@ -42,7 +42,7 @@ struct TopBarView: View {
                     .bold()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text("💎")
+                Text(tr("💎"))
             }
             
             Spacer(minLength: 0)
@@ -90,18 +90,20 @@ struct ContentView: View {
                 Group {
                     switch selectedTab {
                     case 0:
-                        FactoryView()
+                        StoryView()
                     case 1:
-                        InventoryView(selectedTab: $selectedTab, navPath: $navPath)
+                        FactoryView()
                     case 2:
-                        UpgradeView()
-                    case 3:
                         CrateShopView()
+                    case 3:
+                        InventoryView(selectedTab: $selectedTab, navPath: $navPath)
                     case 4:
-                        RitualView()
+                        UpgradeView()
                     case 5:
-                        PrestigeView()
+                        RitualView()
                     case 6:
+                        PrestigeView()
+                    case 7:
                         IAPShopView()
                     default:
                         EmptyView()
@@ -128,6 +130,13 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         )
+        .navigationBarHidden(true)
+        .navigationDestination(for: Duck.self) { duck in
+            DuckDetailView(duck: duck)
+                .environment(gameManager)
+        }
+        } // closes ZStack
+        } // closes NavigationStack
         .sheet(isPresented: $showingSettings) {
             SettingsView()
                 .environment(gameManager)
@@ -138,57 +147,84 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .navigationBarHidden(true)
-        .navigationDestination(for: Duck.self) { duck in
-            DuckDetailView(duck: duck)
-                .environment(gameManager)
-        }
-        }
     }
-}
 }
 
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @Environment(\.colorScheme) var colorScheme
+    @Environment(GameManager.self) private var gameManager
     
-    let tabs = [
-        (title: "Usines", icon: "building.2.crop.circle"),
-        (title: "Canards", icon: "bird"),
-        (title: "Amélio.", icon: "bolt.circle.fill"),
-        (title: "Boutique", icon: "shippingbox"),
-        (title: "Rituel", icon: "flame"),
-        (title: "Prestige", icon: "star.fill"),
-        (title: "Banque", icon: "creditcard.fill")
+    let tabs: [(title: String, icon: String, color: Color)] = [
+        ("Histoire", "book.fill", .blue),
+        ("Usines", "building.2.crop.circle", .green),
+        ("Boutique", "shippingbox", .orange),
+        ("Canards", "bird", .yellow),
+        ("Amélio.", "bolt.circle.fill", .purple),
+        ("Rituel", "flame", .red),
+        ("Prestige", "star.fill", .yellow),
+        ("Banque", "creditcard.fill", .cyan)
     ]
     
     @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    
+    private func isUnlocked(_ index: Int) -> Bool {
+        switch index {
+        case 0: return gameManager.isHistoireUnlocked
+        case 1: return gameManager.isUsinesUnlocked
+        case 2: return gameManager.isBoutiqueUnlocked
+        case 3: return gameManager.isInventoryUnlocked
+        case 4: return gameManager.isAmelioUnlocked
+        case 5: return gameManager.isRituelUnlocked
+        case 6: return gameManager.isPrestigeUnlocked
+        case 7: return gameManager.isBanqueUnlocked
+        default: return true
+        }
+    }
     
     var body: some View {
         HStack(spacing: 0) {
             ForEach(0..<tabs.count, id: \.self) { index in
                 Button(action: {
-                    feedbackGenerator.prepare()
-                    feedbackGenerator.impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedTab = index
+                    let unlocked = isUnlocked(index)
+                    if unlocked {
+                        feedbackGenerator.prepare()
+                        feedbackGenerator.impactOccurred()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedTab = index
+                        }
+                    } else {
+                        let errorFeedback = UINotificationFeedbackGenerator()
+                        errorFeedback.notificationOccurred(.error)
                     }
                 }) {
+                    let unlocked = isUnlocked(index)
                     VStack(spacing: 4) {
-                        Image(systemName: tabs[index].icon)
-                            .font(.system(size: 20, weight: selectedTab == index ? .bold : .regular))
-                            .scaleEffect(selectedTab == index ? 1.2 : 1.0)
+                        if unlocked {
+                            Image(systemName: tabs[index].icon)
+                                .font(.system(size: 20, weight: selectedTab == index ? .bold : .regular))
+                                .scaleEffect(selectedTab == index ? 1.2 : 1.0)
+                        } else {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 20, weight: .regular))
+                        }
                         
                         if selectedTab == index {
-                            Text(tabs[index].title)
+                            Text(tr(tabs[index].title))
                                 .font(.system(size: 9, weight: .bold)) // Slightly smaller to fit 7 tabs
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
+                        } else if !unlocked {
+                            Text(tr(tabs[index].title))
+                                .font(.system(size: 7, weight: .regular))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
                         }
                     }
-                    .foregroundColor(selectedTab == index ? (colorScheme == .dark ? .white : .blue) : .gray)
+                    .foregroundColor(unlocked ? tabs[index].color.opacity(selectedTab == index ? 1.0 : 0.5) : .gray.opacity(0.3))
                     .frame(maxWidth: .infinity)
                 }
+                .disabled(!isUnlocked(index))
             }
         }
         .padding(.horizontal, 10)

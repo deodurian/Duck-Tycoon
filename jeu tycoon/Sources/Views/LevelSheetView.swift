@@ -18,7 +18,7 @@ struct LevelSheetView: View {
                     let progress = min(1.0, Double(currentXP) / Double(requiredXP))
                     
                     VStack(spacing: 10) {
-                        Text("⭐ Niveau \(currentLevel)")
+                        Text("⭐ \(tr("Niveau")) \(currentLevel)")
                             .font(.system(size: 40, weight: .black, design: .rounded))
                             .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom))
                         
@@ -37,7 +37,7 @@ struct LevelSheetView: View {
                         .frame(height: 30)
                         .padding(.horizontal)
                         
-                        Text("\(currentXP) / \(requiredXP) XP")
+                        Text("\(currentXP) / \(requiredXP) \(tr("XP"))")
                             .font(.subheadline)
                             .foregroundColor(.gray)
                     }
@@ -48,7 +48,7 @@ struct LevelSheetView: View {
                     
                     // Bonus actuels
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Bonus Actuels")
+                        Text(tr("Bonus Actuels"))
                             .font(.headline)
                             .foregroundColor(.white)
                         
@@ -61,9 +61,9 @@ struct LevelSheetView: View {
                             let db = currentLevel / 100
                             if db > 0 {
                                 let mult = Int(pow(2.0, Double(db)))
-                                return "Revenus : +\(mb)% et x\(mult)"
+                                return "\(tr("Revenus")) : +\(mb)% et x\(mult)"
                             } else {
-                                return "Revenus : +\(mb)%"
+                                return "\(tr("Revenus")) : +\(mb)%"
                             }
                         }()
                         
@@ -71,7 +71,7 @@ struct LevelSheetView: View {
                             let part1 = Double(currentLevel / 5) * 1.0
                             let part2 = Double(currentLevel / 10) * 5.0
                             let mb = Int(part1 + part2)
-                            return "Mutation : +\(mb)%"
+                            return "\(tr("Mutation")) : +\(mb)%"
                         }()
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -95,7 +95,7 @@ struct LevelSheetView: View {
                         
                         let nextMilestone = ((currentLevel / 10) + 1) * 10
                         
-                        Text("Prochain Palier (Niveau \(nextMilestone))")
+                        Text("\(tr("Prochain Palier (Niveau")) \(nextMilestone))")
                             .font(.headline)
                             .foregroundColor(.orange)
                             .padding(.top, 10)
@@ -104,11 +104,11 @@ struct LevelSheetView: View {
                             Image(systemName: "gift.fill")
                                 .foregroundColor(.orange)
                             VStack(alignment: .leading, spacing: 5) {
-                                Text("+25% Revenus & +5% Mutation")
-                                Text("10 Gemmes")
-                                Text("1 Perk Usine & 1 Perk Canard")
+                                Text(tr("+25% Revenus & +5% Mutation"))
+                                Text(tr("10 Gemmes"))
+                                Text(tr("1 Perk Usine & 1 Perk Canard"))
                                 if nextMilestone % 100 == 0 {
-                                    Text("Revenus doublés !").bold().foregroundColor(.yellow)
+                                    Text(tr("Revenus doublés !")).bold().foregroundColor(.yellow)
                                 }
                             }
                             .foregroundColor(.white)
@@ -124,7 +124,7 @@ struct LevelSheetView: View {
                 }
                 .padding(.top, 20)
             }
-            .navigationTitle("Niveau Joueur")
+            .navigationTitle(tr("Niveau Joueur"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -134,13 +134,13 @@ struct LevelSheetView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Fermer") { dismiss() }
+                    Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Comment gagner de l'XP ?", isPresented: $showInfo) {
-                Button("Compris", role: .cancel) { }
+            .alert(tr("Comment gagner de l'XP ?"), isPresented: $showInfo) {
+                Button(tr("Compris"), role: .cancel) { }
             } message: {
-                Text("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions.")
+                Text(tr("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."))
             }
         }
     }

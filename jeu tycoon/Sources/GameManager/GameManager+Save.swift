@@ -56,11 +56,10 @@ extension GameManager {
             missions = loadedState.missions
             perksInventory = loadedState.perksInventory
             
-            // Filet de sécurité si la sauvegarde a été créée vide juste avant
-            if money < BigNumber(100) && inventory.isEmpty {
-                money = BigNumber(200.0)
-            }
-            
+            currentStoryStep = loadedState.currentStoryStep
+            isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
+            storyFlags = loadedState.storyFlags
+
             invalidateEarningsCache()
             calculateOfflineEarnings()
             evaluateAffordableCrates(reset: true)
@@ -127,54 +126,19 @@ extension GameManager {
     
     func saveGame(sync: Bool = false) {
         invalidateEarningsCache()
-        
+
         // Annuler la sauvegarde précédente si elle n'a pas encore été exécutée
         saveWorkItem?.cancel()
-        
-        // Capturer les valeurs légères sur le main thread
-        let money = self.money
-        let mutationPoints = self.mutationPoints
-        let factories = self.factories
-        let purchasedUpgrades = self.purchasedUpgrades
-        let upgradeLevels = self.upgradeLevels
-        let inventory = self.inventory
-        let autoCrateTargetId = self.autoCrateTargetId
-        let autoFactoryLevels = self.autoFactoryLevels
-        let currentStars = self.currentStars
-        let totalStars = self.totalStars
-        let spentStars = self.spentStars
-        let unspentStars = self.unspentStars
-        let purchasedPrestigeUpgrades = self.purchasedPrestigeUpgrades
-        let gems = self.gems
-        let playerLevel = self.playerLevel
-        let playerXP = self.playerXP
-        let missions = self.missions
-        let perksInventory = self.perksInventory
+
+        // Capturer un instantané COMPLET de l'état sur le main thread.
+        // On réutilise la propriété `state` pour ne jamais oublier un champ (Histoire, stats, etc.).
+        var snapshot = self.state
         let url = saveFileURL()
-        
+
         let workItem = DispatchWorkItem {
-            var state = GameState()
-            state.money = money
-            state.mutationPoints = mutationPoints
-            state.inventory = inventory
-            state.factories = factories
-            state.lastSaveDate = Date()
-            state.purchasedUpgrades = purchasedUpgrades
-            state.upgradeLevels = upgradeLevels
-            state.autoCrateTargetId = autoCrateTargetId
-            state.autoFactoryLevels = autoFactoryLevels
-            state.currentStars = currentStars
-            state.totalStars = totalStars
-            state.spentStars = spentStars
-            state.unspentStars = unspentStars
-            state.purchasedPrestigeUpgrades = purchasedPrestigeUpgrades
-            state.gems = gems
-            state.playerLevel = playerLevel
-            state.playerXP = playerXP
-            state.missions = missions
-            state.perksInventory = perksInventory
+            snapshot.lastSaveDate = Date() // heure réelle de sauvegarde (pour les gains hors-ligne)
             do {
-                let data = try JSONEncoder().encode(state)
+                let data = try JSONEncoder().encode(snapshot)
                 let backupUrl = url.appendingPathExtension("bak")
                 if FileManager.default.fileExists(atPath: url.path) {
                     try? FileManager.default.removeItem(at: backupUrl)
@@ -194,17 +158,44 @@ extension GameManager {
     }
     
     func resetProgression() {
-        money = BigNumber(200.0)
-        mutationPoints = .zero
-        inventory = []
-        factories = [DuckFactory(name: "Usine 1")]
-        purchasedUpgrades = []
-        upgradeLevels = [:]
-        autoCrateTargetId = nil
-        autoFactoryLevels = [:]
-        // We do NOT reset currentStars, totalStars, spentStars, and purchasedPrestigeUpgrades here, only in full hard reset if needed, but for prestige we keep them.
-        lastSaveDate = Date()
+        let defaultState = GameState()
+        
+        money = defaultState.money
+        mutationPoints = defaultState.mutationPoints
+        inventory = defaultState.inventory
+        factories = defaultState.factories
+        
+        autoCrateTargetId = defaultState.autoCrateTargetId
+        autoFactoryLevels = defaultState.autoFactoryLevels
+        
+        purchasedUpgrades = defaultState.purchasedUpgrades
+        upgradeLevels = defaultState.upgradeLevels
+        
+        totalRecycledDucks = defaultState.totalRecycledDucks
+        totalFusionsDone = defaultState.totalFusionsDone
+        totalMaxedRepeatableUpgrades = defaultState.totalMaxedRepeatableUpgrades
+
+        currentStars = defaultState.currentStars
+        totalStars = defaultState.totalStars
+        spentStars = defaultState.spentStars
+        unspentStars = defaultState.unspentStars
+        purchasedPrestigeUpgrades = defaultState.purchasedPrestigeUpgrades
+        
+        gems = defaultState.gems
+        
+        playerLevel = defaultState.playerLevel
+        playerXP = defaultState.playerXP
+        missions = defaultState.missions
+        perksInventory = defaultState.perksInventory
+        
+        currentStoryStep = defaultState.currentStoryStep
+        isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
+        storyFlags = defaultState.storyFlags
+        
+        invalidateEarningsCache()
+        calculateOfflineEarnings()
         evaluateAffordableCrates(reset: true)
+
         saveGame()
     }
     
