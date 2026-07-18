@@ -60,9 +60,13 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
         }
         
         if let topController = topController {
+            print("AdManager: Appel de rewardedAd.present()")
             rewardedAd.present(from: topController) { [weak self] in
-                print("Le joueur a gagné la récompense !")
-                self?.onRewardEarned?(true)
+                print("AdManager: Le joueur a gagné la récompense (dans le callback de Google) !")
+                DispatchQueue.main.async {
+                    print("AdManager: Appel de onRewardEarned?(true)")
+                    self?.onRewardEarned?(true)
+                }
             }
         } else {
             print("Erreur: Impossible de trouver la fenêtre principale pour afficher la pub.")

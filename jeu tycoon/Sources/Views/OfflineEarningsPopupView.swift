@@ -65,10 +65,15 @@ struct OfflineEarningsPopupView: View {
                     VStack(spacing: 15) {
                         if adManager.isReady {
                             Button(action: {
+                                print("Bouton X2 cliqué !")
                                 AdManager.shared.showRewardedAd { earned in
+                                    print("Retour du AdManager, earned = \(earned)")
                                     if earned {
-                                        withAnimation {
-                                            gameManager.claimOfflineEarnings(multiplier: 2.0)
+                                        DispatchQueue.main.async {
+                                            print("Appel de claimOfflineEarnings(2.0)")
+                                            withAnimation {
+                                                gameManager.claimOfflineEarnings(multiplier: 2.0)
+                                            }
                                         }
                                     }
                                 }
