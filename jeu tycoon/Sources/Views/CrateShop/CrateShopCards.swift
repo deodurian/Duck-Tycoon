@@ -314,6 +314,11 @@ struct PremiumCrateCard: View {
         guard !isGenerating else { return }
         guard let cost = gameManager.calculateCrateCostMoney(crate: crate, amount: amount), gameManager.money >= cost else { return }
         gameManager.money -= cost
+        
+        if crate.type == .bois && amount == 1 {
+            gameManager.storyFlags["firstWoodenCrateOpened"] = true
+        }
+        
         gameManager.evaluateAffordableCrates(reset: true)
         openCrate(amount: amount)
     }

@@ -12,10 +12,10 @@ extension Double {
 
 /// Représente l'état complet du jeu pour la sauvegarde
 struct GameState: Codable, Sendable {
-    var money: BigNumber = BigNumber(150.0)
+    var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
     
-    var inventory: [Duck] = []
+    var inventory: [Duck] = [Duck(rarity: .commun, sizeLevel: 1, mutationLevel: 1, origin: "Départ", size: 1.0, isSpecial: false)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     
     var lastSaveDate: Date = Date()
@@ -63,7 +63,7 @@ struct GameState: Codable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.money = try container.decodeIfPresent(BigNumber.self, forKey: .money) ?? BigNumber(150.0)
+        self.money = try container.decodeIfPresent(BigNumber.self, forKey: .money) ?? .zero
         
         // Migration logic for mutationPoints (Int -> BigNumber)
         if let mpInt = try? container.decodeIfPresent(Int.self, forKey: .mutationPoints) {
@@ -145,9 +145,9 @@ struct GameState: Codable, Sendable {
 
 @Observable
 class GameManager {
-    var money: BigNumber = BigNumber(150.0)
+    var money: BigNumber = .zero
     var mutationPoints: BigNumber = .zero
-    var inventory: [Duck] = []
+    var inventory: [Duck] = [Duck(rarity: .commun, sizeLevel: 1, mutationLevel: 1, origin: "Départ", size: 1.0, isSpecial: false)]
     var factories: [DuckFactory] = [DuckFactory(name: "Usine 1")]
     var lastSaveDate: Date = Date()
     

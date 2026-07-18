@@ -371,6 +371,10 @@ extension GameManager {
         guard let baseCost = crate.costMoney else { return nil }
         guard inventory.count + amount <= maxInventoryCapacity else { return nil }
         
+        if crate.type == .bois && amount == 1 && storyFlags["firstWoodenCrateOpened"] != true {
+            return .zero
+        }
+        
         let multiplier = amount <= 10000 ? 2.0 : max(2.0, 1.0 + Double(amount) / 10000.0)
         return amount <= 1 ? baseCost : baseCost * Double(amount) * multiplier
     }
@@ -387,6 +391,9 @@ extension GameManager {
         var limit = 0
         
         if let baseCost = crate.costMoney {
+            if crate.type == .bois && storyFlags["firstWoodenCrateOpened"] != true {
+                return 1
+            }
             if money < baseCost { return 0 }
             if money < baseCost * 4.0 { limit = 1 }
             else {

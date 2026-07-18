@@ -59,12 +59,7 @@ extension GameManager {
             currentStoryStep = loadedState.currentStoryStep
             isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
             storyFlags = loadedState.storyFlags
-            
-            // Filet de sécurité si la sauvegarde a été créée vide juste avant
-            if money < BigNumber(100) && inventory.isEmpty {
-                money = BigNumber(200.0)
-            }
-            
+
             invalidateEarningsCache()
             calculateOfflineEarnings()
             evaluateAffordableCrates(reset: true)
@@ -200,41 +195,47 @@ extension GameManager {
     func resetProgression() {
         let defaultState = GameState()
         
-        self.money = defaultState.money
-        self.mutationPoints = defaultState.mutationPoints
-        self.inventory = defaultState.inventory
-        self.factories = defaultState.factories
-        self.purchasedUpgrades = defaultState.purchasedUpgrades
-        self.upgradeLevels = defaultState.upgradeLevels
-        self.autoCrateTargetId = defaultState.autoCrateTargetId
-        self.autoFactoryLevels = defaultState.autoFactoryLevels
+        money = defaultState.money
+        mutationPoints = defaultState.mutationPoints
+        inventory = defaultState.inventory
+        factories = defaultState.factories
         
-        // Reset full (étoiles, niveaux, gemmes)
-        self.totalRecycledDucks = defaultState.totalRecycledDucks
-        self.totalFusionsDone = defaultState.totalFusionsDone
-        self.totalMaxedRepeatableUpgrades = defaultState.totalMaxedRepeatableUpgrades
+        autoCrateTargetId = defaultState.autoCrateTargetId
+        autoFactoryLevels = defaultState.autoFactoryLevels
         
-        self.currentStars = defaultState.currentStars
-        self.totalStars = defaultState.totalStars
-        self.spentStars = defaultState.spentStars
-        self.unspentStars = defaultState.unspentStars
-        self.purchasedPrestigeUpgrades = defaultState.purchasedPrestigeUpgrades
-        self.gems = defaultState.gems
+        purchasedUpgrades = defaultState.purchasedUpgrades
+        upgradeLevels = defaultState.upgradeLevels
         
-        self.playerLevel = defaultState.playerLevel
-        self.playerXP = defaultState.playerXP
-        self.missions = defaultState.missions
-        self.perksInventory = defaultState.perksInventory
+        totalRecycledDucks = defaultState.totalRecycledDucks
+        totalFusionsDone = defaultState.totalFusionsDone
+        totalMaxedRepeatableUpgrades = defaultState.totalMaxedRepeatableUpgrades
+        totalPerksEquipped = defaultState.totalPerksEquipped
+        totalRitualsDone = defaultState.totalRitualsDone
         
-        self.currentStoryStep = defaultState.currentStoryStep
-        self.isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
-        self.storyFlags = defaultState.storyFlags
+        currentStars = defaultState.currentStars
+        totalStars = defaultState.totalStars
+        spentStars = defaultState.spentStars
+        unspentStars = defaultState.unspentStars
+        purchasedPrestigeUpgrades = defaultState.purchasedPrestigeUpgrades
         
-        lastSaveDate = Date()
+        gems = defaultState.gems
         
-        initializeTutorialMissions()
-        evaluateAffordableCrates(reset: true)
+        playerLevel = defaultState.playerLevel
+        playerXP = defaultState.playerXP
+        missions = defaultState.missions
+        perksInventory = defaultState.perksInventory
+        
+        currentStoryStep = defaultState.currentStoryStep
+        isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
+        storyFlags = defaultState.storyFlags
+        
         invalidateEarningsCache()
+        calculateOfflineEarnings()
+        evaluateAffordableCrates(reset: true)
+        
+        // Timer de sauvegarde
+        startSaveTimer()
+        
         saveGame()
     }
     
