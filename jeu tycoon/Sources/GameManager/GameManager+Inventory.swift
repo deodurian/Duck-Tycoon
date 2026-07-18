@@ -599,6 +599,12 @@ extension GameManager {
         }
     }
     
+    func getDynamicStats(for duck: Duck) -> (level: Int, size: DuckSize, mutation: DuckMutation) {
+        let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        let stats = duck.getDynamicStats(with: perks)
+        return (stats.level, stats.size, stats.mutation)
+    }
+    
     func upgradeDuckLevel(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]

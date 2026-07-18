@@ -65,6 +65,7 @@ struct DuckGridCard: View {
     let duck: Duck
     let displayValue: String
     let isAssigned: Bool
+    let dynamicLevel: Int
     
     var body: some View {
         VStack(spacing: 2) {
@@ -73,7 +74,7 @@ struct DuckGridCard: View {
                 .scaledToFit()
                 .frame(width: 25, height: 25)
             
-            Text("Lv.\(duck.level)")
+            Text("Lv.\(dynamicLevel)")
                 .font(.system(size: 7, weight: .bold))
                 .foregroundColor(.white.opacity(0.9))
             
@@ -127,7 +128,7 @@ struct InventoryView: View {
     // Chemin de navigation
     @Binding var navPath: NavigationPath
     
-    @State private var displayInventory: [(duck: Duck, displayValue: String, isAssigned: Bool)] = []
+    @State private var displayInventory: [(duck: Duck, displayValue: String, isAssigned: Bool, dynamicLevel: Int)] = []
     @State private var isLoading = true
     @State private var isLoadingMore = false
     
@@ -137,12 +138,14 @@ struct InventoryView: View {
     @State private var hasMore = false
     @State private var needsUpdate = false
     
-    private func processDucks(_ ducks: [Duck], gm: GameManager) -> [(duck: Duck, displayValue: String, isAssigned: Bool)] {
+    private func processDucks(_ ducks: [Duck], gm: GameManager) -> [(duck: Duck, displayValue: String, isAssigned: Bool, dynamicLevel: Int)] {
         let assignedIds = Set(gm.factories.flatMap { $0.assignedDuckIds })
         return ducks.map { duck in
-            (duck: duck,
+            let dynamicStats = gm.getDynamicStats(for: duck)
+            return (duck: duck,
              displayValue: gm.displaySellValue(for: duck).formattedString(),
-             isAssigned: assignedIds.contains(duck.id))
+             isAssigned: assignedIds.contains(duck.id),
+             dynamicLevel: dynamicStats.level)
         }
     }
     
@@ -313,7 +316,8 @@ struct InventoryView: View {
                                 DuckGridCard(
                                     duck: item.duck,
                                     displayValue: item.displayValue,
-                                    isAssigned: item.isAssigned
+                                    isAssigned: item.isAssigned,
+                                    dynamicLevel: item.dynamicLevel
                                 )
                             }
                             .buttonStyle(PlainButtonStyle())

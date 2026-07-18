@@ -157,13 +157,14 @@ struct PerkSelectionSheet: View {
         var overflowMessages: [String] = []
         if !isEquippedAnywhere && !isSlotFull {
             if targetType == .duck, let duck = gameManager.inventory.first(where: { $0.id == targetId }) {
-                if duck.level + perk.duckConditionalLevels(duckRarity: duck.rarity) > 100 {
+                let dynamicStats = gameManager.getDynamicStats(for: duck)
+                if dynamicStats.level + perk.duckConditionalLevels(duckRarity: duck.rarity) > 100 {
                     overflowMessages.append(tr("niveau"))
                 }
-                if duck.size.index + perk.duckSizeIncrease > DuckSize.geant.index {
+                if dynamicStats.size.index + perk.duckSizeIncrease > DuckSize.geant.index {
                     overflowMessages.append(tr("taille"))
                 }
-                if duck.mutation.index + perk.duckMutationIncrease > DuckMutation.cristallise.index {
+                if dynamicStats.mutation.index + perk.duckMutationIncrease > DuckMutation.cristallise.index {
                     overflowMessages.append(tr("mutation"))
                 }
             } else if targetType == .factory, let _ = gameManager.factories.first(where: { $0.id == targetId }) {
