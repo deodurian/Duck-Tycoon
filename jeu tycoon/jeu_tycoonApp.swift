@@ -7,6 +7,7 @@ import GoogleMobileAds
 struct jeu_tycoonApp: App {
     init() {
         #if canImport(GoogleMobileAds)
+        MobileAds.shared.requestConfiguration.testDeviceIdentifiers = [ "04791426dd61ac2f0d7206d419c4d0bc" ]
         MobileAds.shared.start { _ in }
         #endif
     }
