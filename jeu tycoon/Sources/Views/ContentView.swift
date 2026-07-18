@@ -90,18 +90,20 @@ struct ContentView: View {
                 Group {
                     switch selectedTab {
                     case 0:
-                        FactoryView()
+                        StoryView()
                     case 1:
-                        InventoryView(selectedTab: $selectedTab, navPath: $navPath)
+                        FactoryView()
                     case 2:
-                        UpgradeView()
-                    case 3:
                         CrateShopView()
+                    case 3:
+                        InventoryView(selectedTab: $selectedTab, navPath: $navPath)
                     case 4:
-                        RitualView()
+                        UpgradeView()
                     case 5:
-                        PrestigeView()
+                        RitualView()
                     case 6:
+                        PrestigeView()
+                    case 7:
                         IAPShopView()
                     default:
                         EmptyView()
@@ -154,10 +156,11 @@ struct CustomTabBar: View {
     @Environment(GameManager.self) private var gameManager
     
     let tabs: [(title: String, icon: String, color: Color)] = [
+        ("Histoire", "book.fill", .blue),
         ("Usines", "building.2.crop.circle", .green),
+        ("Boutique", "shippingbox", .orange),
         ("Canards", "bird", .yellow),
         ("Amélio.", "bolt.circle.fill", .purple),
-        ("Boutique", "shippingbox", .orange),
         ("Rituel", "flame", .red),
         ("Prestige", "star.fill", .yellow),
         ("Banque", "creditcard.fill", .cyan)
@@ -166,15 +169,15 @@ struct CustomTabBar: View {
     @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     
     private func isUnlocked(_ index: Int) -> Bool {
-        // Niveau requis pour chaque onglet (à ajuster plus tard)
         switch index {
-        case 0: return true // Usines
-        case 1: return true // Canards
-        case 2: return gameManager.playerLevel >= 3 // Amélio.
-        case 3: return gameManager.playerLevel >= 2 // Boutique
-        case 4: return gameManager.playerLevel >= 10 // Rituel
-        case 5: return gameManager.playerLevel >= 20 // Prestige
-        case 6: return true // Banque
+        case 0: return gameManager.isHistoireUnlocked
+        case 1: return gameManager.isUsinesUnlocked
+        case 2: return gameManager.isBoutiqueUnlocked
+        case 3: return gameManager.isInventoryUnlocked
+        case 4: return gameManager.isAmelioUnlocked
+        case 5: return gameManager.isRituelUnlocked
+        case 6: return gameManager.isPrestigeUnlocked
+        case 7: return gameManager.isBanqueUnlocked
         default: return true
         }
     }

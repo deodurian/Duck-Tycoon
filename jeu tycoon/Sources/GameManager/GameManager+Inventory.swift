@@ -40,6 +40,7 @@ extension GameManager {
             emitMissionEvent(.bulkOpenCrates, amount: BigNumber(ducks.count))
         }
         
+        checkStoryAction("open_wooden_crate")
         saveGame()
     }
     
@@ -81,6 +82,7 @@ extension GameManager {
                 }
             }
             emitMissionEvent(.assignDuckToFactory)
+            checkStoryAction("assign_duck")
             invalidateEarningsCache()
             saveGame()
         }
@@ -110,6 +112,7 @@ extension GameManager {
         let duck = inventory[index]
         addMutationPoints(duck.recycleValue * mutationMultiplier)
         inventory.remove(at: index)
+        checkStoryAction("recycle_duck")
         saveGame()
     }
     
@@ -163,6 +166,7 @@ extension GameManager {
         totalRecycledDucks += ids.count
         emitMissionEvent(.recycleDuck, amount: BigNumber(ids.count))
         emitMissionEvent(.totalRecycleCount, amount: BigNumber(ids.count))
+        checkStoryAction("recycle_duck")
         saveGame()
     }
     func countBulkRecycle(rarity: DuckRarity, level: Int) -> Int {
@@ -311,6 +315,7 @@ extension GameManager {
         totalFusionsDone += 1
         emitMissionEvent(.fuseCommonDuck)
         emitMissionEvent(.totalFusionCount)
+        checkStoryAction("fusion_duck")
         saveGame()
     }
     
@@ -574,6 +579,7 @@ extension GameManager {
             duck.size = nextSize
             inventory[index] = duck
             emitMissionEvent(.upgradeDuckSize)
+            checkStoryAction("upgrade_duck")
             saveGame()
         }
     }
@@ -665,6 +671,7 @@ extension GameManager {
             factories[index].equippedPerkIds.append(perk.id)
             invalidateEarningsCache()
             emitMissionEvent(.assignPerk)
+            checkStoryAction("equip_perk")
             saveGame()
             return
         }
@@ -681,6 +688,7 @@ extension GameManager {
             
             inventory[index].equippedPerkIds.append(perk.id)
             emitMissionEvent(.assignPerk)
+            checkStoryAction("equip_perk")
             saveGame()
             return
         }
@@ -776,6 +784,7 @@ extension GameManager {
                 inventory[index].ritualSuccesses += 1
             }
             emitMissionEvent(.upgradeDuckMutation)
+            checkStoryAction("ritual_success")
         } else {
             // Unassign from factory if assigned
             if let factoryIndex = factories.firstIndex(where: { $0.assignedDuckIds.contains(duckId) }) {

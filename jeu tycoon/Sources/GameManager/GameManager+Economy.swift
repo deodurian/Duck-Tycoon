@@ -446,6 +446,7 @@ extension GameManager {
         mutationPoints = .zero
         
         emitMissionEvent(.prestige)
+        checkStoryAction("prestige")
         
         inventory.removeAll()
         factories = [DuckFactory(name: "Usine 1")]

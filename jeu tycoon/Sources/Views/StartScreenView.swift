@@ -65,7 +65,7 @@ struct StartScreenView: View {
                     Spacer()
                     
                     HStack {
-                        Text(tr("v1.0.0"))
+                        Text(tr("v1.0.2"))
                             .font(.caption)
                             .foregroundColor(.gray)
                         Spacer()

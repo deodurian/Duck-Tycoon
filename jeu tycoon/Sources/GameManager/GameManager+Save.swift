@@ -56,6 +56,10 @@ extension GameManager {
             missions = loadedState.missions
             perksInventory = loadedState.perksInventory
             
+            currentStoryStep = loadedState.currentStoryStep
+            isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
+            storyFlags = loadedState.storyFlags
+            
             // Filet de sécurité si la sauvegarde a été créée vide juste avant
             if money < BigNumber(100) && inventory.isEmpty {
                 money = BigNumber(200.0)
@@ -221,6 +225,10 @@ extension GameManager {
         self.playerXP = defaultState.playerXP
         self.missions = defaultState.missions
         self.perksInventory = defaultState.perksInventory
+        
+        self.currentStoryStep = defaultState.currentStoryStep
+        self.isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
+        self.storyFlags = defaultState.storyFlags
         
         lastSaveDate = Date()
         
