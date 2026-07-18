@@ -101,25 +101,37 @@ struct PerkSelectionSheet: View {
                                         let isEquippedAnywhere = gameManager.isPerkEquippedAnywhere(perk.id)
                                         let isSlotFull = equippedIds.count >= getMaxSlots()
 
-                                        PerkCardView(perk: perk, showRecycle: false)
-                                            .opacity(isEquippedAnywhere || isSlotFull ? 0.4 : 1.0)
-                                            .overlay(
-                                                Group {
-                                                    if isEquippedAnywhere {
-                                                        RoundedRectangle(cornerRadius: 14)
-                                                            .fill(Color.black.opacity(0.3))
-                                                        Image(systemName: "lock.fill")
-                                                            .font(.largeTitle)
-                                                            .foregroundColor(.white.opacity(0.8))
-                                                    }
-                                                }
-                                            )
-                                            .onTapGesture {
-                                                if !isEquippedAnywhere && !isSlotFull {
-                                                    gameManager.equipPerk(perk, to: targetId)
-                                                    dismiss()
-                                                }
+                                        let overflowMessages = getOverflowMessages(for: perk, isEquippedAnywhere: isEquippedAnywhere, isSlotFull: isSlotFull)
+
+                                        VStack(spacing: 4) {
+                                            if !overflowMessages.isEmpty {
+                                                Text("\(tr("dépassement de")) \(overflowMessages.joined(separator: ", "))")
+                                                    .font(.caption.bold())
+                                                    .foregroundColor(.red)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                    .padding(.horizontal, 4)
                                             }
+                                            
+                                            PerkCardView(perk: perk, showRecycle: false)
+                                                .opacity(isEquippedAnywhere || isSlotFull ? 0.4 : 1.0)
+                                                .overlay(
+                                                    Group {
+                                                        if isEquippedAnywhere {
+                                                            RoundedRectangle(cornerRadius: 14)
+                                                                .fill(Color.black.opacity(0.3))
+                                                            Image(systemName: "lock.fill")
+                                                                .font(.largeTitle)
+                                                                .foregroundColor(.white.opacity(0.8))
+                                                        }
+                                                    }
+                                                )
+                                        }
+                                        .onTapGesture {
+                                            if !isEquippedAnywhere && !isSlotFull {
+                                                gameManager.equipPerk(perk, to: targetId)
+                                                dismiss()
+                                            }
+                                        }
                                     }
                                 }
                                 .padding(.horizontal)
@@ -140,6 +152,26 @@ struct PerkSelectionSheet: View {
     }
     
     // MARK: - Helpers
+    
+    private func getOverflowMessages(for perk: Perk, isEquippedAnywhere: Bool, isSlotFull: Bool) -> [String] {
+        var overflowMessages: [String] = []
+        if !isEquippedAnywhere && !isSlotFull {
+            if targetType == .duck, let duck = gameManager.inventory.first(where: { $0.id == targetId }) {
+                if duck.level + perk.duckConditionalLevels(duckRarity: duck.rarity) > 100 {
+                    overflowMessages.append(tr("niveau"))
+                }
+                if duck.size.index + perk.duckSizeIncrease > DuckSize.geant.index {
+                    overflowMessages.append(tr("taille"))
+                }
+                if duck.mutation.index + perk.duckMutationIncrease > DuckMutation.cristallise.index {
+                    overflowMessages.append(tr("mutation"))
+                }
+            } else if targetType == .factory, let _ = gameManager.factories.first(where: { $0.id == targetId }) {
+                // Currently perks don't explicitly add levels to factory, but if they did we'd catch it.
+            }
+        }
+        return overflowMessages
+    }
     
     private func getEquippedPerks() -> [UUID] {
         if targetType == .factory {
