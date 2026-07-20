@@ -86,10 +86,8 @@ struct OfflineEarningsPopupView: View {
                         if adManager.isReady {
                             Button(action: {
                                 AdManager.shared.showRewardedAd(for: .offlineBoost) { earned in
-                                    print("Retour du AdManager, earned = \(earned)")
                                     if earned {
                                         DispatchQueue.main.async {
-                                            print("Appel de claimOfflineEarnings(2.0)")
                                             withAnimation {
                                                 gameManager.claimOfflineEarnings(multiplier: 2.0)
                                             }

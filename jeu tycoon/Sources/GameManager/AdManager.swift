@@ -51,14 +51,12 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
         let request = Request()
         RewardedAd.load(with: placement.adUnitID, request: request) { ad, error in
             Task { @MainActor in
-                if let error = error {
-                    print("Erreur de chargement pub (\(placement)): \(error.localizedDescription)")
+                if error != nil {
                     return
                 }
                 ad?.fullScreenContentDelegate = AdManager.shared
                 AdManager.shared.rewardedAds[placement] = ad
                 AdManager.shared.isReady = !AdManager.shared.rewardedAds.isEmpty
-                print("Pub récompensée chargée avec succès pour \(placement).")
             }
         }
     }
@@ -69,8 +67,7 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
         self.currentlyShowingPlacement = placement
         
         guard let rewardedAd = rewardedAds[placement] else {
-            print("La pub pour \(placement) n'est pas encore prête.")
-            self.onRewardEarned?(false) 
+            self.onRewardEarned?(false)
             self.loadRewardedAd(for: placement)
             return
         }
@@ -86,13 +83,10 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
         }
         
         if let topController = topController {
-            print("AdManager: Appel de rewardedAd.present()")
             rewardedAd.present(from: topController) { [weak self] in
-                print("AdManager: Le joueur a gagné la récompense (dans le callback de Google) !")
                 self?.isRewardEarned = true
             }
         } else {
-            print("Erreur: Impossible de trouver la fenêtre principale pour afficher la pub.")
             self.onRewardEarned?(false)
             self.loadRewardedAd(for: placement)
         }
@@ -101,36 +95,25 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
     // MARK: - FullScreenContentDelegate
     
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        print("La pub a été fermée.")
-        
         // Appeler le callback APRÈS la fermeture de la pub
-        let earned = self.isRewardEarned
+        finishCurrentAd(earned: self.isRewardEarned)
+    }
+
+    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        finishCurrentAd(earned: false)
+    }
+
+    private func finishCurrentAd(earned: Bool) {
         DispatchQueue.main.async {
             self.onRewardEarned?(earned)
             self.onRewardEarned = nil
         }
-        
+
         if let placement = currentlyShowingPlacement {
             self.rewardedAds[placement] = nil
             self.loadRewardedAd(for: placement)
         }
-        
-        self.currentlyShowingPlacement = nil
-        self.isRewardEarned = false
-        self.isReady = !self.rewardedAds.isEmpty
-    }
-    
-    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        print("Erreur d'affichage de la pub : \(error.localizedDescription)")
-        DispatchQueue.main.async {
-            self.onRewardEarned?(false)
-            self.onRewardEarned = nil
-        }
-        if let placement = currentlyShowingPlacement {
-            self.rewardedAds[placement] = nil
-            self.loadRewardedAd(for: placement)
-        }
-        
+
         self.currentlyShowingPlacement = nil
         self.isRewardEarned = false
         self.isReady = !self.rewardedAds.isEmpty
@@ -142,7 +125,7 @@ class AdManager {
     static let shared = AdManager()
     
     func showRewardedAd(for placement: AdPlacement, completion: @escaping (Bool) -> Void) {
-        print("AdMob SDK not installed. Simulating ad success for \(placement).")
+        // AdMob SDK not installed: simulate ad success
         completion(true)
     }
 }

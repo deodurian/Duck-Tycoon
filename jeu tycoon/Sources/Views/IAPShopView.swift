@@ -113,19 +113,19 @@ struct IAPShopView: View {
     }
 }
 
-// MARK: - IAP Section (Real Money)
-struct ShopSectionView: View {
+// MARK: - Shared Section & Card Chrome
+
+/// En-tête de section + grille 3 colonnes, communs aux sections IAP et virtuelles.
+struct ShopSectionContainer<Content: View>: View {
     let title: String
     let icon: String
     let color: Color
-    let definitions: [StoreProductDefinition]
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 15),
-        GridItem(.flexible(), spacing: 15),
-        GridItem(.flexible(), spacing: 15)
-    ]
-    
+    @ViewBuilder let content: () -> Content
+
+    private static var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 15), count: 3)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
@@ -137,13 +137,66 @@ struct ShopSectionView: View {
                     .foregroundColor(.white)
             }
             .padding(.horizontal)
-            
-            LazyVGrid(columns: columns, spacing: 15) {
-                ForEach(definitions, id: \.id) { def in
-                    ShopItemCard(definition: def, color: color)
-                }
+
+            LazyVGrid(columns: Self.columns, spacing: 15) {
+                content()
             }
             .padding(.horizontal)
+        }
+    }
+}
+
+/// Mise en page commune d'une carte du shop : icône, titre, badge de prix, fond et bordure.
+struct ShopCardLayout<Badge: View>: View {
+    let iconName: String
+    let title: String
+    let color: Color
+    @ViewBuilder let badge: () -> Badge
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(iconName)
+                .font(.system(size: 30))
+
+            Text(tr(title))
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+
+            Spacer(minLength: 0)
+
+            badge()
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(color.opacity(0.2))
+                .cornerRadius(8)
+        }
+        .padding(10)
+        .frame(height: 120)
+        .frame(maxWidth: .infinity)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(15)
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - IAP Section (Real Money)
+struct ShopSectionView: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let definitions: [StoreProductDefinition]
+
+    var body: some View {
+        ShopSectionContainer(title: title, icon: icon, color: color) {
+            ForEach(definitions, id: \.id) { def in
+                ShopItemCard(definition: def, color: color)
+            }
         }
     }
 }
@@ -172,36 +225,11 @@ struct ShopItemCard: View {
                 }
             }
         }) {
-            VStack(spacing: 8) {
-                Text(definition.type.iconName)
-                    .font(.system(size: 30))
-                
-                Text(tr(definition.type.title))
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-                
-                Spacer(minLength: 0)
-                
+            ShopCardLayout(iconName: definition.type.iconName, title: definition.type.title, color: color) {
                 Text(isDeveloperMode ? "Gratuit (Dev)" : (product?.displayPrice ?? definition.type.simulatedPrice))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(color)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .background(color.opacity(0.2))
-                    .cornerRadius(8)
             }
-            .padding(10)
-            .frame(height: 120)
-            .frame(maxWidth: .infinity)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(15)
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(color.opacity(0.3), lineWidth: 1)
-            )
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(storeManager.isPurchasing && !isDeveloperMode)
@@ -216,31 +244,12 @@ struct VirtualShopSectionView: View {
     let color: Color
     let products: [VirtualShopProduct]
     let onPurchaseFailed: () -> Void
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 15),
-        GridItem(.flexible(), spacing: 15),
-        GridItem(.flexible(), spacing: 15)
-    ]
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                Text(tr(title))
-                    .font(.title2)
-                    .bold()
-                    .foregroundColor(.white)
+        ShopSectionContainer(title: title, icon: icon, color: color) {
+            ForEach(0..<products.count, id: \.self) { index in
+                VirtualShopItemCard(product: products[index], color: color, onPurchaseFailed: onPurchaseFailed)
             }
-            .padding(.horizontal)
-            
-            LazyVGrid(columns: columns, spacing: 15) {
-                ForEach(0..<products.count, id: \.self) { index in
-                    VirtualShopItemCard(product: products[index], color: color, onPurchaseFailed: onPurchaseFailed)
-                }
-            }
-            .padding(.horizontal)
         }
     }
 }
@@ -263,19 +272,7 @@ struct VirtualShopItemCard: View {
                 impact.impactOccurred()
             }
         }) {
-            VStack(spacing: 8) {
-                Text(product.iconName)
-                    .font(.system(size: 30))
-                
-                Text(tr(product.title))
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-                
-                Spacer(minLength: 0)
-                
+            ShopCardLayout(iconName: product.iconName, title: product.title, color: color) {
                 HStack(spacing: 4) {
                     Text("\(product.gemCost)")
                         .font(.system(size: 12, weight: .semibold))
@@ -283,20 +280,7 @@ struct VirtualShopItemCard: View {
                     Text("💎")
                         .font(.system(size: 10))
                 }
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
-                .background(color.opacity(0.2))
-                .cornerRadius(8)
             }
-            .padding(10)
-            .frame(height: 120)
-            .frame(maxWidth: .infinity)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(15)
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(color.opacity(0.3), lineWidth: 1)
-            )
         }
         .buttonStyle(PlainButtonStyle())
     }
