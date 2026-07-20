@@ -63,22 +63,41 @@ enum CrateType: String, Codable, CaseIterable {
 
 struct CrateProbabilities {
     let chances: [DuckRarity: Double]
-    
-    /// Tire une rareté au sort en fonction des probabilités (somme = 100)
-    func rollRarity() -> DuckRarity {
+
+    /// Tire une rareté au sort en fonction des probabilités (somme = 100).
+    /// `bonus` (perk Chance de Caisse) réduit la part de la rareté la plus commune de cette caisse
+    /// et redistribue proportionnellement le reste vers les raretés plus élevées.
+    func rollRarity(bonus: Double = 0.0) -> DuckRarity {
         let roll = Double.random(in: 0..<100)
-        var cumulative = 0.0
-        
-        for rarity in DuckRarity.allCases {
-            if let chance = chances[rarity], chance > 0 {
-                cumulative += chance
-                if roll < cumulative {
-                    return rarity
+
+        guard bonus > 0, let lowestRarity = DuckRarity.allCases.first(where: { (chances[$0] ?? 0) > 0 }) else {
+            var cumulative = 0.0
+            for rarity in DuckRarity.allCases {
+                if let chance = chances[rarity], chance > 0 {
+                    cumulative += chance
+                    if roll < cumulative { return rarity }
                 }
             }
+            return DuckRarity.allCases.last ?? .commun
         }
-        
-        return DuckRarity.allCases.last ?? .commun
+
+        let baseLowest = chances[lowestRarity] ?? 0
+        let lowestThreshold = max(0.0, baseLowest - (bonus * 100.0))
+        if roll < lowestThreshold { return lowestRarity }
+
+        let remaining = 100.0 - lowestThreshold
+        let originalRemaining = 100.0 - baseLowest
+
+        var cumulative = lowestThreshold
+        for rarity in DuckRarity.allCases where rarity != lowestRarity {
+            if let chance = chances[rarity], chance > 0 {
+                let share = originalRemaining > 0 ? remaining * (chance / originalRemaining) : 0
+                cumulative += share
+                if roll < cumulative { return rarity }
+            }
+        }
+
+        return DuckRarity.allCases.last ?? lowestRarity
     }
 }
 
@@ -97,42 +116,42 @@ struct Crate {
         Crate(
             type: .bois,
             costMoney: BigNumber(100),
-            probabilities: CrateProbabilities(chances: [.commun: 85.0, .peuCommun: 14.9, .rare: 0.1])
+            probabilities: CrateProbabilities(chances: [.commun: 87.0, .peuCommun: 12.9, .rare: 0.1])
         ),
         Crate(
             type: .fer,
             costMoney: BigNumber(20000),
-            probabilities: CrateProbabilities(chances: [.commun: 60.0, .peuCommun: 30.0, .rare: 9.5, .epique: 0.4, .legendaire: 0.1])
+            probabilities: CrateProbabilities(chances: [.commun: 63.0, .peuCommun: 32.0, .rare: 4.7, .epique: 0.25, .legendaire: 0.05])
         ),
         Crate(
             type: .or,
             costMoney: BigNumber(1_000_000),
-            probabilities: CrateProbabilities(chances: [.commun: 20.0, .peuCommun: 50.0, .rare: 25.0, .epique: 4.5, .legendaire: 0.4, .mythique: 0.1])
+            probabilities: CrateProbabilities(chances: [.commun: 27.0, .peuCommun: 58.0, .rare: 13.0, .epique: 1.7, .legendaire: 0.25, .mythique: 0.05])
         ),
         Crate(
             type: .platine,
             costMoney: BigNumber(1_000_000_000),
-            probabilities: CrateProbabilities(chances: [.peuCommun: 35.0, .rare: 45.0, .epique: 17.5, .legendaire: 2.0, .mythique: 0.5])
+            probabilities: CrateProbabilities(chances: [.peuCommun: 40.0, .rare: 50.0, .epique: 8.5, .legendaire: 1.2, .mythique: 0.3])
         ),
-        
+
         // Caisses achetables avec des Mutations
         Crate(
             type: .saphir,
             costMoney: nil,
             costMutationPoints: BigNumber(500.0),
-            probabilities: CrateProbabilities(chances: [.rare: 50.0, .epique: 40.0, .legendaire: 9.0, .mythique: 1.0])
+            probabilities: CrateProbabilities(chances: [.rare: 50.0, .epique: 40.0, .legendaire: 8.7, .mythique: 1.1, .exotique: 0.2])
         ),
         Crate(
             type: .rubis,
             costMoney: nil,
             costMutationPoints: BigNumber(5000.0),
-            probabilities: CrateProbabilities(chances: [.epique: 40.0, .legendaire: 50.0, .mythique: 10.0])
+            probabilities: CrateProbabilities(chances: [.epique: 40.0, .legendaire: 48.0, .mythique: 8.5, .exotique: 3.3, .celeste: 0.2])
         ),
         Crate(
             type: .diamant,
             costMoney: nil,
             costMutationPoints: BigNumber(50000.0),
-            probabilities: CrateProbabilities(chances: [.legendaire: 40.0, .mythique: 60.0])
+            probabilities: CrateProbabilities(chances: [.legendaire: 25.0, .mythique: 55.0, .exotique: 15.0, .celeste: 4.5, .primordiale: 0.5])
         )
     ]
 }

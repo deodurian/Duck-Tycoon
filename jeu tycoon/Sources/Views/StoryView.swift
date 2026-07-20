@@ -5,7 +5,7 @@ struct StoryView: View {
 
     @State private var showingMissions = false
 
-    private let totalChapters = 7
+    private let totalChapters = 8
 
     var body: some View {
         ZStack {

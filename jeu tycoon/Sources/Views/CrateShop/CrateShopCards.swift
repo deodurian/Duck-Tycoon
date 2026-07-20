@@ -15,7 +15,12 @@ struct PremiumCrateCard: View {
     @State private var holdDidTrigger = false
     @State private var shimmerOffset: CGFloat = -1
     @State private var glowPulse = false
-    
+
+    /// La rareté la plus élevée que cette caisse peut donner
+    private var bestRarity: DuckRarity? {
+        crate.probabilities.chances.filter { $0.value > 0 }.keys.max()
+    }
+
 
     
     var body: some View {
@@ -42,7 +47,7 @@ struct PremiumCrateCard: View {
                             .font(.system(size: 36))
                             .foregroundStyle(LinearGradient(colors: crate.type.gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing))
                             .shadow(color: crate.type.accentColor.opacity(0.5), radius: 8)
-                        
+
                         // Sparkle on premium crates
                         if crate.type == .diamant || crate.type == .rubis {
                             Image(systemName: "sparkle")
@@ -51,27 +56,30 @@ struct PremiumCrateCard: View {
                                 .offset(x: 18, y: -18)
                         }
                     }
-                    
+
                     Text(tr(crate.type.shortName))
                         .font(.system(size: 15, weight: .black, design: .rounded))
                         .foregroundColor(crate.type.textColor)
+
+                    // Meilleure rareté obtenable dans cette caisse
+                    if let bestRarity = bestRarity {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 7))
+                            Text(tr(bestRarity.rawValue))
+                                .font(.system(size: 9, weight: .black))
+                        }
+                        .foregroundColor(bestRarity.color)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.black.opacity(0.35)))
+                        .overlay(Capsule().stroke(bestRarity.color.opacity(0.5), lineWidth: 1))
+                    }
                 }
             }
             .padding(.top, 10)
             .padding(.bottom, 4)
-            
-            // Info button
-            HStack {
-                Spacer()
-                Button(action: { withAnimation { infoCrate = crate } }) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 14))
-                        .foregroundColor(crate.type.textColor.opacity(0.6))
-                }
-                .padding(.trailing, 8)
-            }
-            .padding(.top, -20)
-            
+
             Spacer(minLength: 4)
             
             // Buy buttons section
@@ -98,6 +106,14 @@ struct PremiumCrateCard: View {
             }
         }
         .buttonStyle(BorderlessButtonStyle())
+        .overlay(alignment: .topTrailing) {
+            Button(action: { withAnimation { infoCrate = crate } }) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 15))
+                    .foregroundColor(crate.type.textColor.opacity(0.55))
+                    .padding(8)
+            }
+        }
         .frame(minHeight: 220)
         .background(
             ZStack {
@@ -342,8 +358,9 @@ struct PremiumCrateCard: View {
             var generatedDucks = [Duck]()
             generatedDucks.reserveCapacity(amount)
             let hasGenes = gameManager.isUnlocked(.genesCroissants)
+            let luckBonus = gameManager.crateLuckBonus
             for _ in 0..<amount {
-                let rarity = crate.probabilities.rollRarity()
+                let rarity = crate.probabilities.rollRarity(bonus: luckBonus)
                 let size = DuckSize.rollRandom(genesCroissants: hasGenes)
                 let mutation = DuckMutation.rollRandom()
                 generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -352,20 +369,21 @@ struct PremiumCrateCard: View {
             openingState = CrateOpeningState(crate: crate, ducks: generatedDucks)
             return
         }
-        
+
         // Grand nombre : générer en arrière-plan
         isGenerating = true
         let probabilities = crate.probabilities
         let crateRef = crate
         let hasGenes = gameManager.isUnlocked(.genesCroissants)
-        
+        let luckBonus = gameManager.crateLuckBonus
+
         DispatchQueue.global(qos: .userInitiated).async {
             var generatedDucks = [Duck]()
             generatedDucks.reserveCapacity(amount)
             var rarityCounts: [DuckRarity: Int] = [:]
-            
+
             for _ in 0..<amount {
-                let rarity = probabilities.rollRarity()
+                let rarity = probabilities.rollRarity(bonus: luckBonus)
                 let size = DuckSize.rollRandom(genesCroissants: hasGenes)
                 let mutation = DuckMutation.rollRandom()
                 generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -440,13 +458,14 @@ struct PremiumCrateCard: View {
         var generatedDucks = [Duck]()
         generatedDucks.reserveCapacity(amount)
         let hasGenes = gameManager.isUnlocked(.genesCroissants)
+        let luckBonus = gameManager.crateLuckBonus
         for _ in 0..<amount {
-            let rarity = crate.probabilities.rollRarity()
+            let rarity = crate.probabilities.rollRarity(bonus: luckBonus)
             let size = DuckSize.rollRandom(genesCroissants: hasGenes)
             let mutation = DuckMutation.rollRandom()
             generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
         }
-        
+
         gameManager.processNewDucks(generatedDucks)
         gameManager.evaluateAffordableCrates(reset: true)
         return true

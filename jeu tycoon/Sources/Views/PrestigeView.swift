@@ -154,7 +154,7 @@ struct PrestigeView: View {
                             let discount = 1.0 - gameManager.factoryCostDiscount
                             bonusRow(icon: "building.2.fill", label: tr("Réduction usines"), value: "-\(Int(discount * 100))%", color: .purple)
                             Divider().background(Color.white.opacity(0.1))
-                            bonusRow(icon: "DNA", label: tr("Gain mutation"), value: "+\(formatBonus(3))%", color: .cyan)
+                            bonusRow(icon: "flask.fill", label: tr("Gain mutation"), value: "+\(formatBonus(3))%", color: .cyan)
                             Divider().background(Color.white.opacity(0.1))
                             if gameManager.totalStars >= 100 {
                                 bonusRow(icon: "wand.and.stars", label: tr("Mutation spontanée"), value: "+\(formatBonus(0.2))%", color: .mint)
@@ -184,18 +184,18 @@ struct PrestigeView: View {
                 Spacer(minLength: 20)
                 
                 // Section action Prestige
-                if gameManager.money < BigNumber(10_000_000_000) {
+                if gameManager.money < GameManager.firstPrestigeThreshold {
                     // Verrouillé
                     VStack(spacing: 14) {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 30))
                             .foregroundColor(.gray.opacity(0.6))
-                        
-                        Text(tr("Atteindre 10B d'argent"))
+
+                        Text(tr("Atteindre") + " " + GameManager.firstPrestigeThreshold.doubleValue.formattedString() + " " + tr("d'argent"))
                             .font(.headline)
                             .foregroundColor(.gray)
-                        
-                        let progress = (gameManager.money / BigNumber(10_000_000_000.0)).doubleValue
+
+                        let progress = (gameManager.money / GameManager.firstPrestigeThreshold).doubleValue
                         ProgressView(value: min(progress, 1.0))
                             .tint(.yellow)
                             .scaleEffect(y: 1.5)

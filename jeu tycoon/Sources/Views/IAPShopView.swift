@@ -32,6 +32,31 @@ struct IAPShopView: View {
                 ScrollView {
                     VStack(spacing: 30) {
                         
+                        // Section 0 : Pub
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Image(systemName: "play.rectangle.fill").foregroundColor(.red)
+                                Text(tr("Offres Quotidiennes")).font(.title2.bold()).foregroundColor(.white)
+                            }.padding(.horizontal)
+                            
+                            Button(action: { gameManager.watchAdForGems() }) {
+                                HStack {
+                                    Image(systemName: "video.fill").font(.title2).foregroundColor(.white)
+                                    VStack(alignment: .leading) {
+                                        Text(tr("10 Gemmes Gratuites")).font(.headline).foregroundColor(.white)
+                                        Text("\(5 - gameManager.dailyAdGemsCount) \(tr("restants aujourd'hui"))").font(.caption).foregroundColor(.white.opacity(0.8))
+                                    }
+                                    Spacer()
+                                    Text("+10 💎").font(.title3.bold()).foregroundColor(.cyan)
+                                }
+                                .padding()
+                                .background(gameManager.canWatchAdForGems ? LinearGradient(colors: [.red.opacity(0.8), .orange.opacity(0.8)], startPoint: .leading, endPoint: .trailing) : LinearGradient(colors: [.gray.opacity(0.5)], startPoint: .leading, endPoint: .trailing))
+                                .cornerRadius(16)
+                            }
+                            .disabled(!gameManager.canWatchAdForGems)
+                            .padding(.horizontal)
+                        }
+                        
                         // Section 1 : Gemmes (Achats IAP réels)
                         ShopSectionView(
                             title: tr("Gemmes"),
@@ -59,7 +84,7 @@ struct IAPShopView: View {
                         // Section 3 : ADN (Achats virtuels en Gemmes)
                         VirtualShopSectionView(
                             title: "Packs d'ADN",
-                            icon: "dna",
+                            icon: "flask.fill",
                             color: .purple,
                             products: storeManager.virtualProducts.filter { prod in
                                 if case .dna = prod { return true }

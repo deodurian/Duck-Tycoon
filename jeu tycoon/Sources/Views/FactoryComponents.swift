@@ -157,7 +157,8 @@ struct FactoryRow: View {
                                 DuckGridCard(
                                     duck: assignedDucks[index],
                                     displayValue: gameManager.displaySellValue(for: assignedDucks[index]).formattedString(),
-                                    isAssigned: false
+                                    isAssigned: false,
+                                    dynamicLevel: gameManager.getDynamicStats(for: assignedDucks[index]).level
                                 )
                             } else {
                                 VStack(spacing: 3) {
@@ -274,7 +275,7 @@ struct FactoryRow: View {
                 if isMaxLevel {
                     if factory.evolution < 7 {
                         let factoryPerks = factory.equippedPerkIds.compactMap { id in gameManager.perksInventory.first { $0.id == id } }
-                        let cost = factory.evolveCost(factoryPerks: factoryPerks, baseDiscount: gameManager.factoryCostDiscount)
+                        let cost = factory.evolveCost(factoryPerks: factoryPerks, baseDiscount: gameManager.factoryEvolutionCostDiscount)
                         let canEvolve = gameManager.money >= cost
                         Button(action: { gameManager.evolveFactory(factoryId: factory.id) }) {
                             HStack(spacing: 6) {
@@ -489,7 +490,8 @@ struct DuckSelectionSheet: View {
                             DuckGridCard(
                                 duck: duck,
                                 displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id)
+                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                dynamicLevel: gameManager.getDynamicStats(for: duck).level
                             )
                         .onTapGesture {
                             gameManager.assignDuck(duck, to: factoryId)

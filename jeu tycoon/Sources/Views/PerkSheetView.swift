@@ -150,6 +150,9 @@ struct PerkCardView: View {
         case .epique: return 5000
         case .legendaire: return 25000
         case .mythique: return 100000
+        case .exotique: return 400000
+        case .celeste: return 1600000
+        case .primordiale: return 6400000
         }
     }
 

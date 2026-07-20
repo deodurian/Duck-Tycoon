@@ -110,19 +110,19 @@ struct FusionView: View {
                 Spacer()
                 
                 Button(action: {
-                    if gameManager.isUnlocked(.autoFusion) {
+                    if gameManager.isAutoFusionUnlocked {
                         showingBulkFusion = true
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: gameManager.isUnlocked(.autoFusion) ? "bolt.fill" : "lock.fill")
+                        Image(systemName: gameManager.isAutoFusionUnlocked ? "bolt.fill" : "lock.fill")
                         Text(tr("Auto"))
                     }
                     .font(.headline)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(gameManager.isUnlocked(.autoFusion) ? Color.orange.opacity(0.15) : Color.gray.opacity(0.15))
-                    .foregroundColor(gameManager.isUnlocked(.autoFusion) ? .orange : .gray)
+                    .background(gameManager.isAutoFusionUnlocked ? Color.orange.opacity(0.15) : Color.gray.opacity(0.15))
+                    .foregroundColor(gameManager.isAutoFusionUnlocked ? .orange : .gray)
                     .cornerRadius(10)
                 }
             }
@@ -183,7 +183,8 @@ struct FusionView: View {
                             DuckGridCard(
                                 duck: duck,
                                 displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                isAssigned: isAssigned
+                                isAssigned: isAssigned,
+                                dynamicLevel: gameManager.getDynamicStats(for: duck).level
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8).stroke(Color.green, lineWidth: 3)
@@ -252,7 +253,8 @@ struct FusionView: View {
                                 DuckGridCard(
                                     duck: duck,
                                     displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                    isAssigned: gameManager.isDuckAssigned(duckId: duck.id)
+                                    isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                    dynamicLevel: gameManager.getDynamicStats(for: duck).level
                                 )
                                 .onTapGesture {
                                     selectedDuckIds.remove(at: index)

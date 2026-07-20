@@ -7,27 +7,31 @@ struct AutoFactoryCard: View {
     let factory: DuckFactory
     
     var level: Int { gameManager.autoFactoryLevels[factory.id] ?? 0 }
-    let maxLevel = 3
-    
+    let maxLevel = 5
+
     var cost: BigNumber {
         switch level {
         case 0: return BigNumber(25000.0)
         case 1: return BigNumber(100000.0)
         case 2: return BigNumber(500000.0)
+        case 3: return BigNumber(2500000.0)
+        case 4: return BigNumber(10000000.0)
         default: return .zero
         }
     }
-    
+
     var canAfford: Bool {
         gameManager.mutationPoints >= cost
     }
-    
+
     var effectText: String {
         switch level {
         case 0: return "Auto: Désactivé"
         case 1: return "1 niv / 10s"
         case 2: return "1 niv / 3s"
         case 3: return "1 niv / 1s"
+        case 4: return "1 niv / 0.5s"
+        case 5: return "1 niv / 0.2s"
         default: return ""
         }
     }

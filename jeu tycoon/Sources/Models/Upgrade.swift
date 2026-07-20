@@ -62,6 +62,8 @@ enum UpgradeID: String, Codable, CaseIterable, Hashable {
     case autoOuvrier2
     case autoOuvrier3
     case autoOuvrier4
+    case autoOuvrier5
+    case autoOuvrier6
 
     // Bonus permanents (niveaux multiples)
     case bonusGlobal
@@ -73,6 +75,13 @@ enum UpgradeID: String, Codable, CaseIterable, Hashable {
     case bonusMythique
     case bonusMutation
     case paradisFiscal
+    case bonusExotique
+    case bonusCeleste
+    case bonusPrimordiale
+    case bonusEvolutionCost
+    case bonusAutomationSpeed
+    case bonusPerkPower
+    case bonusPrestigeStars
 }
 
 // MARK: - Catégorie
@@ -500,10 +509,34 @@ extension UpgradeDefinition {
             category: .automation,
             currency: .mutationPoints,
             icon: "clock.fill",
-            name: "Auto-Ouvrier MAX",
-            description: "L'Auto-Ouvrier atteint sa vitesse maximale.",
+            name: "Auto-Ouvrier IV",
+            description: "Accélère encore l'Auto-Ouvrier.",
             effectDescription: "1 caisse toutes les 0.5 secondes.",
             baseCost: 2500000,
+            costMultiplier: 1.0,
+            maxLevel: 1
+        ),
+        UpgradeDefinition(
+            id: .autoOuvrier5,
+            category: .automation,
+            currency: .mutationPoints,
+            icon: "clock.fill",
+            name: "Auto-Ouvrier V",
+            description: "Accélère massivement l'Auto-Ouvrier.",
+            effectDescription: "1 caisse toutes les 0.25 secondes.",
+            baseCost: 10000000,
+            costMultiplier: 1.0,
+            maxLevel: 1
+        ),
+        UpgradeDefinition(
+            id: .autoOuvrier6,
+            category: .automation,
+            currency: .mutationPoints,
+            icon: "clock.fill",
+            name: "Auto-Ouvrier MAX",
+            description: "L'Auto-Ouvrier atteint sa vitesse maximale.",
+            effectDescription: "1 caisse toutes les 0.1 seconde.",
+            baseCost: 50000000,
             costMultiplier: 1.0,
             maxLevel: 1
         ),
@@ -598,7 +631,7 @@ extension UpgradeDefinition {
             id: .bonusMutation,
             category: .bonus,
             currency: .money,
-            icon: "dna",
+            icon: "flask.fill",
             name: "Bonus Mutation",
             description: "Augmente les mutations obtenues lors du recyclage.",
             effectDescription: "+2% de mutations/niv.",
@@ -617,6 +650,90 @@ extension UpgradeDefinition {
             baseCost: 2_000_000,
             costMultiplier: 1.618,
             maxLevel: 20
+        ),
+        UpgradeDefinition(
+            id: .bonusExotique,
+            category: .bonus,
+            currency: .money,
+            icon: "circle.fill",
+            name: "Bonus Exotique",
+            description: "Augmente les revenus des canards Exotiques.",
+            effectDescription: "+2% revenus Exotiques/niv.",
+            baseCost: 1_000_000_000,
+            costMultiplier: 1.618,
+            maxLevel: 100
+        ),
+        UpgradeDefinition(
+            id: .bonusCeleste,
+            category: .bonus,
+            currency: .money,
+            icon: "circle.fill",
+            name: "Bonus Céleste",
+            description: "Augmente les revenus des canards Célestes.",
+            effectDescription: "+2% revenus Célestes/niv.",
+            baseCost: 10_000_000_000,
+            costMultiplier: 1.618,
+            maxLevel: 100
+        ),
+        UpgradeDefinition(
+            id: .bonusPrimordiale,
+            category: .bonus,
+            currency: .money,
+            icon: "circle.fill",
+            name: "Bonus Primordial",
+            description: "Augmente les revenus des canards Primordiaux.",
+            effectDescription: "+2% revenus Primordiaux/niv.",
+            baseCost: 100_000_000_000,
+            costMultiplier: 1.618,
+            maxLevel: 100
+        ),
+        UpgradeDefinition(
+            id: .bonusEvolutionCost,
+            category: .bonus,
+            currency: .mutationPoints,
+            icon: "arrow.down.circle.fill",
+            name: "Maîtrise d'Évolution",
+            description: "Réduit le coût des évolutions d'usine.",
+            effectDescription: "-1% coût d'évolution/niv.",
+            baseCost: 1_000_000,
+            costMultiplier: 1.55,
+            maxLevel: 50
+        ),
+        UpgradeDefinition(
+            id: .bonusAutomationSpeed,
+            category: .bonus,
+            currency: .mutationPoints,
+            icon: "speedometer",
+            name: "Cadence Automatisée",
+            description: "Réduit les intervalles de l'Auto-Ouvrier et de l'Auto-Usine.",
+            effectDescription: "-1% intervalle automatisation/niv.",
+            baseCost: 2_000_000,
+            costMultiplier: 1.5,
+            maxLevel: 100
+        ),
+        UpgradeDefinition(
+            id: .bonusPerkPower,
+            category: .bonus,
+            currency: .mutationPoints,
+            icon: "sparkle",
+            name: "Résonance de Perk",
+            description: "Amplifie tous les effets numériques des perks équipés.",
+            effectDescription: "+2% effets de perks/niv.",
+            baseCost: 3_000_000,
+            costMultiplier: 1.618,
+            maxLevel: 100
+        ),
+        UpgradeDefinition(
+            id: .bonusPrestigeStars,
+            category: .bonus,
+            currency: .mutationPoints,
+            icon: "star.circle.fill",
+            name: "Calcul Stellaire",
+            description: "Augmente le nombre d'étoiles gagnées au prestige.",
+            effectDescription: "+0.5% étoiles gagnées/niv.",
+            baseCost: 5_000_000,
+            costMultiplier: 1.6,
+            maxLevel: 50
         ),
     ]
 

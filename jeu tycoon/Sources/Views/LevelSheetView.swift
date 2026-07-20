@@ -85,7 +85,7 @@ struct LevelSheetView: View {
 
                         HStack(spacing: 12) {
                             StatBonusCard(icon: "dollarsign.circle.fill", color: .yellow, title: tr("Revenus"), value: moneyBonusText)
-                            StatBonusCard(icon: "dna", color: .green, title: tr("Mutation"), value: mutationBonusText)
+                            StatBonusCard(icon: "flask.fill", color: .green, title: tr("Mutation"), value: mutationBonusText)
                         }
                         .padding(.horizontal)
 

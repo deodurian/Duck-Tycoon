@@ -41,24 +41,47 @@ extension GameManager {
             upgradeLevels = loadedState.upgradeLevels
             autoCrateTargetId = loadedState.autoCrateTargetId
             autoFactoryLevels = loadedState.autoFactoryLevels
-            
+
             // Migration pour les étoiles
             currentStars = loadedState.currentStars
             totalStars = loadedState.totalStars
             spentStars = loadedState.spentStars
             unspentStars = loadedState.unspentStars
             purchasedPrestigeUpgrades = loadedState.purchasedPrestigeUpgrades
-            
+
             gems = loadedState.gems
-            
+
             playerLevel = loadedState.playerLevel
             playerXP = loadedState.playerXP
             missions = loadedState.missions
             perksInventory = loadedState.perksInventory
-            
+
             currentStoryStep = loadedState.currentStoryStep
             isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
             storyFlags = loadedState.storyFlags
+
+            // Statistiques cumulées (nécessaires aux quêtes secondaires)
+            totalRecycledDucks = loadedState.totalRecycledDucks
+            totalFusionsDone = loadedState.totalFusionsDone
+            totalMaxedRepeatableUpgrades = loadedState.totalMaxedRepeatableUpgrades
+
+            // Quêtes Secondaires
+            totalDucksFromCrates = loadedState.totalDucksFromCrates
+            claimedSideQuestIds = loadedState.claimedSideQuestIds
+
+            // Migration V2 : insertion de l'étape « Auto-Fusion » avant l'Anomalie.
+            // Les sauvegardes arrivées à l'Anomalie (>= 6) sont décalées d'un cran.
+            if loadedState.storyVersion < 2 && currentStoryStep >= 6 {
+                currentStoryStep += 1
+            }
+            storyVersion = 2
+            
+            // Ads
+            adBoostMultiplier = loadedState.adBoostMultiplier
+            adBoostEndTime = loadedState.adBoostEndTime
+            nextMysteryCrateDate = loadedState.nextMysteryCrateDate
+            dailyAdGemsCount = loadedState.dailyAdGemsCount
+            lastAdGemsDate = loadedState.lastAdGemsDate
 
             invalidateEarningsCache()
             calculateOfflineEarnings()
@@ -81,8 +104,8 @@ extension GameManager {
                 let displayValues = ducks.map { displaySellValue(for: $0) }
                 let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
                 
-                earningsPerSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks)
-                mutationsPerSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier)
+                earningsPerSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, perkPowerFactor: perkPowerMultiplier)
+                mutationsPerSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier, factoryPerks: factoryPerks)
             }
         }
         
@@ -194,6 +217,16 @@ extension GameManager {
         currentStoryStep = defaultState.currentStoryStep
         isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
         storyFlags = defaultState.storyFlags
+
+        totalDucksFromCrates = defaultState.totalDucksFromCrates
+        claimedSideQuestIds = defaultState.claimedSideQuestIds
+        storyVersion = defaultState.storyVersion
+        
+        adBoostMultiplier = defaultState.adBoostMultiplier
+        adBoostEndTime = defaultState.adBoostEndTime
+        nextMysteryCrateDate = defaultState.nextMysteryCrateDate
+        dailyAdGemsCount = defaultState.dailyAdGemsCount
+        lastAdGemsDate = defaultState.lastAdGemsDate
 
         lastSaveDate = Date()
         pendingOfflineEarnings = nil

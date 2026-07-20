@@ -42,6 +42,29 @@ struct FactoryView: View {
                         .cornerRadius(12)
                     }
                     
+                    TimelineView(.periodic(from: Date(), by: 1.0)) { timeline in
+                        Button(action: { gameManager.watchAdForBoost() }) {
+                            HStack {
+                                Text("📺")
+                                if let end = gameManager.adBoostEndTime, timeline.date < end {
+                                    let timeLeft = Int(end.timeIntervalSince(timeline.date))
+                                    let min = timeLeft / 60
+                                    let sec = timeLeft % 60
+                                    Text(String(format: "x%.0f (%02d:%02d)", gameManager.currentAdMultiplier, min, sec))
+                                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                                } else {
+                                    Text(tr("Boost x2"))
+                                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.red.opacity(0.2))
+                            .foregroundColor(.red)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -64,21 +87,24 @@ struct FactoryView: View {
                     Spacer()
                     
                     // Total production badge
+                    let isBoostActive = gameManager.adBoostMultiplier > 1.0
+                    let badgeColor: Color = isBoostActive ? .red : .yellow
+                    
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.yellow)
+                            .foregroundColor(badgeColor)
                         Text("\((gameManager.cachedEarningsPerSecond ?? .zero).formattedString())/s")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundColor(.yellow)
+                            .foregroundColor(badgeColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.yellow.opacity(0.12))
+                    .background(badgeColor.opacity(0.12))
                     .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color.yellow.opacity(0.25), lineWidth: 1))
+                    .overlay(Capsule().stroke(badgeColor.opacity(0.25), lineWidth: 1))
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)

@@ -8,6 +8,8 @@ enum PerkType: String, Codable {
 enum PerkFamily: String, Codable, Hashable {
     case income, synergy, discount, sacrifice, fusion, extraSlot, extraDuck, mythicFactory
     case value, levelBoost, size, mutation, fusionWeight, recycleMut, mythicDuck
+    case stackBonus, evolutionBoost, mutationYield
+    case rarityUpgrade, crateLuck
 }
 
 enum PerkTarget: String, Codable, Hashable {
@@ -81,6 +83,9 @@ struct Perk: Identifiable, Codable, Hashable {
             case .extraSlot: return tr("Emplacement+")
             case .extraDuck: return tr("Canard+")
             case .mythicFactory: return tr("Omnipotence Usine")
+            case .stackBonus: return tr("Cumul d'Usine")
+            case .evolutionBoost: return tr("Catalyseur d'Évolution")
+            case .mutationYield: return tr("Extracteur ADN")
             default: return tr("Perk Usine")
             }
         } else {
@@ -93,6 +98,8 @@ struct Perk: Identifiable, Codable, Hashable {
             case .recycleMut: return tr("Recyclage+")
             case .extraSlot: return tr("Emplacement+")
             case .mythicDuck: return tr("Dieu Canard")
+            case .rarityUpgrade: return tr("Ascension")
+            case .crateLuck: return tr("Chance de Caisse")
             default: return tr("Perk Canard")
             }
         }
@@ -109,6 +116,9 @@ struct Perk: Identifiable, Codable, Hashable {
             case .extraSlot: return tr("Permet de rajouter un 2ème perk a l'usine et donne \(Int(factoryExtraPerkBonus * 100))% d'argent en plus")
             case .extraDuck: return tr("Permet de mettre un 2ème canard dans l'usine et donne un bonus de \(Int(factoryExtraDuckBonus * 100))%")
             case .mythicFactory: return tr("+500% argent, -55% prix amélioration, +10% argent par usine active")
+            case .stackBonus: return tr("Donne \(String(format: "%.2f", factoryStackBonus(currentLevel: 1) * 100))% d'argent en plus par niveau de l'usine")
+            case .evolutionBoost: return tr("Baisse de \(Int(factoryEvolutionDiscount * 100))% le coût d'évolution de cette usine")
+            case .mutationYield: return tr("Augmente de \(Int(factoryMutationYieldBonus * 100))% la production d'ADN de cette usine")
             default: return ""
             }
         } else {
@@ -121,6 +131,8 @@ struct Perk: Identifiable, Codable, Hashable {
             case .recycleMut: return tr("Multiplie par \(Int(duckRecycleMutationMultiplier)) la valeur en 🧬 du canard (Perk détruit)")
             case .extraSlot: return tr("Permet de mettre un 2ème perk et augmente de \(Int(duckExtraPerkBonus * 100))% la valeur")
             case .mythicDuck: return tr("+500% valeur, max stats, 2ème perk, compte 32 fois en fusion")
+            case .rarityUpgrade: return tr("\(Int(duckRarityUpgradeChance * 100))% de chance de faire monter la rareté du canard au lieu de le recycler")
+            case .crateLuck: return tr("Augmente de \(String(format: "%.1f", duckCrateLuckBonus * 100))% les chances de rareté à l'ouverture de caisses")
             default: return ""
             }
         }
@@ -269,7 +281,48 @@ struct Perk: Identifiable, Codable, Hashable {
         guard type == .factory, family == .mythicFactory else { return 0.0 }
         return 0.10
     }
-    
+
+    /// Bonus de revenu qui scale avec le niveau actuel de l'usine (par niveau)
+    func factoryStackBonus(currentLevel: Int) -> Double {
+        guard type == .factory, family == .stackBonus else { return 0.0 }
+        let perLevel: Double
+        switch rarity {
+        case .commun: perLevel = 0.0002
+        case .peuCommun: perLevel = 0.0004
+        case .rare: perLevel = 0.0007
+        case .epique: perLevel = 0.0012
+        case .legendaire: perLevel = 0.0020
+        default: perLevel = 0.0
+        }
+        return perLevel * Double(currentLevel)
+    }
+
+    /// Réduction du coût d'évolution de cette usine spécifique
+    var factoryEvolutionDiscount: Double {
+        guard type == .factory, family == .evolutionBoost else { return 0.0 }
+        switch rarity {
+        case .commun: return 0.03
+        case .peuCommun: return 0.06
+        case .rare: return 0.10
+        case .epique: return 0.15
+        case .legendaire: return 0.22
+        default: return 0.0
+        }
+    }
+
+    /// Bonus de production d'ADN de cette usine (pertinent si évolution >= 1)
+    var factoryMutationYieldBonus: Double {
+        guard type == .factory, family == .mutationYield else { return 0.0 }
+        switch rarity {
+        case .commun: return 0.10
+        case .peuCommun: return 0.20
+        case .rare: return 0.35
+        case .epique: return 0.55
+        case .legendaire: return 0.85
+        default: return 0.0
+        }
+    }
+
     // MARK: - Duck Effects
     
     nonisolated var duckValueBonus: Double {
@@ -403,7 +456,31 @@ struct Perk: Identifiable, Codable, Hashable {
         default: return 0.0
         }
     }
-    
+
+    /// Chance, au recyclage, de faire monter la rareté du canard au lieu de le recycler
+    nonisolated var duckRarityUpgradeChance: Double {
+        guard type == .duck, family == .rarityUpgrade else { return 0.0 }
+        switch rarity {
+        case .rare: return 0.04
+        case .epique: return 0.07
+        case .legendaire: return 0.12
+        default: return 0.0
+        }
+    }
+
+    /// Bonus ajouté au globalBonus des tirages de caisses futurs quand ce canard est assigné à une usine
+    nonisolated var duckCrateLuckBonus: Double {
+        guard type == .duck, family == .crateLuck else { return 0.0 }
+        switch rarity {
+        case .commun: return 0.001
+        case .peuCommun: return 0.002
+        case .rare: return 0.004
+        case .epique: return 0.007
+        case .legendaire: return 0.012
+        default: return 0.0
+        }
+    }
+
     // MARK: - Generation
     
     static func rollRandom(type: PerkType? = nil, forcedRarity: DuckRarity? = nil) -> Perk {
@@ -428,32 +505,36 @@ struct Perk: Identifiable, Codable, Hashable {
         if rolledType == .factory {
             switch rarity {
             case .commun:
-                options = [(.income, nil), (.synergy, .commun), (.discount, nil), (.sacrifice, nil)]
+                options = [(.income, nil), (.synergy, .commun), (.discount, nil), (.sacrifice, nil), (.stackBonus, nil)]
             case .peuCommun:
-                options = [(.income, nil), (.synergy, .commun), (.synergy, .peuCommun), (.discount, nil), (.sacrifice, nil)]
+                options = [(.income, nil), (.synergy, .commun), (.synergy, .peuCommun), (.discount, nil), (.sacrifice, nil), (.stackBonus, nil)]
             case .rare:
-                options = [(.income, nil), (.synergy, .commun), (.synergy, .peuCommun), (.synergy, .rare), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion2)]
+                options = [(.income, nil), (.synergy, .commun), (.synergy, .peuCommun), (.synergy, .rare), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion2), (.stackBonus, nil), (.evolutionBoost, nil), (.mutationYield, nil)]
             case .epique:
-                options = [(.income, nil), (.synergy, .cpr), (.synergy, .el), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion23), (.extraSlot, nil)]
+                options = [(.income, nil), (.synergy, .cpr), (.synergy, .el), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion23), (.extraSlot, nil), (.stackBonus, nil), (.evolutionBoost, nil), (.mutationYield, nil)]
             case .legendaire:
-                options = [(.income, nil), (.synergy, .cpr), (.synergy, .elm), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion1234), (.extraSlot, nil), (.extraDuck, nil)]
+                options = [(.income, nil), (.synergy, .cpr), (.synergy, .elm), (.discount, nil), (.sacrifice, nil), (.fusion, .fusion1234), (.extraSlot, nil), (.extraDuck, nil), (.stackBonus, nil), (.evolutionBoost, nil), (.mutationYield, nil)]
             case .mythique:
                 options = [(.mythicFactory, nil)]
+            default:
+                options = [(.income, nil)]
             }
         } else {
             switch rarity {
             case .commun:
-                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil)]
+                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.crateLuck, nil)]
             case .peuCommun:
-                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.mutation, nil), (.fusionWeight, nil)]
+                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.crateLuck, nil)]
             case .rare:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .epique), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .epique), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
             case .epique:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
             case .legendaire:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
             case .mythique:
                 options = [(.mythicDuck, nil)]
+            default:
+                options = [(.value, nil)]
             }
         }
         

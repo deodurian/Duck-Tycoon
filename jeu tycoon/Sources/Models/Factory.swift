@@ -124,14 +124,23 @@ struct DuckFactory: Identifiable, Codable, Hashable {
         return totalCost
     }
     
+    /// Calcule la réduction de coût d'évolution applicable (perks)
+    func calculateEvolutionDiscount(with factoryPerks: [Perk]) -> Double {
+        var totalDiscount = 0.0
+        for perk in factoryPerks {
+            totalDiscount += perk.factoryEvolutionDiscount
+        }
+        return totalDiscount
+    }
+
     /// Coût pour évoluer
     func evolveCost(factoryPerks: [Perk] = [], baseDiscount: Double = 1.0) -> BigNumber {
-        let perkDiscount = calculateDiscount(with: factoryPerks)
+        let perkDiscount = calculateDiscount(with: factoryPerks) + calculateEvolutionDiscount(with: factoryPerks)
         let finalDiscountMultiplier = max(0.01, baseDiscount - perkDiscount)
-        
+
         let multiplier = BigNumber.pow(BigNumber(1.44), Double(100 + (evolution * 200)))
         let level100Cost = BigNumber(baseUpgradeCost) * multiplier * BigNumber(finalDiscountMultiplier)
-        return level100Cost * 10.0
+        return level100Cost * 4.0
     }
     
     /// Nombre de niveaux qu'on peut acheter avec un budget (Max)
@@ -156,23 +165,25 @@ struct DuckFactory: Identifiable, Codable, Hashable {
     }
     
     /// Calcule l'argent généré par cette usine en une seconde, incluant tous les canards et les perks
-    func calculateEarningsPerSecond(assignedDucks: [Duck], duckDisplayValues: [BigNumber], factoryPerks: [Perk], globalPerkBonus: Double = 0.0) -> BigNumber {
+    func calculateEarningsPerSecond(assignedDucks: [Duck], duckDisplayValues: [BigNumber], factoryPerks: [Perk], globalPerkBonus: Double = 0.0, perkPowerFactor: Double = 1.0) -> BigNumber {
         guard !assignedDucks.isEmpty else { return .zero }
-        
+
         var totalIncomeBonus = 0.0
         var totalConditionalBonus = 0.0
         var totalDrawbackSelf = 0.0
         var totalExtraDuckBonus = 0.0
         var totalExtraPerkBonus = 0.0
         var perEquippedDuckBonus = 0.0
-        
+        var totalStackBonus = 0.0
+
         for perk in factoryPerks {
             totalIncomeBonus += perk.factoryIncomeBonus
             totalDrawbackSelf += perk.factoryDrawbackSelf
             totalExtraDuckBonus += perk.factoryExtraDuckBonus
             totalExtraPerkBonus += perk.factoryExtraPerkBonus
             perEquippedDuckBonus += perk.factoryPerEquippedDuckBonus
-            
+            totalStackBonus += perk.factoryStackBonus(currentLevel: level)
+
             // Les bonus conditionnels s'appliquent si au moins un des canards remplit la condition
             var bestConditionalBonus = 0.0
             for duck in assignedDucks {
@@ -181,24 +192,32 @@ struct DuckFactory: Identifiable, Codable, Hashable {
             }
             totalConditionalBonus += bestConditionalBonus
         }
-        
-        let perkMultiplier = max(0.0, 1.0 + totalIncomeBonus + totalConditionalBonus + totalExtraDuckBonus + totalExtraPerkBonus - totalDrawbackSelf + globalPerkBonus + (perEquippedDuckBonus * Double(assignedDucks.count)))
-        
+
+        let rawPerkBonus = totalIncomeBonus + totalConditionalBonus + totalExtraDuckBonus + totalExtraPerkBonus + totalStackBonus - totalDrawbackSelf + (perEquippedDuckBonus * Double(assignedDucks.count))
+        let perkMultiplier = max(0.0, 1.0 + (rawPerkBonus * perkPowerFactor) + globalPerkBonus)
+
         var totalEarnings = BigNumber.zero
         for displayValue in duckDisplayValues {
             totalEarnings += displayValue * baseProductionPerSecond * perkMultiplier
         }
-        
+
         return totalEarnings
     }
-    
+
     /// Calcule les mutations générées par seconde
-    func calculateMutationsPerSecond(assignedDucks: [Duck], globalBonus: BigNumber = BigNumber(1.0)) -> BigNumber {
+    func calculateMutationsPerSecond(assignedDucks: [Duck], globalBonus: BigNumber = BigNumber(1.0), factoryPerks: [Perk] = []) -> BigNumber {
         guard evolution > 0, !assignedDucks.isEmpty else { return .zero }
+
+        var mutationYieldBonus = 0.0
+        for perk in factoryPerks {
+            mutationYieldBonus += perk.factoryMutationYieldBonus
+        }
+        let yieldMultiplier = 1.0 + mutationYieldBonus
+
         var totalMutations = BigNumber.zero
         for duck in assignedDucks {
             let baseMutation = duck.recycleValue * 0.01
-            totalMutations += baseMutation * globalBonus
+            totalMutations += baseMutation * globalBonus * yieldMultiplier
         }
         return totalMutations
     }

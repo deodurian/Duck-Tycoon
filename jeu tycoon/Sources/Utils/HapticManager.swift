@@ -36,7 +36,7 @@ struct HapticManager {
             heavyTap()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.heavyTap() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { self.success() }
-        case .mythique:
+        case .mythique, .exotique, .celeste, .primordiale:
             heavyTap()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.heavyTap() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { self.heavyTap() }

@@ -23,6 +23,10 @@ struct BonusCard: View {
         case .bonusEpique:      return .purple
         case .bonusLegendaire:  return .orange
         case .bonusMythique:    return .red
+        case .bonusExotique:    return .indigo
+        case .bonusCeleste:     return .pink
+        // Blanc "platine" légèrement teinté pour rester lisible sur fond clair
+        case .bonusPrimordiale: return Color(red: 0.72, green: 0.74, blue: 0.82)
         default:                return .cyan
         }
     }

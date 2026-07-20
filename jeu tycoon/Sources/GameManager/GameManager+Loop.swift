@@ -105,8 +105,8 @@ extension GameManager {
                     let ducks = factory.assignedDuckIds.compactMap { assignedDucksCache[$0] }
                     let displayValues = ducks.map { displaySellValue(for: $0) }
                     let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, globalPerkBonus: globalFactoryBonusOthers)
-                    mutationsThisSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier)
+                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, globalPerkBonus: globalFactoryBonusOthers, perkPowerFactor: perkPowerMultiplier)
+                    mutationsThisSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier, factoryPerks: factoryPerks)
                 }
             }
             
@@ -217,7 +217,7 @@ extension GameManager {
                         generatedDucks.reserveCapacity(batchSize)
                         
                         for _ in 0..<batchSize {
-                            let rarity = crate.probabilities.rollRarity()
+                            let rarity = crate.probabilities.rollRarity(bonus: crateLuckBonus)
                             let size = DuckSize.rollRandom(genesCroissants: hasGenes)
                             let mutation = DuckMutation.rollRandom(bonusChance: prestigeSpontaneousMutationChance)
                             generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -269,7 +269,7 @@ extension GameManager {
         }
         
         let hasGenes = isUnlocked(.genesCroissants)
-        let rarity = crate.probabilities.rollRarity()
+        let rarity = crate.probabilities.rollRarity(bonus: crateLuckBonus)
         let size = DuckSize.rollRandom(genesCroissants: hasGenes)
         let mutation = DuckMutation.rollRandom(bonusChance: prestigeSpontaneousMutationChance)
         let duck = Duck(rarity: rarity, size: size, mutation: mutation)

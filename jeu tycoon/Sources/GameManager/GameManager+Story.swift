@@ -58,6 +58,12 @@ extension GameManager {
             )
         case 6:
             return StoryStepInfo(
+                dialogue: "Gérant, le compresseur moléculaire n'arrête plus de tourner et mes bras ne suivent plus ! J'ai dessiné les plans d'un module d'Auto-Fusion, mais il me faut des données de compression pour le calibrer. Effectue 10 fusions au total et je te l'installe. Et tant qu'à faire, j'ouvre un registre de Quêtes Secondaires pour récompenser tous nos exploits !",
+                quest: StoryQuest(title: "L'Ingénieur", description: "Effectuer 10 fusions au total", rewardDescription: "Auto-Fusion + Onglet Quêtes Secondaires"),
+                unlocks: "Auto-Fusion"
+            )
+        case 7:
+            return StoryStepInfo(
                 dialogue: "[Anthony est paniqué] L'énergie occulte des rituels a fusionné avec la génétique des canards ! Un trou noir est en train de se former au centre de l'usine ! La seule solution pour sauver cette dimension est d'y précipiter toute notre entreprise. En échange, l'anomalie nous donnera des Étoiles d'Énergie Pure pour tout recommencer en mieux. On n'a pas le choix... clique sur Prestige !",
                 quest: StoryQuest(title: "L'Anomalie", description: "Atteindre 10 Milliards $ et faire un Prestige", rewardDescription: "10 Gemmes + Quêtes Secondaires"),
                 unlocks: "Prestige"
@@ -71,8 +77,8 @@ extension GameManager {
     
     func checkStoryAction(_ action: String) {
         // Skip if story is over
-        if currentStoryStep > 6 { return }
-        
+        if currentStoryStep > 7 { return }
+
         switch currentStoryStep {
         case 0:
             if action == "assign_duck" { isStoryQuestReadyToClaim = true }
@@ -91,19 +97,21 @@ extension GameManager {
         case 5:
             if action == "ritual_success" { isStoryQuestReadyToClaim = true }
         case 6:
+            if action == "fusion_duck" && totalFusionsDone >= 10 { isStoryQuestReadyToClaim = true }
+        case 7:
             if action == "prestige" { isStoryQuestReadyToClaim = true }
         default:
             break
         }
-        
+
         if isStoryQuestReadyToClaim {
             saveGame()
         }
     }
-    
+
     func claimStoryReward() {
         guard isStoryQuestReadyToClaim else { return }
-        
+
         // Give rewards
         switch currentStoryStep {
         case 0:
@@ -120,22 +128,28 @@ extension GameManager {
         case 5:
             break
         case 6:
+            break // L'Auto-Fusion et les Quêtes Secondaires découlent du numéro d'étape
+        case 7:
             gems += BigNumber(10) // 10 gems
-            // Activer missions secondaires plus tard
         default:
             break
         }
-        
+
         // Move to next step
         currentStoryStep += 1
         isStoryQuestReadyToClaim = false
         storyFlags.removeAll() // reset flags for next step
-        
+
+        // Si le joueur a déjà 10 fusions au compteur, l'étape Auto-Fusion se valide d'elle-même
+        if currentStoryStep == 6 && totalFusionsDone >= 10 {
+            isStoryQuestReadyToClaim = true
+        }
+
         saveGame()
     }
-    
+
     // MARK: - Unlocks
-    
+
     var isHistoireUnlocked: Bool { true }
     var isUsinesUnlocked: Bool { true }
     var isBoutiqueUnlocked: Bool { currentStoryStep >= 1 }
@@ -143,5 +157,11 @@ extension GameManager {
     var isAmelioUnlocked: Bool { currentStoryStep >= 2 } // unlocked at the beginning of step 2
     var isBanqueUnlocked: Bool { currentStoryStep >= 4 } // also unlocks perks
     var isRituelUnlocked: Bool { currentStoryStep >= 5 }
-    var isPrestigeUnlocked: Bool { currentStoryStep >= 6 && (hasPrestiged || money >= BigNumber(10_000_000_000)) }
+    var isPrestigeUnlocked: Bool { currentStoryStep >= 7 && (hasPrestiged || money >= GameManager.firstPrestigeThreshold) }
+
+    /// L'Auto-Fusion se débloque via l'Histoire (étape 6 réclamée) — les anciens achats ADN restent valides
+    var isAutoFusionUnlocked: Bool { currentStoryStep >= 7 || isUnlocked(.autoFusion) }
+
+    /// Les Quêtes Secondaires s'ouvrent en même temps que l'Auto-Fusion
+    var isSideQuestsUnlocked: Bool { currentStoryStep >= 7 }
 }

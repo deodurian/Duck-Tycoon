@@ -26,11 +26,14 @@ struct RitualView: View {
     @State private var showResult = false
     @State private var resultSuccess = false
     @State private var resultGolden = false
-    @State private var showInfoAlert = false
     
     // Animations
     @State private var flameFlicker = false
     @State private var glowPulse = false
+    @State private var showInfoAlert = false
+    
+    @State private var showSaveAdAlert = false
+    @State private var duckPendingDestruction: Duck? = nil
     
     var successChance: Double {
         guard let duck = selectedDuck else { return 0.5 }
@@ -187,7 +190,8 @@ struct RitualView: View {
                             DuckGridCard(
                                 duck: duck,
                                 displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id)
+                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                dynamicLevel: gameManager.getDynamicStats(for: duck).level
                             )
                             .scaleEffect(100.0 / 55.0)
                         } else {
@@ -348,6 +352,28 @@ struct RitualView: View {
         } message: {
             Text(tr("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"))
         }
+        .alert(tr("Rituel Échoué !"), isPresented: $showSaveAdAlert) {
+            Button(tr("Sauver (Pub)"), role: .cancel) {
+                AdManager.shared.showRewardedAd(for: .ritualSave) { earned in
+                    if !earned {
+                        if let d = duckPendingDestruction {
+                            gameManager.destroyDuck(id: d.id)
+                        }
+                        selectedDuck = nil
+                    }
+                    duckPendingDestruction = nil
+                }
+            }
+            Button(tr("Accepter la perte"), role: .destructive) {
+                if let d = duckPendingDestruction {
+                    gameManager.destroyDuck(id: d.id)
+                }
+                selectedDuck = nil
+                duckPendingDestruction = nil
+            }
+        } message: {
+            Text(tr("Le rituel a échoué. Votre canard va être détruit. Regardez une publicité pour le sauver !"))
+        }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                 flameFlicker = true
@@ -414,8 +440,9 @@ struct RitualView: View {
                     selectedDuck = updatedDuck
                 }
             } else {
-                // Le canard est détruit
-                selectedDuck = nil
+                // On met en attente de destruction
+                duckPendingDestruction = duck
+                showSaveAdAlert = true
             }
             
             // Réinitialiser la roue silencieusement
@@ -521,7 +548,8 @@ struct RitualDuckPickerSheet: View {
                             DuckGridCard(
                                 duck: duck,
                                 displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id)
+                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                dynamicLevel: gameManager.getDynamicStats(for: duck).level
                             )
                             .onTapGesture {
                                 selectedDuck = duck

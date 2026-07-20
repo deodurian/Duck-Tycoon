@@ -1385,6 +1385,62 @@ let translations: [AppLanguage: [String: String]] = [
         "Histoire Terminée !": "Story Completed!",
         "Chapitre": "Chapter",
         "Assigné à une usine": "Assigned to a factory",
+
+        // Étape d'histoire : Auto-Fusion
+        "Gérant, le compresseur moléculaire n'arrête plus de tourner et mes bras ne suivent plus ! J'ai dessiné les plans d'un module d'Auto-Fusion, mais il me faut des données de compression pour le calibrer. Effectue 10 fusions au total et je te l'installe. Et tant qu'à faire, j'ouvre un registre de Quêtes Secondaires pour récompenser tous nos exploits !": "Manager, the molecular compressor won't stop running and my arms can't keep up! I've drawn up plans for an Auto-Fusion module, but I need compression data to calibrate it. Perform 10 fusions in total and I'll install it. And while I'm at it, I'm opening a Side Quests registry to reward all our feats!",
+        "L'Ingénieur": "The Engineer",
+        "Effectuer 10 fusions au total": "Perform 10 fusions in total",
+        "Auto-Fusion + Onglet Quêtes Secondaires": "Auto-Fusion + Side Quests Tab",
+
+        // Boutique de caisses
+        "Caisses en Argent": "Money Crates",
+        "Caisses en ADN": "DNA Crates",
+
+        // Quêtes Secondaires : UI
+        "Secondaires": "Side Quests",
+        "En cours": "In Progress",
+        "Verrouillées": "Locked",
+        "Terminées": "Completed",
+        "Requiert :": "Requires:",
+        "Auto-Ouvrier": "Auto-Worker",
+        "Choisis la caisse ouverte automatiquement.": "Choose the crate opened automatically.",
+
+        "Débloqué via les Quêtes Secondaires": "Unlocked via Side Quests",
+        "Accomplis des quêtes secondaires (page Histoire) pour gagner l'Auto-Ouvrier et le Filtre de Recyclage.": "Complete side quests (Story page) to earn the Auto-Worker and the Recycling Filter.",
+
+        // Quêtes Secondaires : titres
+
+        "Grossiste": "Wholesaler",
+        "Magnat des Caisses": "Crate Tycoon",
+        "La Cadence Infernale": "The Infernal Pace",
+        "Le Grand Compresseur": "The Great Compressor",
+        "Le Recycleur Fou": "The Mad Recycler",
+        "Tri Sélectif Industriel": "Industrial Sorting",
+        "L'Annihilateur": "The Annihilator",
+        "Collectionneur I": "Collector I",
+        "Collectionneur II": "Collector II",
+        "Collectionneur III": "Collector III",
+        "Automatisation I": "Automation I",
+        "Automatisation II": "Automation II",
+        "Automatisation III": "Automation III",
+        "Automatisation IV": "Automation IV",
+
+        // Quêtes Secondaires : descriptions
+        "Obtenir 200 canards via des caisses": "Obtain 200 ducks from crates",
+        "Obtenir 1000 canards via des caisses": "Obtain 1000 ducks from crates",
+        "Obtenir 5000 canards via des caisses": "Obtain 5000 ducks from crates",
+        "Obtenir 500 canards via des caisses": "Obtain 500 ducks from crates",
+        "Effectuer 30 fusions au total": "Perform 30 fusions in total",
+        "Recycler 200 canards au total": "Recycle 200 ducks in total",
+        "Recycler 1500 canards au total": "Recycle 1500 ducks in total",
+        "Recycler 8000 canards au total": "Recycle 8000 ducks in total",
+        "Avoir 90 canards dans l'inventaire": "Have 90 ducks in the inventory",
+        "Avoir 900 canards dans l'inventaire": "Have 900 ducks in the inventory",
+        "Avoir 4500 canards dans l'inventaire": "Have 4500 ducks in the inventory",
+        "Atteindre le niveau joueur 15": "Reach player level 15",
+        "Atteindre le niveau joueur 30": "Reach player level 30",
+        "Atteindre le niveau joueur 50": "Reach player level 50",
+        "Atteindre le niveau joueur 75": "Reach player level 75",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "You have completed all story quests. Free mode is activated!",
         
         "La Production": "Production",
@@ -2103,6 +2159,62 @@ let translations: [AppLanguage: [String: String]] = [
         "Histoire Terminée !": "¡Historia Terminada!",
         "Chapitre": "Capítulo",
         "Assigné à une usine": "Asignado a una fábrica",
+
+        // Étape d'histoire : Auto-Fusion
+        "Gérant, le compresseur moléculaire n'arrête plus de tourner et mes bras ne suivent plus ! J'ai dessiné les plans d'un module d'Auto-Fusion, mais il me faut des données de compression pour le calibrer. Effectue 10 fusions au total et je te l'installe. Et tant qu'à faire, j'ouvre un registre de Quêtes Secondaires pour récompenser tous nos exploits !": "¡Gerente, el compresor molecular no deja de funcionar y mis brazos ya no pueden más! He diseñado los planos de un módulo de Auto-Fusión, pero necesito datos de compresión para calibrarlo. Realiza 10 fusiones en total y te lo instalo. Y ya que estoy, ¡abro un registro de Misiones Secundarias para recompensar todas nuestras hazañas!",
+        "L'Ingénieur": "El Ingeniero",
+        "Effectuer 10 fusions au total": "Realizar 10 fusiones en total",
+        "Auto-Fusion + Onglet Quêtes Secondaires": "Auto-Fusión + Pestaña de Misiones Secundarias",
+
+        // Boutique de caisses
+        "Caisses en Argent": "Cajas de Dinero",
+        "Caisses en ADN": "Cajas de ADN",
+
+        // Quêtes Secondaires : UI
+        "Secondaires": "Secundarias",
+        "En cours": "En curso",
+        "Verrouillées": "Bloqueadas",
+        "Terminées": "Completadas",
+        "Requiert :": "Requiere:",
+        "Auto-Ouvrier": "Auto-Obrero",
+        "Choisis la caisse ouverte automatiquement.": "Elige la caja que se abre automáticamente.",
+
+        "Débloqué via les Quêtes Secondaires": "Desbloqueado vía Misiones Secundarias",
+        "Accomplis des quêtes secondaires (page Histoire) pour gagner l'Auto-Ouvrier et le Filtre de Recyclage.": "Completa misiones secundarias (página Historia) para ganar el Auto-Obrero y el Filtro de Reciclaje.",
+
+        // Quêtes Secondaires : titres
+
+        "Grossiste": "Mayorista",
+        "Magnat des Caisses": "Magnate de las Cajas",
+        "La Cadence Infernale": "El Ritmo Infernal",
+        "Le Grand Compresseur": "El Gran Compresor",
+        "Le Recycleur Fou": "El Reciclador Loco",
+        "Tri Sélectif Industriel": "Clasificación Industrial",
+        "L'Annihilateur": "El Aniquilador",
+        "Collectionneur I": "Coleccionista I",
+        "Collectionneur II": "Coleccionista II",
+        "Collectionneur III": "Coleccionista III",
+        "Automatisation I": "Automatización I",
+        "Automatisation II": "Automatización II",
+        "Automatisation III": "Automatización III",
+        "Automatisation IV": "Automatización IV",
+
+        // Quêtes Secondaires : descriptions
+        "Obtenir 200 canards via des caisses": "Obtener 200 patos de cajas",
+        "Obtenir 1000 canards via des caisses": "Obtener 1000 patos de cajas",
+        "Obtenir 5000 canards via des caisses": "Obtener 5000 patos de cajas",
+        "Obtenir 500 canards via des caisses": "Obtener 500 patos de cajas",
+        "Effectuer 30 fusions au total": "Realizar 30 fusiones en total",
+        "Recycler 200 canards au total": "Reciclar 200 patos en total",
+        "Recycler 1500 canards au total": "Reciclar 1500 patos en total",
+        "Recycler 8000 canards au total": "Reciclar 8000 patos en total",
+        "Avoir 90 canards dans l'inventaire": "Tener 90 patos en el inventario",
+        "Avoir 900 canards dans l'inventaire": "Tener 900 patos en el inventario",
+        "Avoir 4500 canards dans l'inventaire": "Tener 4500 patos en el inventario",
+        "Atteindre le niveau joueur 15": "Alcanzar el nivel de jugador 15",
+        "Atteindre le niveau joueur 30": "Alcanzar el nivel de jugador 30",
+        "Atteindre le niveau joueur 50": "Alcanzar el nivel de jugador 50",
+        "Atteindre le niveau joueur 75": "Alcanzar el nivel de jugador 75",
         "Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !": "Has completado todas las misiones de la historia. ¡El modo libre está activado!",
         
         "La Production": "La Producción",

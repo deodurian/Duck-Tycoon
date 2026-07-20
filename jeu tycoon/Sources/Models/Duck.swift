@@ -10,11 +10,14 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
     case epique = "Épique"
     case legendaire = "Légendaire"
     case mythique = "Mythique"
-    
+    case exotique = "Exotique"
+    case celeste = "Céleste"
+    case primordiale = "Primordiale"
+
     @MainActor var localizedName: String {
         return tr(self.rawValue)
     }
-    
+
     nonisolated var multiplier: Double {
         switch self {
         case .commun: return 1.0
@@ -23,9 +26,12 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return 30.0
         case .legendaire: return 150.0
         case .mythique: return 1000.0
+        case .exotique: return 8000.0
+        case .celeste: return 75000.0
+        case .primordiale: return 750000.0
         }
     }
-    
+
     nonisolated var baseRecyclePoints: Double {
         switch self {
         case .commun: return 5.0
@@ -34,20 +40,26 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return 200.0
         case .legendaire: return 1000.0
         case .mythique: return 10000.0
+        case .exotique: return 80000.0
+        case .celeste: return 750000.0
+        case .primordiale: return 7500000.0
         }
     }
-    
+
     var baseProbability: Double {
         switch self {
-        case .commun: return 60.0
-        case .peuCommun: return 25.0
-        case .rare: return 10.0
-        case .epique: return 4.0
-        case .legendaire: return 0.9
-        case .mythique: return 0.1
+        case .commun: return 67.0
+        case .peuCommun: return 26.0
+        case .rare: return 5.5
+        case .epique: return 1.2
+        case .legendaire: return 0.25
+        case .mythique: return 0.04
+        case .exotique: return 0.008
+        case .celeste: return 0.0015
+        case .primordiale: return 0.0005
         }
     }
-    
+
     var color: Color {
         switch self {
         case .commun: return .gray
@@ -56,9 +68,12 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return .purple
         case .legendaire: return .orange
         case .mythique: return .red
+        case .exotique: return .indigo
+        case .celeste: return .pink
+        case .primordiale: return .white
         }
     }
-    
+
     var imageName: String {
         switch self {
         case .commun: return "duck_commun"
@@ -67,9 +82,12 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return "duck_epique"
         case .legendaire: return "duck_legendaire"
         case .mythique: return "duck_mythique"
+        case .exotique: return "duck_exotique"
+        case .celeste: return "duck_celeste"
+        case .primordiale: return "duck_primordiale"
         }
     }
-    
+
     var shortName: String {
         switch self {
         case .commun: return "COM"
@@ -78,9 +96,12 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return "EPI"
         case .legendaire: return "LEG"
         case .mythique: return "MYT"
+        case .exotique: return "EXO"
+        case .celeste: return "CEL"
+        case .primordiale: return "PRI"
         }
     }
-    
+
     var revealTitle: String {
         switch self {
         case .commun: return "COMMUN !"
@@ -89,9 +110,12 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return "ÉPIQUE !"
         case .legendaire: return "LÉGENDAIRE !!!"
         case .mythique: return "MYTHIQUE !!!"
+        case .exotique: return "EXOTIQUE !!!!"
+        case .celeste: return "CÉLESTE !!!!!"
+        case .primordiale: return "PRIMORDIALE !!!!!!"
         }
     }
-    
+
     var nextRarity: DuckRarity? {
         switch self {
         case .commun: return .peuCommun
@@ -99,14 +123,17 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .rare: return .epique
         case .epique: return .legendaire
         case .legendaire: return .mythique
-        case .mythique: return nil
+        case .mythique: return .exotique
+        case .exotique: return .celeste
+        case .celeste: return .primordiale
+        case .primordiale: return nil
         }
     }
-    
+
     nonisolated static func < (lhs: DuckRarity, rhs: DuckRarity) -> Bool {
         return lhs.multiplier < rhs.multiplier
     }
-    
+
     // Multiplicateur pour les points de recyclage de base
     nonisolated var recycleMultiplier: Double {
         switch self {
@@ -116,6 +143,9 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return 15.0
         case .legendaire: return 50.0
         case .mythique: return 200.0
+        case .exotique: return 800.0
+        case .celeste: return 3000.0
+        case .primordiale: return 12000.0
         }
     }
     
@@ -153,6 +183,9 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         case .epique: return 1.6
         case .legendaire: return 2.0
         case .mythique: return 3.0
+        case .exotique: return 4.0
+        case .celeste: return 6.0
+        case .primordiale: return 10.0
         }
     }
 }
@@ -162,32 +195,36 @@ enum DuckSize: String, Codable, CaseIterable, Comparable {
     case moyen = "Moyen"
     case grand = "Grand"
     case geant = "Géant"
-    
+    case colossal = "Colossal"
+
     nonisolated var index: Int {
         switch self {
         case .petit: return 0
         case .moyen: return 1
         case .grand: return 2
         case .geant: return 3
+        case .colossal: return 4
         }
     }
-    
+
     nonisolated static func fromIndex(_ i: Int) -> DuckSize {
         if i <= 0 { return .petit }
         if i == 1 { return .moyen }
         if i == 2 { return .grand }
-        return .geant
+        if i == 3 { return .geant }
+        return .colossal
     }
-    
+
     nonisolated var multiplier: Double {
         switch self {
         case .petit: return 1.0
         case .moyen: return 1.5
         case .grand: return 2.5
         case .geant: return 5.0
+        case .colossal: return 9.0
         }
     }
-    
+
     // Multiplicateur pour les points de recyclage
     nonisolated var recycleMultiplier: Double {
         switch self {
@@ -195,64 +232,68 @@ enum DuckSize: String, Codable, CaseIterable, Comparable {
         case .moyen: return 1.5
         case .grand: return 2.0
         case .geant: return 3.0
+        case .colossal: return 4.5
         }
     }
-    
+
     // Coût d'amélioration de base
     nonisolated var upgradeCostBase: BigNumber {
         switch self {
         case .petit: return BigNumber(20.0) // Pour passer à moyen
         case .moyen: return BigNumber(60.0) // Pour passer à grand
         case .grand: return BigNumber(200.0) // Pour passer à géant
-        case .geant: return .zero // Max
+        case .geant: return BigNumber(200.0) // Pour passer à colossal
+        case .colossal: return .zero // Max
         }
     }
-    
+
     nonisolated var next: DuckSize? {
         switch self {
         case .petit: return .moyen
         case .moyen: return .grand
         case .grand: return .geant
-        case .geant: return nil
+        case .geant: return .colossal
+        case .colossal: return nil
         }
     }
-    
+
     var baseProbability: Double {
         switch self {
-        case .petit: return 70.0
+        case .petit: return 68.0
         case .moyen: return 20.0
-        case .grand: return 8.0
-        case .geant: return 2.0
+        case .grand: return 8.5
+        case .geant: return 3.0
+        case .colossal: return 0.5
         }
     }
-    
+
     nonisolated static func < (lhs: DuckSize, rhs: DuckSize) -> Bool {
         return lhs.multiplier < rhs.multiplier
     }
-    
+
     // Poids pour la probabilité de drop dans les caisses
     static func rollRandom(genesCroissants: Bool = false) -> DuckSize {
         let roll = Double.random(in: 0..<100)
         let modifier = genesCroissants ? 1.618 : 0.0
-        
+
         var cumulative: Double = 0.0
         for size in DuckSize.allCases {
             var chance = size.baseProbability
-            
+
             // Les gènes croissants réduisent la chance d'avoir un petit et l'ajoutent au moyen
             if size == .petit {
                 chance -= modifier
             } else if size == .moyen {
                 chance += modifier
             }
-            
+
             cumulative += chance
             if roll < cumulative {
                 return size
             }
         }
-        
-        return .geant
+
+        return .colossal
     }
 }
 
@@ -261,77 +302,86 @@ enum DuckMutation: String, Codable, CaseIterable, Comparable {
     case dore = "Doré"
     case radioactif = "Radioactif"
     case cristallise = "Cristallisé"
-    
+    case quantique = "Quantique"
+
     nonisolated var index: Int {
         switch self {
         case .aucune: return 0
         case .dore: return 1
         case .radioactif: return 2
         case .cristallise: return 3
+        case .quantique: return 4
         }
     }
-    
+
     nonisolated static func fromIndex(_ i: Int) -> DuckMutation {
         if i <= 0 { return .aucune }
         if i == 1 { return .dore }
         if i == 2 { return .radioactif }
-        return .cristallise
+        if i == 3 { return .cristallise }
+        return .quantique
     }
-    
+
     nonisolated var multiplier: Double {
         switch self {
         case .aucune: return 1.0
         case .dore: return 5.0
         case .radioactif: return 15.0
         case .cristallise: return 50.0
+        case .quantique: return 180.0
         }
     }
-    
+
     nonisolated var recycleMultiplier: Double {
         switch self {
         case .aucune: return 1.0
         case .dore: return 2.0
         case .radioactif: return 3.0
         case .cristallise: return 5.0
+        case .quantique: return 8.0
         }
     }
-    
+
     nonisolated var upgradeCostBase: BigNumber {
         switch self {
         case .aucune: return BigNumber(50.0) // Pour passer à doré
         case .dore: return BigNumber(200.0) // Pour passer à radioactif
         case .radioactif: return BigNumber(800.0) // Pour passer à cristallisé
-        case .cristallise: return .zero // Max
+        case .cristallise: return BigNumber(800.0) // Pour passer à quantique
+        case .quantique: return .zero // Max
         }
     }
-    
+
     nonisolated var next: DuckMutation? {
         switch self {
         case .aucune: return .dore
         case .dore: return .radioactif
         case .radioactif: return .cristallise
-        case .cristallise: return nil
+        case .cristallise: return .quantique
+        case .quantique: return nil
         }
     }
-    
+
     var baseProbability: Double {
         switch self {
-        case .aucune: return 85.0
-        case .dore: return 10.0
-        case .radioactif: return 4.0
-        case .cristallise: return 1.0
+        case .aucune: return 87.0
+        case .dore: return 9.0
+        case .radioactif: return 3.0
+        case .cristallise: return 0.9
+        case .quantique: return 0.1
         }
     }
-    
+
     var color: Color {
         switch self {
         case .aucune: return .primary
         case .dore: return .yellow
         case .radioactif: return .green
         case .cristallise: return .cyan
+        case .quantique: return .purple
         }
     }
-    
+
     nonisolated static func < (lhs: DuckMutation, rhs: DuckMutation) -> Bool {
         return lhs.multiplier < rhs.multiplier
     }
@@ -469,11 +519,11 @@ struct Duck: Identifiable, Codable, Hashable {
             extraMultiplier += perk.duckValueBonus
             extraMultiplier += perk.duckExtraPerkBonus
             
-            if perk.duckConditionalLevels(duckRarity: .commun) == 999 {
+            if perk.family == .mythicDuck {
                 // Mythic: maximize all
                 tempLevel = 100
-                tempSizeIdx = 3
-                tempMutIdx = 3
+                tempSizeIdx = 4
+                tempMutIdx = 4
             } else {
                 let addedLevels = perk.duckConditionalLevels(duckRarity: rarity)
                 let addedSize = perk.duckSizeIncrease
@@ -486,38 +536,39 @@ struct Duck: Identifiable, Codable, Hashable {
                 if tempLevel > 100 {
                     extraMultiplier += perk.duckOverflowValueBonus
                 }
-                if tempSizeIdx > 3 {
+                if tempSizeIdx > 4 {
                     extraMultiplier += perk.duckOverflowBonus
                 }
-                if tempMutIdx > 3 {
+                if tempMutIdx > 4 {
                     extraMultiplier += perk.duckOverflowBonus
                 }
             }
-            
+
             recycleMult *= perk.duckRecycleMutationMultiplier
         }
-        
+
         let finalLevel = min(100, tempLevel)
-        let finalSize = DuckSize.fromIndex(min(3, tempSizeIdx))
-        let finalMutation = DuckMutation.fromIndex(min(3, tempMutIdx))
+        let finalSize = DuckSize.fromIndex(min(4, tempSizeIdx))
+        let finalMutation = DuckMutation.fromIndex(min(4, tempMutIdx))
         
         return (finalLevel, finalSize, finalMutation, extraMultiplier, recycleMult)
     }
     
     /// Calcule la valeur de vente de ce canard
-    nonisolated func calculateSellValue(with perks: [Perk]) -> BigNumber {
+    nonisolated func calculateSellValue(with perks: [Perk], perkPowerFactor: Double = 1.0) -> BigNumber {
         let stats = getDynamicStats(with: perks)
-        
+
         let ritualMultiplier = BigNumber.pow(BigNumber(2.0), Double(ritualSuccesses)) * BigNumber.pow(BigNumber(10.0), Double(goldenRitualSuccesses))
         let levelMultiplier = 1.0 + (Double(stats.level - 1) * 0.01)
         let base = customBasePrice ?? BigNumber(Duck.basePrice)
         var value = base * rarity.multiplier * stats.mutation.multiplier * stats.size.multiplier * levelMultiplier
-        
+
         if customBasePrice == nil && fusionLevel > 0 {
             value *= BigNumber.pow(BigNumber(3.1), Double(fusionLevel))
         }
-        
-        return value * ritualMultiplier * stats.extraValueMultiplier
+
+        let perkAdjustedExtra = 1.0 + (stats.extraValueMultiplier - 1.0) * perkPowerFactor
+        return value * ritualMultiplier * perkAdjustedExtra
     }
     
     // Valeur de vente sans perks (pour affichage de base)
@@ -526,9 +577,9 @@ struct Duck: Identifiable, Codable, Hashable {
     }
     
     /// Calcule les points de mutation obtenus en recyclant ce canard
-    nonisolated func calculateRecycleValue(with perks: [Perk]) -> BigNumber {
+    nonisolated func calculateRecycleValue(with perks: [Perk], perkPowerFactor: Double = 1.0) -> BigNumber {
         let stats = getDynamicStats(with: perks)
-        
+
         var baseValue: BigNumber
         if let custom = customRecycleValue {
             baseValue = custom * stats.size.recycleMultiplier * stats.mutation.recycleMultiplier
@@ -539,8 +590,9 @@ struct Duck: Identifiable, Codable, Hashable {
             }
             baseValue = BigNumber(value)
         }
-        
-        return baseValue * stats.recycleMultiplier
+
+        let perkAdjustedRecycleMult = 1.0 + (stats.recycleMultiplier - 1.0) * perkPowerFactor
+        return baseValue * perkAdjustedRecycleMult
     }
     
     nonisolated var recycleValue: BigNumber {

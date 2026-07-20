@@ -28,34 +28,49 @@ struct GameState: Codable, Sendable {
     var totalRecycledDucks: Int = 0
     var totalFusionsDone: Int = 0
     var totalMaxedRepeatableUpgrades: Int = 0
-    
+    var totalMutationPointsEarned: BigNumber = .zero
+
     // Automatisation
     var autoCrateTargetId: String? = nil; var autoFactoryLevels: [UUID: Int] = [:]
-    
+
     // Prestige
     var currentStars: BigNumber = .zero; var totalStars: BigNumber = .zero
     var spentStars: BigNumber = .zero; var unspentStars: BigNumber = .zero
     var purchasedPrestigeUpgrades: Set<String> = []; var gems: BigNumber = .zero
-    
+
     // Player Level, Missions, Perks
     var playerLevel: Int = 1; var playerXP: Int = 0
     var missions: [Mission] = []; var perksInventory: [Perk] = []
-    
+
     // Story Mode
     var currentStoryStep: Int = 0
     var isStoryQuestReadyToClaim: Bool = false
     var storyFlags: [String: Bool] = [:]
+
+    // Quêtes Secondaires
+    var totalDucksFromCrates: Int = 0
+    var claimedSideQuestIds: Set<String> = []
+    var storyVersion: Int = 2
     
+    // Ads
+    var adBoostMultiplier: Double = 1.0
+    var adBoostEndTime: Date? = nil
+    var nextMysteryCrateDate: Date? = nil
+    var dailyAdGemsCount: Int = 0
+    var lastAdGemsDate: Date? = nil
+
     // Custom Codable implementation for backward compatibility
     enum CodingKeys: String, CodingKey {
         case money, mutationPoints, inventory, factories, lastSaveDate
         case purchasedUpgrades, upgradeLevels
-        case totalRecycledDucks, totalFusionsDone, totalMaxedRepeatableUpgrades
+        case totalRecycledDucks, totalFusionsDone, totalMaxedRepeatableUpgrades, totalMutationPointsEarned
         case autoCrateTargetId, autoFactoryLevels
         case currentStars, totalStars, spentStars, unspentStars, purchasedPrestigeUpgrades
         case gems
         case playerLevel, playerXP, missions, perksInventory
         case currentStoryStep, isStoryQuestReadyToClaim, storyFlags
+        case totalDucksFromCrates, claimedSideQuestIds, storyVersion
+        case adBoostMultiplier, adBoostEndTime, nextMysteryCrateDate, dailyAdGemsCount, lastAdGemsDate
     }
     
     init() {}
@@ -82,6 +97,7 @@ struct GameState: Codable, Sendable {
         self.totalRecycledDucks = try container.decodeIfPresent(Int.self, forKey: .totalRecycledDucks) ?? 0
         self.totalFusionsDone = try container.decodeIfPresent(Int.self, forKey: .totalFusionsDone) ?? 0
         self.totalMaxedRepeatableUpgrades = try container.decodeIfPresent(Int.self, forKey: .totalMaxedRepeatableUpgrades) ?? 0
+        self.totalMutationPointsEarned = try container.decodeIfPresent(BigNumber.self, forKey: .totalMutationPointsEarned) ?? .zero
         
         self.autoCrateTargetId = try container.decodeIfPresent(String.self, forKey: .autoCrateTargetId)
         self.autoFactoryLevels = try container.decodeIfPresent([UUID: Int].self, forKey: .autoFactoryLevels) ?? [:]
@@ -111,6 +127,16 @@ struct GameState: Codable, Sendable {
         self.currentStoryStep = try container.decodeIfPresent(Int.self, forKey: .currentStoryStep) ?? 0
         self.isStoryQuestReadyToClaim = try container.decodeIfPresent(Bool.self, forKey: .isStoryQuestReadyToClaim) ?? false
         self.storyFlags = try container.decodeIfPresent([String: Bool].self, forKey: .storyFlags) ?? [:]
+        
+        self.totalDucksFromCrates = try container.decodeIfPresent(Int.self, forKey: .totalDucksFromCrates) ?? 0
+        self.claimedSideQuestIds = try container.decodeIfPresent(Set<String>.self, forKey: .claimedSideQuestIds) ?? []
+        self.storyVersion = try container.decodeIfPresent(Int.self, forKey: .storyVersion) ?? 1
+        
+        self.adBoostMultiplier = try container.decodeIfPresent(Double.self, forKey: .adBoostMultiplier) ?? 1.0
+        self.adBoostEndTime = try container.decodeIfPresent(Date.self, forKey: .adBoostEndTime)
+        self.nextMysteryCrateDate = try container.decodeIfPresent(Date.self, forKey: .nextMysteryCrateDate)
+        self.dailyAdGemsCount = try container.decodeIfPresent(Int.self, forKey: .dailyAdGemsCount) ?? 0
+        self.lastAdGemsDate = try container.decodeIfPresent(Date.self, forKey: .lastAdGemsDate)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -125,6 +151,7 @@ struct GameState: Codable, Sendable {
         try container.encode(totalRecycledDucks, forKey: .totalRecycledDucks)
         try container.encode(totalFusionsDone, forKey: .totalFusionsDone)
         try container.encode(totalMaxedRepeatableUpgrades, forKey: .totalMaxedRepeatableUpgrades)
+        try container.encode(totalMutationPointsEarned, forKey: .totalMutationPointsEarned)
         try container.encodeIfPresent(autoCrateTargetId, forKey: .autoCrateTargetId)
         try container.encode(autoFactoryLevels, forKey: .autoFactoryLevels)
         try container.encode(currentStars, forKey: .currentStars)
@@ -140,6 +167,9 @@ struct GameState: Codable, Sendable {
         try container.encode(currentStoryStep, forKey: .currentStoryStep)
         try container.encode(isStoryQuestReadyToClaim, forKey: .isStoryQuestReadyToClaim)
         try container.encode(storyFlags, forKey: .storyFlags)
+        try container.encode(totalDucksFromCrates, forKey: .totalDucksFromCrates)
+        try container.encode(claimedSideQuestIds, forKey: .claimedSideQuestIds)
+        try container.encode(storyVersion, forKey: .storyVersion)
     }
 }
 
@@ -159,6 +189,7 @@ class GameManager {
     var totalRecycledDucks: Int = 0
     var totalFusionsDone: Int = 0
     var totalMaxedRepeatableUpgrades: Int = 0
+    var totalMutationPointsEarned: BigNumber = .zero
     
     // Automatisation
     var autoCrateTargetId: String? = nil; var autoFactoryLevels: [UUID: Int] = [:]
@@ -176,7 +207,19 @@ class GameManager {
     var currentStoryStep: Int = 0
     var isStoryQuestReadyToClaim: Bool = false
     var storyFlags: [String: Bool] = [:]
-    
+
+    // Quêtes Secondaires
+    var totalDucksFromCrates: Int = 0
+    var claimedSideQuestIds: Set<String> = []
+    var storyVersion: Int = 2
+
+    // Ads
+    var adBoostMultiplier: Double = 1.0
+    var adBoostEndTime: Date? = nil
+    var nextMysteryCrateDate: Date? = nil
+    var dailyAdGemsCount: Int = 0
+    var lastAdGemsDate: Date? = nil
+
     // Hors Ligne
     struct OfflineEarnings {
         let money: BigNumber
@@ -224,6 +267,7 @@ class GameManager {
         st.totalRecycledDucks = totalRecycledDucks
         st.totalFusionsDone = totalFusionsDone
         st.totalMaxedRepeatableUpgrades = totalMaxedRepeatableUpgrades
+        st.totalMutationPointsEarned = totalMutationPointsEarned
         st.autoCrateTargetId = autoCrateTargetId
         st.autoFactoryLevels = autoFactoryLevels
         st.currentStars = currentStars
@@ -239,6 +283,14 @@ class GameManager {
         st.currentStoryStep = currentStoryStep
         st.isStoryQuestReadyToClaim = isStoryQuestReadyToClaim
         st.storyFlags = storyFlags
+        st.totalDucksFromCrates = totalDucksFromCrates
+        st.claimedSideQuestIds = claimedSideQuestIds
+        st.storyVersion = storyVersion
+        st.adBoostMultiplier = adBoostMultiplier
+        st.adBoostEndTime = adBoostEndTime
+        st.nextMysteryCrateDate = nextMysteryCrateDate
+        st.dailyAdGemsCount = dailyAdGemsCount
+        st.lastAdGemsDate = lastAdGemsDate
         return st
     }
     
@@ -285,5 +337,7 @@ class GameManager {
     // MARK: - Safe Math Helpers
     func addMutationPoints(_ amount: BigNumber) {
         mutationPoints += amount
+        totalMutationPointsEarned += amount
+        evaluateAffordableCrates(reset: false)
     }
 }

@@ -1,6 +1,9 @@
 import SwiftUI
 
 extension GameManager {
+    /// Seuil d'argent requis pour le premier prestige (0 étoile). Centralisé pour éviter la duplication.
+    static let firstPrestigeThreshold = BigNumber(1_000_000_000_000.0)
+
     // MARK: - Shop UI Optimization
     func evaluateAffordableCrates(reset: Bool) {
         if reset {
@@ -68,13 +71,123 @@ extension GameManager {
     
     // MARK: - Système d'Améliorations
     
+    var currentAdMultiplier: Double {
+        if let end = adBoostEndTime, Date() < end {
+            return adBoostMultiplier
+        } else {
+            return 1.0
+        }
+    }
+    
     var earningsMultiplier: BigNumber {
         let level = upgradeLevels[.bonusGlobal] ?? 0
         let base = BigNumber(1.0 + Double(level) * 0.01)
         let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.10)
         let playerLevelBonus = BigNumber(PlayerLevelSystem.moneyMultiplier(for: playerLevel))
-        let total = base * prestigeBonus * playerLevelBonus
-        return hasPrestigeUpgrade("p2_eco") ? total * 1.30 : total
+        let adBonus = BigNumber(currentAdMultiplier)
+        var total = base * prestigeBonus * playerLevelBonus * adBonus
+        if hasPrestigeUpgrade("p2_eco") { total *= 1.30 }
+        if hasPrestigeUpgrade("p7_omnipotence") { total *= 11.0 } // +1000%
+        return total
+    }
+
+    /// Amplifie tous les effets numériques des perks équipés (bonus permanent + prestige tier 6)
+    var perkPowerMultiplier: Double {
+        let level = upgradeLevels[.bonusPerkPower] ?? 0
+        var multiplier = 1.0 + Double(level) * 0.02
+        if hasPrestigeUpgrade("p6_perk_power") { multiplier += 0.30 }
+        return multiplier
+    }
+
+    /// Nombre de base d'emplacements de perk (avant bonus d'extraSlot), usine ET canard
+    var basePerkSlots: Int {
+        hasPrestigeUpgrade("p5_perk_slot") ? 2 : 1
+    }
+
+    /// Bonus cumulé des perks "Chance de Caisse" équipés sur les canards actuellement assignés à une usine
+    var crateLuckBonus: Double {
+        var bonus = 0.0
+        for factory in factories {
+            for duckId in factory.assignedDuckIds {
+                guard let duck = inventory.first(where: { $0.id == duckId }) else { continue }
+                for perkId in duck.equippedPerkIds {
+                    if let perk = perksInventory.first(where: { $0.id == perkId }) {
+                        bonus += perk.duckCrateLuckBonus
+                    }
+                }
+            }
+        }
+        return bonus
+    }
+    
+    func watchAdForBoost() {
+        AdManager.shared.showRewardedAd(for: .factoryBoost) { [weak self] earned in
+            guard let self = self, earned else { return }
+            
+            DispatchQueue.main.async {
+                if let end = self.adBoostEndTime, Date() < end {
+                    self.adBoostMultiplier += 1.0
+                } else {
+                    self.adBoostMultiplier = 2.0
+                }
+                
+                self.adBoostEndTime = Date().addingTimeInterval(3600) // 1 heure
+                self.invalidateEarningsCache()
+                self.saveGame()
+            }
+        }
+    }
+    
+    var isMysteryCrateAvailable: Bool {
+        if let nextDate = nextMysteryCrateDate {
+            return Date() >= nextDate
+        }
+        return true // Toujours dispo la première fois
+    }
+
+    func claimMysteryCrate() {
+        guard isMysteryCrateAvailable else { return }
+        AdManager.shared.showRewardedAd(for: .mysteryCrate) { [weak self] earned in
+            guard let self = self, earned else { return }
+            
+            DispatchQueue.main.async {
+                // Donner un canard mythique
+                let duck = Duck(rarity: .mythique, size: DuckSize.allCases.randomElement()!, mutation: .aucune)
+                self.inventory.append(duck)
+                
+                // Relancer le cooldown entre 30 min (1800s) et 1 heure (3600s)
+                self.nextMysteryCrateDate = Date().addingTimeInterval(Double.random(in: 1800...3600))
+                self.saveGame()
+            }
+        }
+    }
+    
+    func resetDailyGemsIfNeeded() {
+        if let lastDate = lastAdGemsDate {
+            if !Calendar.current.isDateInToday(lastDate) {
+                dailyAdGemsCount = 0
+                lastAdGemsDate = nil
+            }
+        }
+    }
+    
+    var canWatchAdForGems: Bool {
+        resetDailyGemsIfNeeded()
+        return dailyAdGemsCount < 5
+    }
+    
+    func watchAdForGems() {
+        guard canWatchAdForGems else { return }
+        AdManager.shared.showRewardedAd(for: .dailyGems) { [weak self] earned in
+            guard let self = self, earned else { return }
+            
+            DispatchQueue.main.async {
+                self.gems += BigNumber(10)
+                self.dailyAdGemsCount += 1
+                self.lastAdGemsDate = Date()
+                self.saveGame()
+            }
+        }
     }
     
     /// Multiplicateur de points de mutation + Prestige + PlayerLevel
@@ -83,8 +196,11 @@ extension GameManager {
         let base = BigNumber(1.0 + Double(level) * 0.02)
         let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.03)
         let playerLevelBonus = BigNumber(PlayerLevelSystem.mutationMultiplier(for: playerLevel))
-        let total = base * prestigeBonus * playerLevelBonus
-        return hasPrestigeUpgrade("p4_adn") ? total * 3.0 : total // +200% = x3
+        var total = base * prestigeBonus * playerLevelBonus
+        if hasPrestigeUpgrade("p4_adn") { total *= 3.0 } // +200%
+        if hasPrestigeUpgrade("p5_adn2") { total *= 2.5 } // +150%
+        if hasPrestigeUpgrade("p7_omnipotence") { total *= 6.0 } // +500%
+        return total
     }
     
     // Prestige: Bonus d'argent après fusion (+5% par étoile)
@@ -94,7 +210,21 @@ extension GameManager {
     
     // Prestige: Prix des usines moins chères (-1% par étoile, asymptote max 100%)
     var factoryCostDiscount: Double {
-        return 100.0 / (100.0 + totalStars.doubleValue)
+        var discount = 100.0 / (100.0 + totalStars.doubleValue)
+        if hasPrestigeUpgrade("p7_omnipotence") { discount -= 0.75 }
+        return discount
+    }
+
+    /// Réduction de coût d'évolution d'usine : factoryCostDiscount + Maîtrise d'Évolution + upgrades de prestige dédiés
+    var factoryEvolutionCostDiscount: Double {
+        var discount = factoryCostDiscount
+        let bonusLevel = upgradeLevels[.bonusEvolutionCost] ?? 0
+        if bonusLevel > 0 {
+            discount -= (1.0 - pow(0.99, Double(bonusLevel)))
+        }
+        if hasPrestigeUpgrade("p5_evo_cost") { discount -= 0.20 }
+        if hasPrestigeUpgrade("p7_usine_evo_cost") { discount -= 0.50 }
+        return discount
     }
     
     // Prestige: Chance de canard muté spontanée (+0.2% par étoile, si totalStars >= 100)
@@ -123,10 +253,13 @@ extension GameManager {
         case .epique: upgradeId = .bonusEpique
         case .legendaire: upgradeId = .bonusLegendaire
         case .mythique: upgradeId = .bonusMythique
+        case .exotique: upgradeId = .bonusExotique
+        case .celeste: upgradeId = .bonusCeleste
+        case .primordiale: upgradeId = .bonusPrimordiale
         }
         let level = upgradeLevels[upgradeId] ?? 0
         var multiplier = 1.0 + Double(level) * 0.02
-        
+
         if hasPrestigeUpgrade("p2_val_com") && (rarity == .commun || rarity == .peuCommun) {
             multiplier += 1.0
         }
@@ -139,15 +272,26 @@ extension GameManager {
         if hasPrestigeUpgrade("p3_val_base") && (rarity == .commun || rarity == .peuCommun || rarity == .rare) {
             multiplier += 0.50
         }
-        
+        if hasPrestigeUpgrade("p5_rarete_exo") && (rarity == .exotique || rarity == .celeste || rarity == .primordiale) {
+            multiplier += 1.00
+        }
+        if hasPrestigeUpgrade("p6_rarete_myth") && (rarity == .mythique || rarity == .exotique || rarity == .celeste || rarity == .primordiale) {
+            multiplier += 0.75
+        }
+        if hasPrestigeUpgrade("p7_rarete_primo") && (rarity == .exotique || rarity == .celeste || rarity == .primordiale) {
+            multiplier += 2.00
+        }
+
         return multiplier
     }
     
-    /// Multiplicateur de taxe de fusion (Paradis Fiscal)
+    /// Multiplicateur de taxe de fusion (Paradis Fiscal + prestige tier 6)
     var taxMultiplier: Double {
         let level = upgradeLevels[.paradisFiscal] ?? 0
         // -5% par niveau, max 20 = -100%
-        return max(0.0, 1.0 - Double(level) * 0.05)
+        var multiplier = 1.0 - Double(level) * 0.05
+        if hasPrestigeUpgrade("p6_fusion_taxfree") { multiplier -= 0.50 }
+        return max(0.0, multiplier)
     }
     
     /// Vérifie si un déblocage est acheté
@@ -190,25 +334,49 @@ extension GameManager {
     }
 
     var autoCrateInterval: Double? {
-        if isUnlocked(.autoOuvrier4) { return 0.5 }
-        if isUnlocked(.autoOuvrier3) { return 2.0 }
-        if isUnlocked(.autoOuvrier2) { return 5.0 }
-        if isUnlocked(.autoOuvrier) { return 10.0 }
-        return nil
+        var interval: Double? = nil
+        if isUnlocked(.autoOuvrier6) { interval = 0.1 }
+        else if isUnlocked(.autoOuvrier5) { interval = 0.25 }
+        else if isUnlocked(.autoOuvrier4) { interval = 0.5 }
+        else if isUnlocked(.autoOuvrier3) { interval = 2.0 }
+        else if isUnlocked(.autoOuvrier2) { interval = 5.0 }
+        else if isUnlocked(.autoOuvrier) { interval = 10.0 }
+
+        if hasPrestigeUpgrade("p5_auto2") {
+            interval = min(interval ?? .infinity, 0.25)
+        }
+        if hasPrestigeUpgrade("p7_auto_max") {
+            interval = 0.1
+        }
+
+        guard let baseInterval = interval else { return nil }
+        let speedLevel = upgradeLevels[.bonusAutomationSpeed] ?? 0
+        let speedFactor = speedLevel > 0 ? pow(0.99, Double(speedLevel)) : 1.0
+        return max(0.02, baseInterval * speedFactor)
     }
-    
+
     var hasRecyclingExpertise: Bool {
         return isUnlocked(.expertiseRecyclage)
     }
 
     func autoFactoryInterval(for factoryId: UUID) -> Double? {
-        let level = autoFactoryLevels[factoryId] ?? 0
+        var level = autoFactoryLevels[factoryId] ?? 0
+        if hasPrestigeUpgrade("p6_auto3") { level = max(level, 5) }
+        if hasPrestigeUpgrade("p7_auto_max") { level = max(level, 5) }
+
+        var interval: Double?
         switch level {
-        case 3: return 1.0
-        case 2: return 3.0
-        case 1: return 10.0
-        default: return nil
+        case 5: interval = 0.2
+        case 4: interval = 0.5
+        case 3: interval = 1.0
+        case 2: interval = 3.0
+        case 1: interval = 10.0
+        default: interval = nil
         }
+        guard let baseInterval = interval else { return nil }
+        let speedLevel = upgradeLevels[.bonusAutomationSpeed] ?? 0
+        let speedFactor = speedLevel > 0 ? pow(0.99, Double(speedLevel)) : 1.0
+        return max(0.05, baseInterval * speedFactor)
     }
     
     /// Niveau d'un bonus permanent (0 si non acheté)
@@ -356,13 +524,17 @@ extension GameManager {
         }
         
         let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        
-        return duck.calculateSellValue(with: duckPerks) * earningsMultiplier * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus
+
+        return duck.calculateSellValue(with: duckPerks, perkPowerFactor: perkPowerMultiplier) * earningsMultiplier * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus
     }
-    
+
     func displayRecycleValue(for duck: Duck) -> BigNumber {
         let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        return duck.calculateRecycleValue(with: duckPerks) * mutationMultiplier
+        var recycleRarityBonus = 1.0
+        if hasPrestigeUpgrade("p7_rarete_primo") && (duck.rarity == .exotique || duck.rarity == .celeste || duck.rarity == .primordiale) {
+            recycleRarityBonus += 2.00
+        }
+        return duck.calculateRecycleValue(with: duckPerks, perkPowerFactor: perkPowerMultiplier) * mutationMultiplier * recycleRarityBonus
     }
     
     func calculateCrateCostMoney(crate: Crate, amount: Int) -> BigNumber? {
@@ -428,14 +600,22 @@ extension GameManager {
     // MARK: - Prestige System
     
     func calculatePrestigeStars() -> BigNumber {
-        guard money >= BigNumber(10_000_000_000) else { return .zero }
-        let ratioBN = money / BigNumber(10_000_000_000.0)
-        
-        // floor( pow( Argent / 10,000,000,000, 0.25 ) )
+        guard money >= GameManager.firstPrestigeThreshold else { return .zero }
+        let ratioBN = money / GameManager.firstPrestigeThreshold
+
+        // floor( pow( Argent / seuil, 0.25 ) )
         let rawStars = BigNumber.pow(ratioBN, 0.25)
-        
-        if rawStars.exponent >= 15 { return rawStars }
-        return BigNumber(Foundation.floor(rawStars.doubleValue))
+
+        var stars = rawStars.exponent >= 15 ? rawStars : BigNumber(Foundation.floor(rawStars.doubleValue))
+
+        let bonusLevel = upgradeLevels[.bonusPrestigeStars] ?? 0
+        var starGainMultiplier = 1.0 + Double(bonusLevel) * 0.005
+        if hasPrestigeUpgrade("p7_star_gain") { starGainMultiplier += 0.50 }
+        if starGainMultiplier != 1.0 {
+            stars = BigNumber(Foundation.floor((stars * starGainMultiplier).doubleValue))
+        }
+
+        return stars
     }
     
     func executePrestige() {
@@ -460,6 +640,9 @@ extension GameManager {
         totalMaxedRepeatableUpgrades = 0
         autoCrateTargetId = nil
         autoFactoryLevels.removeAll()
+
+        // Les déblocages gagnés via les Quêtes Secondaires sont permanents
+        regrantSideQuestRewards()
         
         invalidateEarningsCache()
         isAssignedDucksCacheValid = false
