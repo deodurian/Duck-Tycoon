@@ -17,16 +17,17 @@ struct StartScreenView: View {
                 .transition(.opacity)
         } else {
             ZStack {
-                Color(red: 0.05, green: 0.0, blue: 0.12)
-                    .ignoresSafeArea()
-                
+                NeonBackground()
+
                 VStack {
                     Spacer()
-                    
+
                     Text(tr("DUCK TYCOON"))
                         .font(.system(size: 48, weight: .heavy, design: .rounded))
-                        .foregroundColor(.yellow)
-                        .shadow(color: .orange, radius: 5, x: 0, y: 3)
+                        .foregroundStyle(
+                            LinearGradient(colors: [Neon.cyan, Neon.magenta], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .shadow(color: Neon.cyan.opacity(0.7), radius: 12)
                         .padding(.bottom, 20)
                     
                     if phase == .waitingForTap {
@@ -65,7 +66,7 @@ struct StartScreenView: View {
                     Spacer()
                     
                     HStack {
-                        Text(tr("v1.0.2"))
+                        Text(tr("v1.1.0"))
                             .font(.caption)
                             .foregroundColor(.gray)
                         Spacer()

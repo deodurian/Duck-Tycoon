@@ -96,7 +96,7 @@ struct BulkFusionSheet: View {
                                     .padding(.vertical, 10)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
-                                            .fill(selectedRarity == rarity ? rarity.color.opacity(0.1) : Color(.systemGray6))
+                                            .fill(selectedRarity == rarity ? rarity.color.opacity(0.15) : Color.white.opacity(0.05))
                                     )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
@@ -107,8 +107,7 @@ struct BulkFusionSheet: View {
                             }
                         }
                         .padding()
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(16)
+                        .neonPanel(color: selectedRarity.color, cornerRadius: 16)
                         .padding(.horizontal)
                         .onChange(of: selectedRarity) { _, _ in
                             updateBulkCost()
@@ -146,8 +145,9 @@ struct BulkFusionSheet: View {
                             }
                             
                             if costInfo.fusionsCount > 0 {
+                                let canBulk = gameManager.money >= costInfo.totalCost
                                 Button(action: {
-                                    if gameManager.money >= costInfo.totalCost {
+                                    if canBulk {
                                         animationData = Array(repeating: (selectedRarity, 0), count: 12)
                                         animationResultDuck = nil
                                         pendingFusionAction = {
@@ -157,23 +157,17 @@ struct BulkFusionSheet: View {
                                     }
                                 }) {
                                     Text(tr("TOUT FUSIONNER"))
-                                        .font(.headline.bold())
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(gameManager.money >= costInfo.totalCost ? selectedRarity.color : Color.gray.opacity(0.3))
-                                        .foregroundColor(.white)
-                                        .cornerRadius(16)
-                                        .shadow(color: gameManager.money >= costInfo.totalCost ? selectedRarity.color.opacity(0.4) : Color.clear, radius: 8, x: 0, y: 4)
                                 }
-                                .disabled(gameManager.money < costInfo.totalCost)
+                                .buttonStyle(NeonButtonStyle(color: selectedRarity.color))
+                                .opacity(canBulk ? 1.0 : 0.45)
+                                .disabled(!canBulk)
                             }
                         }
                         .padding()
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(16)
+                        .neonPanel(color: selectedRarity.color, cornerRadius: 16)
                         .padding(.horizontal)
                     }
-                    
+
                     // Mega-Fusion section
                     if gameManager.isUnlocked(.megaFusion) {
                         VStack(alignment: .leading, spacing: 15) {
@@ -200,6 +194,7 @@ struct BulkFusionSheet: View {
                                 }
                                 
                                 if megaCostInfo.fusionsCount > 0 {
+                                    let canMega = gameManager.money >= megaCostInfo.totalCost
                                     Button(action: {
                                         let allRarities = DuckRarity.allCases
                                         animationData = allRarities.flatMap { [$0, $0] }.map { ($0, 0) }
@@ -210,42 +205,36 @@ struct BulkFusionSheet: View {
                                         }
                                     }) {
                                         Text(tr("LANCER MÉGA-FUSION"))
-                                            .font(.headline.bold())
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 14)
-                                            .background(gameManager.money >= megaCostInfo.totalCost ? Color.purple : Color.gray)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(12)
                                     }
-                                    .disabled(gameManager.money < megaCostInfo.totalCost)
+                                    .buttonStyle(NeonButtonStyle(color: .purple, cornerRadius: 12))
+                                    .opacity(canMega ? 1.0 : 0.45)
+                                    .disabled(!canMega)
                                 }
                             }
                         }
                         .padding()
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-                        )
+                        .neonPanel(color: .purple, cornerRadius: 16)
                         .padding(.horizontal)
                     }
                 }
                 .padding(.vertical)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(NeonBackground(accent: Neon.green))
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .preferredColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(tr("Fermer")) { dismiss() }
                 }
             }
-            .alert("Comment ça marche ?", isPresented: $showInfo) {
-                Button(tr("OK"), role: .cancel) { }
-            } message: {
-                Text("Auto-Fusion : S'applique uniquement à la rareté sélectionnée. Assemble tous les groupes de 3 canards identiques.\n\nMéga-Fusion : Fusionne TOUS les canards de l'inventaire en cascade jusqu'à épuisement des canards ou de l'argent.")
-            }
+            .infoPopup(
+                isPresented: $showInfo,
+                title: tr("Comment ça marche ?"),
+                message: tr("Auto-Fusion : S'applique uniquement à la rareté sélectionnée. Assemble tous les groupes de 3 canards identiques.\n\nMéga-Fusion : Fusionne TOUS les canards de l'inventaire en cascade jusqu'à épuisement des canards ou de l'argent."),
+                accent: Neon.green
+            )
             .overlay {
                 if let data = animationData {
                     FusionAnimationView(ducksToAnimate: data, resultingDuck: animationResultDuck) {

@@ -10,12 +10,7 @@ struct LevelSheetView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                NeonBackground()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 18) {
@@ -69,7 +64,8 @@ struct LevelSheetView: View {
 
                             let db = currentLevel / 100
                             if db > 0 {
-                                let mult = Int(pow(2.0, Double(db)))
+                                // BigNumber : Int(pow(2.0, db)) trappait (∞ → Int) au niveau ~102 400
+                                let mult = BigNumber.pow(BigNumber(2.0), db).formattedString()
                                 return "+\(mb)% et x\(mult)"
                             } else {
                                 return "+\(mb)%"
@@ -111,18 +107,8 @@ struct LevelSheetView: View {
                                 }
                             }
                         }
-                        .padding(14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.orange.opacity(0.08))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(
-                                    LinearGradient(colors: [.orange.opacity(0.5), .orange.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    lineWidth: 1
-                                )
-                        )
+                        .padding(16)
+                        .neonPanel(color: .orange, cornerRadius: 18)
                         .padding(.horizontal)
                         .padding(.bottom, 20)
                     }
@@ -130,6 +116,8 @@ struct LevelSheetView: View {
             }
             .navigationTitle(tr("Niveau Joueur"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .preferredColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showInfo = true }) {
@@ -139,13 +127,15 @@ struct LevelSheetView: View {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(tr("Fermer")) { dismiss() }
+                        .foregroundColor(.cyan)
                 }
             }
-            .alert(tr("Comment gagner de l'XP ?"), isPresented: $showInfo) {
-                Button(tr("Compris"), role: .cancel) { }
-            } message: {
-                Text(tr("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."))
-            }
+            .infoPopup(
+                isPresented: $showInfo,
+                title: tr("Comment gagner de l'XP ?"),
+                message: tr("Vous gagnez de l'XP passivement en fonction de l'argent généré par vos usines chaque seconde. L'XP continue d'augmenter même lorsque vous êtes hors ligne. Vous pouvez également gagner de l'XP en accomplissant des missions."),
+                accent: Neon.yellow
+            )
         }
     }
 }
@@ -181,14 +171,7 @@ private struct StatBonusCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(color.opacity(0.2), lineWidth: 1)
-        )
+        .neonPanel(color: color, cornerRadius: 16)
     }
 }
 

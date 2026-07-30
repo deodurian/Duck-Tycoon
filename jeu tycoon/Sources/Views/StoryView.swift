@@ -64,6 +64,7 @@ struct StoryView: View {
                     .foregroundColor(.blue)
                     .clipShape(Capsule())
                 }
+                .bouncy()
             }
             .padding(.horizontal)
             .padding(.top, 10)
@@ -245,23 +246,9 @@ private struct QuestCard: View {
                 }
             }) {
                 Text(isReady ? tr("Récupérer la récompense") : tr("Quête en cours..."))
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
-                    .background(
-                        Group {
-                            if isReady {
-                                LinearGradient(colors: [.green, Color(hue: 0.38, saturation: 0.9, brightness: 0.6)], startPoint: .top, endPoint: .bottom)
-                            } else {
-                                Color.gray.opacity(0.35)
-                            }
-                        }
-                    )
-                    .cornerRadius(12)
-                    .shadow(color: isReady ? Color.green.opacity(pulse ? 0.7 : 0.25) : .clear, radius: pulse ? 14 : 8, y: 4)
-                    .scaleEffect(isReady && pulse ? 1.02 : 1.0)
             }
+            .neonButton(isReady ? Neon.green : Neon.cyan)
+            .opacity(isReady ? 1.0 : 0.5)
             .disabled(!isReady)
         }
         .padding(12)
@@ -285,41 +272,88 @@ private struct QuestCard: View {
 
 private struct StoryCompletedView: View {
     @State private var glow = false
+    @State private var raysRotate = false
 
     var body: some View {
         VStack {
             Spacer()
-            VStack(spacing: 20) {
+            VStack(spacing: 22) {
                 ZStack {
+                    // Rayons de lumière tournants (récompense ultime)
+                    RadialRays(count: 16)
+                        .fill(
+                            AngularGradient(
+                                colors: [.yellow.opacity(0.0), .yellow.opacity(0.28), .orange.opacity(0.0)],
+                                center: .center
+                            )
+                        )
+                        .frame(width: 260, height: 260)
+                        .rotationEffect(.degrees(raysRotate ? 360 : 0))
+                        .blur(radius: 1)
+
                     Circle()
                         .fill(RadialGradient(colors: [.yellow.opacity(glow ? 0.5 : 0.2), .clear], center: .center, startRadius: 5, endRadius: 90))
                         .frame(width: 180, height: 180)
                     Image(systemName: "star.circle.fill")
-                        .font(.system(size: 70))
+                        .font(.system(size: 76))
                         .foregroundStyle(
                             LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
                         )
-                        .shadow(color: .yellow.opacity(glow ? 0.8 : 0.3), radius: glow ? 20 : 8)
+                        .shadow(color: .yellow.opacity(glow ? 0.8 : 0.3), radius: glow ? 22 : 8)
+                        .scaleEffect(glow ? 1.06 : 1.0)
                 }
 
                 Text(tr("Histoire Terminée !"))
-                    .font(.title.bold())
+                    .font(.system(size: 30, weight: .heavy, design: .rounded))
                     .foregroundStyle(
-                        LinearGradient(colors: [.yellow, .orange], startPoint: .leading, endPoint: .trailing)
+                        LinearGradient(colors: [Neon.yellow, .orange, Neon.yellow], startPoint: .leading, endPoint: .trailing)
                     )
+                    .shadow(color: .yellow.opacity(glow ? 0.9 : 0.5), radius: glow ? 14 : 8)
+                    .multilineTextAlignment(.center)
 
                 Text(tr("Tu as terminé toutes les quêtes d'histoire. Le mode libre est activé !"))
                     .font(.body)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 30)
             }
+            .padding(.vertical, 40)
+            .padding(.horizontal, 28)
+            .frame(maxWidth: .infinity)
+            .neonPanel(color: Neon.yellow, cornerRadius: 24)
+            .padding(.horizontal, 24)
             Spacer()
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
                 glow = true
             }
+            withAnimation(.linear(duration: 40).repeatForever(autoreverses: false)) {
+                raysRotate = true
+            }
         }
+    }
+}
+
+/// Rayons de lumière rayonnant depuis le centre (halo de récompense).
+private struct RadialRays: Shape {
+    var count: Int = 16
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let radius = min(rect.width, rect.height) / 2
+        let rayWidth = (2.0 * .pi) / Double(count) * 0.4
+        for i in 0..<count {
+            let angle = (2.0 * .pi) / Double(count) * Double(i)
+            p.move(to: center)
+            p.addArc(
+                center: center,
+                radius: radius,
+                startAngle: .radians(angle - rayWidth / 2),
+                endAngle: .radians(angle + rayWidth / 2),
+                clockwise: false
+            )
+            p.closeSubpath()
+        }
+        return p
     }
 }

@@ -6,10 +6,10 @@ extension GameManager {
         guard missions.filter({ $0.type == .intro }).isEmpty else { return } // Déjà initialisé
         
         let introMissions = [
-            Mission(id: "intro_1", title: "Le Commencement", description: "Ouvrir une caisse en bois", type: .intro, actionType: .openWoodenCrate, targetProgress: BigNumber(1), rewardXP: 50),
+            Mission(id: "intro_1", title: "Le Commencement", description: "Ouvrir une capsule en bois", type: .intro, actionType: .openWoodenCrate, targetProgress: BigNumber(1), rewardXP: 50),
             Mission(id: "intro_2", title: "Au Travail", description: "Équiper un canard dans une usine", type: .intro, actionType: .assignDuckToFactory, targetProgress: BigNumber(1), rewardXP: 100),
             Mission(id: "intro_3", title: "Développement", description: "Améliorer 10 fois une usine", type: .intro, actionType: .upgradeFactory, targetProgress: BigNumber(10), rewardXP: 150),
-            Mission(id: "intro_4", title: "Fournisseur", description: "Ouvrir 10 caisses", type: .intro, actionType: .openCrates, targetProgress: BigNumber(10), rewardXP: 200),
+            Mission(id: "intro_4", title: "Fournisseur", description: "Ouvrir 10 capsules", type: .intro, actionType: .openCrates, targetProgress: BigNumber(10), rewardXP: 200),
             Mission(id: "intro_5", title: "Tri Sélectif", description: "Recycler 1 canard", type: .intro, actionType: .recycleDuck, targetProgress: BigNumber(1), rewardXP: 150),
             Mission(id: "intro_6", title: "Science !", description: "Débloquer le labo de fusion", type: .intro, actionType: .unlockFusionLab, targetProgress: BigNumber(1), rewardXP: 300),
             Mission(id: "intro_7", title: "Mutation", description: "Faire une fusion de canard commun", type: .intro, actionType: .fuseCommonDuck, targetProgress: BigNumber(1), rewardXP: 300),
@@ -40,7 +40,7 @@ extension GameManager {
         missions.removeAll(where: { $0.type == .daily })
         
         let dailyMissions = [
-            Mission(id: "daily_1", title: "Ouverture Quotidienne", description: "Ouvrir 10 caisses", type: .daily, actionType: .openCrates, targetProgress: BigNumber(10)),
+            Mission(id: "daily_1", title: "Ouverture Quotidienne", description: "Ouvrir 10 capsules", type: .daily, actionType: .openCrates, targetProgress: BigNumber(10)),
             Mission(id: "daily_2", title: "Recyclage Quotidien", description: "Recycler 10 canards", type: .daily, actionType: .recycleDuck, targetProgress: BigNumber(10)),
             Mission(id: "daily_3", title: "Fusion Quotidienne", description: "Faire 10 fusions", type: .daily, actionType: .fuseCommonDuck, targetProgress: BigNumber(10)),
             Mission(id: "daily_4", title: "Rituel Quotidien", description: "Faire un rituel canarifique", type: .daily, actionType: .ritual, targetProgress: BigNumber(1)),
@@ -65,30 +65,40 @@ extension GameManager {
     
     func emitMissionEvent(_ type: MissionActionType, amount: BigNumber = BigNumber(1)) {
         let firstActiveIntroIndex = missions.firstIndex(where: { $0.type == .intro && $0.status != .claimed && $0.status != .completed })
-        
+
+        // CE QUI COÛTAIT : `let mission = missions[index]` copiait TOUT le struct Mission à chaque
+        // itération (trois String + deux BigNumber + optionnels, donc autant de retain/release),
+        // alors que seuls deux champs étaient lus — et cette boucle est relancée plusieurs fois par
+        // canard ouvert, recyclé ou fusionné.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : on lit exactement les mêmes champs, avec les mêmes
+        // conditions et dans le même ordre logique ; seule la copie du struct disparaît. En
+        // particulier, PAS de sortie anticipée quand aucune mission n'a ce `actionType` : les
+        // missions actives doivent continuer de passer de `.notStarted` à `.inProgress`, et cet
+        // état est visible dans le journal des quêtes.
         for index in missions.indices {
-            let mission = missions[index]
-            
-            let isActiveDaily = mission.type == .daily && mission.status != .claimed && mission.status != .completed
             let isActiveIntro = (index == firstActiveIntroIndex)
-            
-            guard isActiveDaily || isActiveIntro else { continue }
-            
+            if !isActiveIntro {
+                guard missions[index].type == .daily else { continue }
+                let status = missions[index].status
+                guard status != .claimed, status != .completed else { continue }
+            }
+
             if missions[index].status == .notStarted {
                 missions[index].status = .inProgress
             }
-            
-            if missions[index].actionType == type {
-                missions[index].currentProgress += amount
-                
-                if missions[index].currentProgress >= missions[index].targetProgress {
-                    missions[index].currentProgress = missions[index].targetProgress
-                    missions[index].status = .completed
-                    
-                    // Si on vient de finir une mission quotidienne, on vérifie la mission 7
-                    if missions[index].type == .daily {
-                        checkDaily7Completion()
-                    }
+
+            guard missions[index].actionType == type else { continue }
+
+            missions[index].currentProgress += amount
+
+            if missions[index].currentProgress >= missions[index].targetProgress {
+                missions[index].currentProgress = missions[index].targetProgress
+                missions[index].status = .completed
+                announceQuestCompleted()
+
+                // Si on vient de finir une mission quotidienne, on vérifie la mission 7
+                if missions[index].type == .daily {
+                    checkDaily7Completion()
                 }
             }
         }
@@ -99,9 +109,11 @@ extension GameManager {
         let allCompleted = dailyMissions.allSatisfy { $0.status == .completed || $0.status == .claimed }
         
         if allCompleted {
-            if let index = missions.firstIndex(where: { $0.id == "daily_7" }) {
+            if let index = missions.firstIndex(where: { $0.id == "daily_7" }),
+               missions[index].status != .completed, missions[index].status != .claimed {
                 missions[index].currentProgress = BigNumber(1)
                 missions[index].status = .completed
+                announceQuestCompleted()
             }
         }
     }
@@ -124,21 +136,24 @@ extension GameManager {
     func verifyStateMissions() {
         let firstActiveIntroIndex = missions.firstIndex(where: { $0.type == .intro && $0.status != .claimed && $0.status != .completed })
         
+        // Même correctif que dans `emitMissionEvent` : plus de copie complète du struct Mission par
+        // itération (trois String + deux BigNumber), alors que cette boucle tourne toutes les 5 s
+        // dans la boucle de jeu. Mêmes champs lus, mêmes conditions, même ordre.
         for index in missions.indices {
-            let mission = missions[index]
-            
-            let isActiveDaily = mission.type == .daily && mission.status != .claimed && mission.status != .completed
             let isActiveIntro = (index == firstActiveIntroIndex)
-            
-            guard isActiveDaily || isActiveIntro else { continue }
-            
+            if !isActiveIntro {
+                guard missions[index].type == .daily else { continue }
+                let status = missions[index].status
+                guard status != .claimed, status != .completed else { continue }
+            }
+
             if missions[index].status == .notStarted {
                 missions[index].status = .inProgress
             }
-            
+
             var progressToSet: BigNumber? = nil
-            
-            switch mission.actionType {
+
+            switch missions[index].actionType {
             case .reachIncome:
                 progressToSet = cachedEarningsPerSecond ?? .zero
             case .totalRecycleCount:
@@ -152,14 +167,7 @@ extension GameManager {
                 progressToSet = hasMythic ? BigNumber(1) : .zero
             case .assignHighLevelDucks:
                 // Attribuer 5 canards lvl 30+ à 5 usines lvl 30+
-                var validCount = 0
-                for factory in factories where factory.level >= 30 {
-                    let assignedDucks = factory.assignedDuckIds.compactMap { id in inventory.first { $0.id == id } }
-                    if assignedDucks.contains(where: { $0.level >= 30 }) {
-                        validCount += 1
-                    }
-                }
-                progressToSet = BigNumber(validCount)
+                progressToSet = BigNumber(countFactoriesWithHighLevelDuck())
             case .maxRepeatableUpgrades:
                 progressToSet = BigNumber(totalMaxedRepeatableUpgrades)
             case .unlockUpgrades:
@@ -175,7 +183,8 @@ extension GameManager {
                 if missions[index].currentProgress >= missions[index].targetProgress {
                     missions[index].currentProgress = missions[index].targetProgress
                     missions[index].status = .completed
-                    
+                    announceQuestCompleted()
+
                     if missions[index].type == .daily {
                         checkDaily7Completion()
                     }
@@ -183,39 +192,62 @@ extension GameManager {
             }
         }
     }
-    
+
+    /// Nombre d'usines de niveau ≥ 30 ayant au moins un canard assigné de niveau ≥ 30.
+    ///
+    /// CE QUI COÛTAIT : la version d'origine faisait un `inventory.first { $0.id == id }` — donc un
+    /// scan linéaire de TOUT l'inventaire (jusqu'à 10 000 canards) — pour CHAQUE canard assigné de
+    /// CHAQUE usine de niveau ≥ 30, et ce toutes les 5 s tant que la mission « Elite » est active.
+    ///
+    /// POURQUOI LE RENDU RESTE IDENTIQUE : on compte exactement les mêmes usines, avec le même
+    /// critère (`level >= 30` sur le canard tel qu'il est stocké dans l'inventaire, comme avant).
+    /// Seule la façon de retrouver les canards change : un unique parcours de l'inventaire filtré
+    /// par un Set d'ids, au lieu d'un scan complet par id.
+    private func countFactoriesWithHighLevelDuck() -> Int {
+        var assignedIdsOfEligibleFactories = Set<UUID>()
+        for factory in factories where factory.level >= 30 {
+            assignedIdsOfEligibleFactories.formUnion(factory.assignedDuckIds)
+        }
+        guard !assignedIdsOfEligibleFactories.isEmpty else { return 0 }
+
+        var highLevelIds = Set<UUID>()
+        for duck in inventory where duck.level >= 30 && assignedIdsOfEligibleFactories.contains(duck.id) {
+            highLevelIds.insert(duck.id)
+        }
+        guard !highLevelIds.isEmpty else { return 0 }
+
+        var count = 0
+        for factory in factories where factory.level >= 30 {
+            if factory.assignedDuckIds.contains(where: { highLevelIds.contains($0) }) {
+                count += 1
+            }
+        }
+        return count
+    }
+
     // MARK: - Vérifications passives pour certaines missions (appelées dans la boucle de jeu ou au chargement)
     func passiveMissionChecks() {
         for index in missions.indices where missions[index].status == .inProgress {
-            let m = missions[index]
-            
-            if m.actionType == .reachIncome {
-                if let eps = cachedEarningsPerSecond, eps >= m.targetProgress {
+            // Accès direct aux champs : `let m = missions[index]` copiait tout le struct Mission
+            // (trois String + deux BigNumber) à chaque itération. Mêmes champs lus, même logique.
+            if missions[index].actionType == .reachIncome {
+                if let eps = cachedEarningsPerSecond, eps >= missions[index].targetProgress {
                     completeMission(at: index)
                 }
-            } else if m.id == "intro_20" {
+            } else if missions[index].id == "intro_20" {
                 // 5 canards lvl 30+ à 5 usines lvl 30+
-                let eligibleFactories = factories.filter { factory in
-                    if factory.level >= 30 {
-                        let highLevelDucksCount = factory.assignedDuckIds.filter { duckId in
-                            if let duck = inventory.first(where: { $0.id == duckId }) {
-                                return duck.level >= 30
-                            }
-                            return false
-                        }.count
-                        return highLevelDucksCount > 0
-                    }
-                    return false
-                }
-                if eligibleFactories.count >= 5 {
+                // Même comptage qu'avant, mais sans un scan complet de l'inventaire par canard
+                // assigné (voir `countFactoriesWithHighLevelDuck`).
+                if countFactoriesWithHighLevelDuck() >= 5 {
                     completeMission(at: index)
                 }
             }
         }
     }
-    
+
     private func completeMission(at index: Int) {
         missions[index].currentProgress = missions[index].targetProgress
         missions[index].status = .completed
+        announceQuestCompleted()
     }
 }

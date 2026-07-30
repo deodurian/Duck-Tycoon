@@ -65,6 +65,25 @@ struct FusionView: View {
         }
     }
     
+    /// Rafraîchit le contenu SANS repasser par l'état de chargement et en conservant les pages
+    /// déjà chargées (calqué sur `InventoryView.silentUpdateDisplayInventory`).
+    /// Coût évité : l'Auto-Ouvrier fait varier `inventory.count` en continu ; la version lourde
+    /// vidait la liste, remettait `isLoading = true` et re-triait tout à chaque canard généré.
+    /// Le contenu affiché reste identique (mêmes canards, même tri) : seule l'apparition du
+    /// spinner disparaît, et elle n'a pas lieu d'être pour un simple ajout de canard.
+    private func silentUpdateDisplayInventory() {
+        Task {
+            let all = await gameManager.getSortedInventoryAsync(by: sortOption, limit: Int.max, filterAssigned: false)
+            let currentLoadedCount = max(self.currentPage * self.pageSize, self.pageSize)
+            let slice = Array(all.prefix(currentLoadedCount))
+            await MainActor.run {
+                self.sortedAll = all
+                self.displayInventory = slice
+                self.hasMore = all.count > currentLoadedCount
+            }
+        }
+    }
+
     /// Charge la page suivante (appelé quand le joueur approche du bas).
     private func loadMoreIfNeeded() {
         guard !isLoadingMore, hasMore else { return }
@@ -91,6 +110,27 @@ struct FusionView: View {
     }
     
     var body: some View {
+        // Le canard de référence de la sélection (rareté + niveau verrouillés) était re-résolu par
+        // un scan linéaire de l'inventaire (jusqu'à 10 000 canards) DANS chaque cellule de la grille,
+        // et même deux fois par cellule (currentRarity PUIS currentLevel). Comme le corps lit
+        // gameManager.money, tout cela était refait chaque seconde. On résout ici une seule fois :
+        // les valeurs comparées sont exactement les mêmes, donc l'affichage est identique.
+        let referenceDuck = selectedDuckIds.first.flatMap { firstId in
+            gameManager.inventory.first(where: { $0.id == firstId })
+        }
+        let lockedRarity = referenceDuck?.rarity
+        let lockedLevel = referenceDuck?.fusionLevel
+
+        // Un Set des canards assignés remplace le `factories.contains(where:)` refait par cellule :
+        // même résultat booléen, mais un seul balayage des usines au lieu d'un par carte affichée.
+        let assignedDuckIds = Set(gameManager.factories.flatMap { $0.assignedDuckIds })
+
+        // `futurePrice` balaye tout l'inventaire : il était évalué jusqu'à 4 fois par reconstruction
+        // du corps (prix affiché, coût affiché, couleur du coût, bouton FUSIONNER). Une seule
+        // évaluation donne exactement les mêmes nombres.
+        let futurePriceValue = futurePrice
+        let fusionCostValue = futurePriceValue * 0.05
+
         VStack(spacing: 0) {
             // Custom Top Bar
             HStack {
@@ -127,8 +167,11 @@ struct FusionView: View {
                 }
             }
             .padding()
-            .background(Color(.systemBackground).shadow(radius: 2))
-            
+            .background(.ultraThinMaterial)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Neon.green.opacity(0.25)).frame(height: 1)
+            }
+
             // Menu de tri + info
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -173,9 +216,9 @@ struct FusionView: View {
                 } else {
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(displayInventory) { duck in
-                        let isAssigned = gameManager.isDuckAssigned(duckId: duck.id)
+                        let isAssigned = assignedDuckIds.contains(duck.id)
                         let isSelected = selectedDuckIds.contains(duck.id)
-                        let isMismatched = currentRarity != nil && (duck.rarity != currentRarity || duck.fusionLevel != currentLevel)
+                        let isMismatched = lockedRarity != nil && (duck.rarity != lockedRarity || duck.fusionLevel != lockedLevel)
                         let isFull = selectedDuckIds.count >= 3 && !isSelected
                         let isDisabled = isMismatched || isFull
                         
@@ -236,7 +279,7 @@ struct FusionView: View {
             // Zone de fusion en bas
             VStack(spacing: 15) {
                 if selectedDuckIds.count == 3 {
-                    Text("\(tr("Prix futur : "))\(futurePrice.formattedString()) 💰 / sec")
+                    Text("\(tr("Prix futur : "))\(futurePriceValue.formattedString()) 💰 / sec")
                         .font(.headline)
                         .foregroundColor(.green)
                         .bold()
@@ -253,7 +296,7 @@ struct FusionView: View {
                                 DuckGridCard(
                                     duck: duck,
                                     displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                    isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                    isAssigned: assignedDuckIds.contains(duck.id),
                                     dynamicLevel: gameManager.getDynamicStats(for: duck).level
                                 )
                                 .onTapGesture {
@@ -276,9 +319,9 @@ struct FusionView: View {
                 
                 if selectedDuckIds.count == 3 {
                     VStack(spacing: 4) {
-                        Text("\(tr("Coût de fusion: "))\(fusionCost.formattedString()) 💰")
+                        Text("\(tr("Coût de fusion: "))\(fusionCostValue.formattedString()) 💰")
                             .font(.headline)
-                            .foregroundColor(gameManager.money >= fusionCost ? .primary : .red)
+                            .foregroundColor(gameManager.money >= fusionCostValue ? .primary : .red)
                         Text(tr("(Taxe 5%)"))
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -286,12 +329,15 @@ struct FusionView: View {
                     .bold()
                 }
                 
+                let canFuse = selectedDuckIds.count == 3 && gameManager.money >= fusionCostValue
                 Button(action: {
-                    if selectedDuckIds.count == 3 && gameManager.money >= fusionCost {
+                    if canFuse {
+                        // Résolution au moment du tap (une seule fois, pas par cellule) : on garde
+                        // volontairement les propriétés calculées ici pour lire l'état le plus frais.
                         let rarity = currentRarity ?? .commun
                         let level = currentLevel ?? 0
                         animationData = Array(repeating: (rarity, level), count: 3)
-                        
+
                         var newRarity = rarity
                         var newLevel = level + 1
                         if level == 4 {
@@ -299,7 +345,7 @@ struct FusionView: View {
                             newRarity = rarity.nextRarity ?? rarity
                         }
                         animationResultDuck = (newRarity, newLevel)
-                        
+
                         pendingFusionAction = {
                             gameManager.fuseDucks(ids: Set(selectedDuckIds))
                             selectedDuckIds.removeAll()
@@ -310,24 +356,18 @@ struct FusionView: View {
                         Image(systemName: "wand.and.stars")
                         Text(tr("FUSIONNER"))
                     }
-                    .font(.headline)
-                    .bold()
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        selectedDuckIds.count == 3 && gameManager.money >= fusionCost
-                        ? LinearGradient(colors: [.purple, .blue], startPoint: .leading, endPoint: .trailing)
-                        : LinearGradient(colors: [.gray], startPoint: .leading, endPoint: .trailing)
-                    )
-                    .foregroundColor(.white)
-                    .cornerRadius(15)
-                    .shadow(radius: selectedDuckIds.count == 3 && gameManager.money >= fusionCost ? 5 : 0)
                 }
-                .disabled(selectedDuckIds.count < 3 || gameManager.money < fusionCost)
+                .neonButton(Neon.purple)
+                .opacity(canFuse ? 1.0 : 0.45)
+                .disabled(!canFuse)
             }
             .padding()
-            .background(Color(.systemBackground).shadow(radius: 2))
+            .background(.ultraThinMaterial)
+            .overlay(alignment: .top) {
+                Rectangle().fill(Neon.green.opacity(0.25)).frame(height: 1)
+            }
         }
+        .background(NeonBackground(accent: Neon.green))
         .overlay {
             if let data = animationData {
                 FusionAnimationView(ducksToAnimate: data, resultingDuck: animationResultDuck) {
@@ -344,8 +384,16 @@ struct FusionView: View {
         .onChange(of: sortOption) { _, _ in
             updateDisplayInventory()
         }
+        // L'Auto-Ouvrier fait varier inventory.count en permanence : la version lourde
+        // (vidage de la liste + spinner + re-tri complet) était relancée à chaque canard généré.
+        // La variante silencieuse affiche exactement le même contenu sans passer par l'écran
+        // de chargement ni perdre les pages déjà chargées.
         .onChange(of: gameManager.inventory.count) { _, _ in
-            updateDisplayInventory()
+            if displayInventory.isEmpty {
+                updateDisplayInventory()
+            } else {
+                silentUpdateDisplayInventory()
+            }
         }
         .sheet(isPresented: $showingBulkFusion) {
             BulkFusionSheet()
@@ -355,6 +403,7 @@ struct FusionView: View {
             InventorySummaryView()
                 .environment(gameManager)
         }
+        .preferredColorScheme(.dark)
     }
-    
+
 }

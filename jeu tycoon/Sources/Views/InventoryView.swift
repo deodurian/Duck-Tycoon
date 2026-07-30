@@ -66,18 +66,25 @@ struct DuckGridCard: View {
     let displayValue: String
     let isAssigned: Bool
     let dynamicLevel: Int
-    
+
+    @State private var unstablePulse = false
+
+    /// Les canards Mythiques et Primordiaux "vibrent" d'énergie instable.
+    private var isUnstable: Bool {
+        duck.rarity == .mythique || duck.rarity == .primordiale
+    }
+
     var body: some View {
         VStack(spacing: 2) {
             Image(duck.rarity.imageName)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 25, height: 25)
-            
+
             Text("Lv.\(dynamicLevel)")
                 .font(.system(size: 7, weight: .bold))
                 .foregroundColor(.white.opacity(0.9))
-            
+
             Text("\(displayValue) 💰")
                 .font(.system(size: 7, weight: .black))
                 .foregroundColor(.yellow)
@@ -90,6 +97,8 @@ struct DuckGridCard: View {
                 .fill(rarityColor.opacity(0.3))
         )
         .fusionBorder(level: duck.fusionLevel, rarityColor: rarityColor)
+        .shadow(color: isUnstable ? rarityColor.opacity(unstablePulse ? 0.9 : 0.25) : .clear,
+                radius: isUnstable ? (unstablePulse ? 9 : 3) : 0)
         .ritualBadge(count: duck.ritualSuccesses)
         .overlay(alignment: .topTrailing) {
             if isAssigned {
@@ -100,6 +109,13 @@ struct DuckGridCard: View {
                     .background(Color.blue)
                     .clipShape(Circle())
                     .offset(x: 5, y: -5)
+            }
+        }
+        .onAppear {
+            if isUnstable {
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                    unstablePulse = true
+                }
             }
         }
     }
@@ -124,6 +140,7 @@ struct InventoryView: View {
     @State private var showingFusionLab = false
     @State private var showingSummary = false
     @State private var showStatsInfo = false
+    @State private var showingCollection = false
     
     // Chemin de navigation
     @Binding var navPath: NavigationPath
@@ -140,10 +157,17 @@ struct InventoryView: View {
     
     private func processDucks(_ ducks: [Duck], gm: GameManager) -> [(duck: Duck, displayValue: String, isAssigned: Bool, dynamicLevel: Int)] {
         let assignedIds = Set(gm.factories.flatMap { $0.assignedDuckIds })
+        // Les trois multiplicateurs globaux ne dépendent pas du canard, mais `displaySellValue(for:)`
+        // les relisait pour CHACUN des 100 à plusieurs milliers de canards traités ici (chacun prend
+        // le verrou NSLock de RemoteConfig + des hachages de String). Même valeur affichée, calculée
+        // une fois pour toute la page.
+        let earningsMult = gm.earningsMultiplier
+        let perkPower = gm.perkPowerMultiplier
+        let collectionBonus = gm.collectionDuckBonusMultiplier
         return ducks.map { duck in
             let dynamicStats = gm.getDynamicStats(for: duck)
             return (duck: duck,
-             displayValue: gm.displaySellValue(for: duck).formattedString(),
+             displayValue: gm.displaySellValue(for: duck, earningsMult: earningsMult, perkPower: perkPower, collectionBonus: collectionBonus).formattedString(),
              isAssigned: assignedIds.contains(duck.id),
              dynamicLevel: dynamicStats.level)
         }
@@ -206,13 +230,23 @@ struct InventoryView: View {
             HStack {
                         Text(tr("Inventaire"))
                             .font(.largeTitle.bold())
-                        
+                            .neonTitle(Neon.cyan)
+
                         Button(action: { showStatsInfo = true }) {
                             Image(systemName: "info.circle")
                                 .font(.title2)
                                 .foregroundColor(.blue)
                         }
                         Spacer()
+
+                        // Compendium (Collection)
+                        Button(action: { showingCollection = true }) {
+                            Text("📘")
+                                .font(.title2)
+                                .padding(6)
+                                .background(Color.blue.opacity(0.2))
+                                .clipShape(Circle())
+                        }
                     }
                     .padding()
                 
@@ -376,12 +410,18 @@ struct InventoryView: View {
                 InventorySummaryView()
                     .environment(gameManager)
             }
+            .sheet(isPresented: $showingCollection) {
+                CollectionView()
+                    .environment(gameManager)
+                    .onAppear { gameManager.hasUnseenCollectionDuck = false }
+            }
         }
-        .alert(tr("Niveaux, Mutations & Tailles"), isPresented: $showStatsInfo) {
-            Button(tr("Compris"), role: .cancel) {}
-        } message: {
-            Text(tr("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3"))
-        }
+        .infoPopup(
+            isPresented: $showStatsInfo,
+            title: tr("Niveaux, Mutations & Tailles"),
+            message: tr("Niveau :\nChaque niveau augmente les revenus générés par le canard de 1%.\n\nMutations :\n- Doré : Revenus x5 / Recyclage x2\n- Radioactif : Revenus x15 / Recyclage x3\n- Cristallisé : Revenus x50 / Recyclage x5\n\nTailles :\n- Moyen : Revenus x1.5 / Recyclage x1.5\n- Grand : Revenus x2.5 / Recyclage x2\n- Géant : Revenus x5 / Recyclage x3"),
+            accent: Neon.cyan
+        )
         .onChange(of: selectedTab) { oldValue, newValue in
             if newValue != 2 {
                 navPath = NavigationPath()

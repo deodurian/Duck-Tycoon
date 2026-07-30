@@ -136,11 +136,6 @@ struct BonusCard: View {
         }
         .padding(10)
         .frame(height: 120)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(currentLevel > 0 ? rarityColor.opacity(0.15) : Color.clear, lineWidth: 1)
-        )
+        .neonPanel(color: rarityColor, cornerRadius: 14)
     }
 }

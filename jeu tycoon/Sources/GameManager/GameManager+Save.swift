@@ -7,108 +7,159 @@ extension GameManager {
         let url = saveFileURL()
         let backupUrl = url.appendingPathExtension("bak")
         
-        var dataToLoad: Data? = nil
-        
+        // CE QUI COÛTAIT : le fichier principal était décodé DEUX fois — une première fois « pour
+        // tester » qu'il n'était pas corrompu, puis une seconde fois pour de bon. Sur une partie
+        // avancée c'est un décodage JSON complet (inventaire + usines + perks, plusieurs Mo) payé
+        // intégralement pour rien au lancement, sur le thread principal.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : on conserve simplement le résultat de la première
+        // tentative. Les règles de repli sont inchangées (fichier principal, puis .bak, puis
+        // abandon silencieux), le décodage est déterministe, et aucune propriété n'est écrite tant
+        // qu'un état n'a pas été décodé avec succès — exactement comme avant.
+        let decoder = JSONDecoder()
+        var decodedState: GameState? = nil
+
         if FileManager.default.fileExists(atPath: url.path) {
             do {
-                dataToLoad = try Data(contentsOf: url)
-                // Test decode to ensure it's not corrupted
-                _ = try JSONDecoder().decode(GameState.self, from: dataToLoad!)
+                let data = try Data(contentsOf: url)
+                decodedState = try decoder.decode(GameState.self, from: data)
             } catch {
-                dataToLoad = nil
+                decodedState = nil
             }
         }
-        
-        if dataToLoad == nil && FileManager.default.fileExists(atPath: backupUrl.path) {
+
+        if decodedState == nil && FileManager.default.fileExists(atPath: backupUrl.path) {
             do {
-                dataToLoad = try Data(contentsOf: backupUrl)
+                let data = try Data(contentsOf: backupUrl)
+                decodedState = try decoder.decode(GameState.self, from: data)
             } catch {
                 // Silently ignore corrupted backup
             }
         }
-        
-        guard let data = dataToLoad else { return }
-        
-        do {
-            let loadedState = try JSONDecoder().decode(GameState.self, from: data)
-            
-            money = loadedState.money
-            mutationPoints = loadedState.mutationPoints
-            inventory = loadedState.inventory
-            factories = loadedState.factories
-            lastSaveDate = loadedState.lastSaveDate
-            purchasedUpgrades = loadedState.purchasedUpgrades
-            upgradeLevels = loadedState.upgradeLevels
-            autoCrateTargetId = loadedState.autoCrateTargetId
-            autoFactoryLevels = loadedState.autoFactoryLevels
 
-            // Migration pour les étoiles
-            currentStars = loadedState.currentStars
-            totalStars = loadedState.totalStars
-            spentStars = loadedState.spentStars
-            unspentStars = loadedState.unspentStars
-            purchasedPrestigeUpgrades = loadedState.purchasedPrestigeUpgrades
+        guard let loadedState = decodedState else { return }
 
-            gems = loadedState.gems
+        // (Plus de `do/catch` ici : le décodage — seule opération qui pouvait échouer — a déjà eu
+        // lieu au-dessus. Les affectations ci-dessous sont exactement les mêmes, dans le même ordre.)
+        money = loadedState.money
+        mutationPoints = loadedState.mutationPoints
+        inventory = loadedState.inventory
+        factories = loadedState.factories
+        lastSaveDate = loadedState.lastSaveDate
+        purchasedUpgrades = loadedState.purchasedUpgrades
+        upgradeLevels = loadedState.upgradeLevels
+        autoCrateTargetId = loadedState.autoCrateTargetId
+        autoFactoryLevels = loadedState.autoFactoryLevels
 
-            playerLevel = loadedState.playerLevel
-            playerXP = loadedState.playerXP
-            missions = loadedState.missions
-            perksInventory = loadedState.perksInventory
+        // Migration pour les étoiles
+        currentStars = loadedState.currentStars
+        totalStars = loadedState.totalStars
+        spentStars = loadedState.spentStars
+        unspentStars = loadedState.unspentStars
+        purchasedPrestigeUpgrades = loadedState.purchasedPrestigeUpgrades
 
-            currentStoryStep = loadedState.currentStoryStep
-            isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
-            storyFlags = loadedState.storyFlags
+        gems = loadedState.gems
 
-            // Statistiques cumulées (nécessaires aux quêtes secondaires)
-            totalRecycledDucks = loadedState.totalRecycledDucks
-            totalFusionsDone = loadedState.totalFusionsDone
-            totalMaxedRepeatableUpgrades = loadedState.totalMaxedRepeatableUpgrades
+        starsInEnergy = loadedState.starsInEnergy
+        starsInMutagen = loadedState.starsInMutagen
+        starsInOptimization = loadedState.starsInOptimization
+        reactorCooldownEndTime = loadedState.reactorCooldownEndTime
 
-            // Quêtes Secondaires
-            totalDucksFromCrates = loadedState.totalDucksFromCrates
-            claimedSideQuestIds = loadedState.claimedSideQuestIds
+        playerLevel = loadedState.playerLevel
+        playerXP = loadedState.playerXP
+        missions = loadedState.missions
+        perksInventory = loadedState.perksInventory
+        migrateRemovedPerks()
+        invalidatePerkCache()
 
-            // Migration V2 : insertion de l'étape « Auto-Fusion » avant l'Anomalie.
-            // Les sauvegardes arrivées à l'Anomalie (>= 6) sont décalées d'un cran.
-            if loadedState.storyVersion < 2 && currentStoryStep >= 6 {
-                currentStoryStep += 1
-            }
-            storyVersion = 2
-            
-            // Ads
-            adBoostMultiplier = loadedState.adBoostMultiplier
-            adBoostEndTime = loadedState.adBoostEndTime
-            nextMysteryCrateDate = loadedState.nextMysteryCrateDate
-            dailyAdGemsCount = loadedState.dailyAdGemsCount
-            lastAdGemsDate = loadedState.lastAdGemsDate
+        currentStoryStep = loadedState.currentStoryStep
+        isStoryQuestReadyToClaim = loadedState.isStoryQuestReadyToClaim
+        storyFlags = loadedState.storyFlags
 
-            invalidateEarningsCache()
-            calculateOfflineEarnings()
-            evaluateAffordableCrates(reset: true)
-        } catch {
-            // Silently ignore corrupted file or missing state
+        // Statistiques cumulées (nécessaires aux quêtes secondaires)
+        totalRecycledDucks = loadedState.totalRecycledDucks
+        totalFusionsDone = loadedState.totalFusionsDone
+        totalMaxedRepeatableUpgrades = loadedState.totalMaxedRepeatableUpgrades
+
+        // Quêtes Secondaires
+        totalDucksFromCrates = loadedState.totalDucksFromCrates
+        claimedSideQuestIds = loadedState.claimedSideQuestIds
+
+        // Migration V2 : insertion de l'étape « Auto-Fusion » avant l'Anomalie.
+        // Les sauvegardes arrivées à l'Anomalie (>= 6) sont décalées d'un cran.
+        if loadedState.storyVersion < 2 && currentStoryStep >= 6 {
+            currentStoryStep += 1
         }
+        storyVersion = 2
+
+        // Ads
+        adBoostMultiplier = loadedState.adBoostMultiplier
+        adBoostEndTime = loadedState.adBoostEndTime
+        nextMysteryCrateDate = loadedState.nextMysteryCrateDate
+        dailyAdGemsCount = loadedState.dailyAdGemsCount
+        lastAdGemsDate = loadedState.lastAdGemsDate
+
+        // Collection (Compendium)
+        unlockedDucks = loadedState.unlockedDucks
+        discoveredPerks = loadedState.discoveredPerks
+        claimedRarityCollections = loadedState.claimedRarityCollections
+        claimedAllDucksCollection = loadedState.claimedAllDucksCollection
+        claimedAllPerksCollection = loadedState.claimedAllPerksCollection
+
+        invalidateEarningsCache()
+        calculateOfflineEarnings()
+        evaluateAffordableCrates(reset: true)
     }
     
-    private func calculateOfflineEarnings() {
-        let secondsOffline = Date().timeIntervalSince(lastSaveDate)
-        guard secondsOffline > 60 else { return } // On ignore si c'est moins d'une minute
-        
+    /// Taux passifs par seconde (argent et ADN) générés par les usines avec canards assignés.
+    /// Utilisé pour les gains hors-ligne et le time travel du mode développeur.
+    func computePassiveRates() -> (earningsPerSecond: BigNumber, mutationsPerSecond: BigNumber) {
         var earningsPerSecond: BigNumber = .zero
         var mutationsPerSecond: BigNumber = .zero
-        
+
+        // CE QUI COÛTAIT (temps de lancement pur, sur le thread principal) :
+        // - `inventory.first { $0.id == id }` refaisait un scan linéaire de TOUT l'inventaire pour
+        //   chaque canard assigné → O(usines × canards assignés × inventaire) alors qu'un index
+        //   canard-assigné existe déjà (`getAssignedDuck(id:)`, reconstruit une seule fois) ;
+        // - `perksInventory.first { ... }` refaisait un scan linéaire de l'inventaire de perks
+        //   alors que l'index O(1) `perks(for:)` existe ;
+        // - `perkPowerMultiplier` et `mutationMultiplier` étaient réévalués à chaque usine (chacun
+        //   prend le NSLock de RemoteConfig), et `earningsMultiplier` à chaque canard via
+        //   `displaySellValue`.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : ce sont les mêmes canards, résolus dans le même ordre
+        // (compactMap sur `assignedDuckIds`, ids introuvables ignorés de la même façon), les mêmes
+        // perks, et des multiplicateurs globaux invariants sur toute la passe. C'est exactement la
+        // source de données qu'utilise déjà la boucle de jeu (`tick`).
+        let ppm = perkPowerMultiplier
+        let earningsMult = earningsMultiplier
+        let collectionBonus = collectionDuckBonusMultiplier
+        let mutMult = mutationMultiplier
+
         for factory in factories {
             if !factory.assignedDuckIds.isEmpty {
-                let ducks = factory.assignedDuckIds.compactMap { id in inventory.first { $0.id == id } }
-                let displayValues = ducks.map { displaySellValue(for: $0) }
-                let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-                
-                earningsPerSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, perkPowerFactor: perkPowerMultiplier)
-                mutationsPerSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier, factoryPerks: factoryPerks)
+                let ducks = factory.assignedDuckIds.compactMap { getAssignedDuck(id: $0) }
+                let displayValues = ducks.map {
+                    displaySellValue(for: $0, earningsMult: earningsMult, perkPower: ppm, collectionBonus: collectionBonus)
+                }
+                let factoryPerks = perks(for: factory.equippedPerkIds)
+
+                earningsPerSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, perkPowerFactor: ppm)
+                mutationsPerSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutMult, factoryPerks: factoryPerks)
             }
         }
-        
+        return (earningsPerSecond, mutationsPerSecond)
+    }
+
+    private func calculateOfflineEarnings() {
+        let rawSecondsOffline = Date().timeIntervalSince(lastSaveDate)
+        guard rawSecondsOffline > 60 else { return } // On ignore si c'est moins d'une minute
+
+        // Plafond de cumul des gains hors-ligne (pilotable à distance, 12 h par défaut).
+        // max(0) : une valeur négative (mauvaise config) donnerait des gains négatifs.
+        let maxHours = max(0.0, RemoteConfigManager.shared.getDouble(RCKey.offlineEarningsMaxHours))
+        let secondsOffline = min(rawSecondsOffline, maxHours * 3600.0)
+
+        let (earningsPerSecond, mutationsPerSecond) = computePassiveRates()
+
         let totalOfflineEarnings = earningsPerSecond * secondsOffline
         let totalOfflineMutations = mutationsPerSecond * secondsOffline
         
@@ -143,9 +194,50 @@ extension GameManager {
         saveGame()
     }
     
-    private func saveFileURL() -> URL {
+    /// Remplace les perks des familles retirées du jeu (Chance de Capsule, Ascension) par un perk
+    /// aléatoire du même type et de la même rareté.
+    /// L'UUID est CONSERVÉ : un perk déjà équipé sur un canard ou une usine le reste.
+    func migrateRemovedPerks() {
+        let removedFamilies: Set<PerkFamily> = [.crateLuck, .rarityUpgrade]
+        var didMigrate = false
+
+        for (index, perk) in perksInventory.enumerated() where removedFamilies.contains(perk.family) {
+            let replacement = Perk.rollRandom(type: perk.type, forcedRarity: perk.rarity)
+            perksInventory[index] = Perk(
+                id: perk.id,
+                type: perk.type,
+                rarity: perk.rarity,
+                family: replacement.family,
+                target: replacement.target
+            )
+            registerPerkDiscovery(perksInventory[index])
+            didMigrate = true
+        }
+
+        if didMigrate {
+            invalidatePerkCache()
+            invalidateEarningsCache()
+        }
+    }
+
+    /// URL du fichier de sauvegarde, résolue UNE seule fois.
+    ///
+    /// CE QUI COÛTAIT : `FileManager.default.urls(for:in:)` interroge NSFileManager et alloue un
+    /// tableau d'URL à chaque appel, suivi d'un `appendingPathComponent` (nouvelle URL). C'était
+    /// payé sur le thread principal à chaque `saveGame()` — appelé depuis une soixantaine
+    /// d'endroits, dont plusieurs sur le chemin du tick — alors que le dossier Documents ne change
+    /// jamais pendant la vie du processus.
+    ///
+    /// POURQUOI LE RENDU RESTE IDENTIQUE : c'est rigoureusement la même URL, produite par le même
+    /// code, simplement mémorisée. Le fichier écrit, son chemin, le moment des sauvegardes et leur
+    /// contenu sont inchangés.
+    private static let cachedSaveFileURL: URL = {
         let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return urls[0].appendingPathComponent("CanardFactorySave.json")
+    }()
+
+    private func saveFileURL() -> URL {
+        GameManager.cachedSaveFileURL
     }
     
 
@@ -161,7 +253,7 @@ extension GameManager {
         var snapshot = self.state
         let url = saveFileURL()
 
-        let workItem = DispatchWorkItem {
+        let workItem = DispatchWorkItem { [weak self] in
             snapshot.lastSaveDate = Date() // heure réelle de sauvegarde (pour les gains hors-ligne)
             do {
                 let data = try JSONEncoder().encode(snapshot)
@@ -174,14 +266,30 @@ extension GameManager {
             } catch {
                 // Silently handle save error
             }
+            DispatchQueue.main.async { self?.lastDiskWriteDate = Date() }
         }
         saveWorkItem = workItem
         if sync {
             workItem.perform()
+            lastDiskWriteDate = Date()
         } else {
-            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 0.5, execute: workItem)
+            // Coalescence des écritures.
+            //
+            // `saveGame()` est appelé depuis ~60 endroits, dont plusieurs sur le chemin du tick
+            // (montée de niveau, missions validées, automatisation…). Chaque appel ré-encodait
+            // TOUT l'état en JSON (jusqu'à plusieurs Mo sur une grosse partie) et recopiait le
+            // fichier de sauvegarde : sur une partie avancée, l'encodeur tournait quasiment sans
+            // interruption. On garantit maintenant une fenêtre minimale entre deux écritures
+            // réelles ; les appels intermédiaires ne font que remplacer l'instantané en attente.
+            // Les sauvegardes critiques (passage en arrière-plan) passent par `sync: true`.
+            let elapsed = Date().timeIntervalSince(lastDiskWriteDate)
+            let delay = min(Self.minimumSaveInterval, max(0.5, Self.minimumSaveInterval - elapsed))
+            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + delay, execute: workItem)
         }
     }
+
+    /// Fenêtre minimale entre deux écritures disque (hors sauvegarde synchrone).
+    static var minimumSaveInterval: TimeInterval { 8.0 }
     
     func resetProgression() {
         let defaultState = GameState()
@@ -206,14 +314,20 @@ extension GameManager {
         spentStars = defaultState.spentStars
         unspentStars = defaultState.unspentStars
         purchasedPrestigeUpgrades = defaultState.purchasedPrestigeUpgrades
-        
+
         gems = defaultState.gems
+
+        starsInEnergy = defaultState.starsInEnergy
+        starsInMutagen = defaultState.starsInMutagen
+        starsInOptimization = defaultState.starsInOptimization
+        reactorCooldownEndTime = defaultState.reactorCooldownEndTime
         
         playerLevel = defaultState.playerLevel
         playerXP = defaultState.playerXP
         missions = defaultState.missions
         perksInventory = defaultState.perksInventory
-        
+        invalidatePerkCache()
+
         currentStoryStep = defaultState.currentStoryStep
         isStoryQuestReadyToClaim = defaultState.isStoryQuestReadyToClaim
         storyFlags = defaultState.storyFlags
@@ -227,6 +341,13 @@ extension GameManager {
         nextMysteryCrateDate = defaultState.nextMysteryCrateDate
         dailyAdGemsCount = defaultState.dailyAdGemsCount
         lastAdGemsDate = defaultState.lastAdGemsDate
+
+        unlockedDucks = defaultState.unlockedDucks
+        discoveredPerks = defaultState.discoveredPerks
+        claimedRarityCollections = defaultState.claimedRarityCollections
+        claimedAllDucksCollection = defaultState.claimedAllDucksCollection
+        claimedAllPerksCollection = defaultState.claimedAllPerksCollection
+        syncCollectionWithCurrentState()
 
         lastSaveDate = Date()
         pendingOfflineEarnings = nil

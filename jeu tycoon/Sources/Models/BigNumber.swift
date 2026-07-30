@@ -126,10 +126,27 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
         return mantissa * Foundation.pow(10.0, Double(exponent))
     }
     
-    nonisolated func formattedString() -> String {
+    /// Style de formatage mis en cache.
+    ///
+    /// `formattedString()` est appelé des milliers de fois par seconde par l'interface (chaque prix,
+    /// chaque compteur, chaque cellule de liste) et lisait `UserDefaults` à CHAQUE appel : verrou,
+    /// pont NSString→String et allocation. Le réglage ne changeant que depuis les Paramètres,
+    /// on le lit une fois et on le rafraîchit explicitement via `refreshFormatStyle()`.
+    nonisolated(unsafe) static var cachedFormatStyle: NumberFormatStyle = readFormatStyleFromDefaults()
+
+    nonisolated static func readFormatStyleFromDefaults() -> NumberFormatStyle {
         let styleString = UserDefaults.standard.string(forKey: "numberFormatStyle") ?? NumberFormatStyle.scientific.rawValue
-        let style = NumberFormatStyle(rawValue: styleString) ?? .scientific
-        
+        return NumberFormatStyle(rawValue: styleString) ?? .scientific
+    }
+
+    /// À appeler quand le joueur change le format des nombres dans les Paramètres.
+    nonisolated static func refreshFormatStyle() {
+        cachedFormatStyle = readFormatStyleFromDefaults()
+    }
+
+    nonisolated func formattedString() -> String {
+        let style = BigNumber.cachedFormatStyle
+
         if isZero { return "0" }
         if exponent >= 10_000_000_000 { return isNegative ? "-inf" : "inf" }
         
@@ -155,18 +172,21 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
         }
     }
     
+    /// Suffixes par tranche de 3 zéros, partagés par l'affichage normal et les compteurs animés.
+    nonisolated fileprivate static let suffixArray = [
+        "k", "M", "Md", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No",
+        "Dc", "UDc", "DDc", "TDc", "QaDc", "QiDc", "SxDc", "SpDc", "OcDc", "NoDc",
+        "Vg", "UVg", "DVg", "TVg", "QaVg", "QiVg", "SxVg", "SpVg", "OcVg", "NoVg",
+        "Tg", "UTg", "DTg"
+    ]
+
     nonisolated private func formatWithSuffixes(absMantissa: Double, absExponent: Int, isNegative: Bool) -> String {
-        let suffixArray = [
-            "k", "M", "Md", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No",
-            "Dc", "UDc", "DDc", "TDc", "QaDc", "QiDc", "SxDc", "SpDc", "OcDc", "NoDc",
-            "Vg", "UVg", "DVg", "TVg", "QaVg", "QiVg", "SxVg", "SpVg", "OcVg", "NoVg",
-            "Tg", "UTg", "DTg"
-        ]
-        
+        let suffixArray = Self.suffixArray
+
         let order = absExponent / 3  // Which group of 3 zeros
         let index = order - 1
         let prefix = isNegative ? "-" : ""
-        
+
         if index >= 0 && index < suffixArray.count {
             let remainder = absExponent % 3
             let displayValue = absMantissa * Foundation.pow(10.0, Double(remainder))
@@ -184,6 +204,46 @@ struct BigNumber: Codable, Equatable, Hashable, Sendable {
     nonisolated private func formatScientific(absMantissa: Double, absExponent: Int, isNegative: Bool) -> String {
         let prefix = isNegative ? "-" : ""
         return "\(prefix)\(String(format: "%.2f", absMantissa))e\(absExponent)"
+    }
+
+    /// Étape d'un compteur qui défile vers ce montant (écran de retour en ligne).
+    ///
+    /// `progress` est la fraction affichée : 0 → 1 pendant le décompte, et jusqu'à 2 quand on
+    /// anime un ×2. L'unité (k, M, e42…) et le nombre de décimales sont **verrouillés sur le
+    /// montant final** : les chiffres roulent sans que le suffixe ni la largeur ne sautent
+    /// d'une image à l'autre. À `progress == 1`, le rendu est exactement `formattedString()`.
+    nonisolated func countingString(progress: Double) -> String {
+        let p = max(0.0, progress)
+        if p == 1.0 { return formattedString() }
+        if isZero { return "0" }
+        if exponent >= 10_000_000_000 { return isNegative ? "-inf" : "inf" }
+
+        let style = BigNumber.cachedFormatStyle
+
+        let prefix = isNegative ? "-" : ""
+        let finalMantissa = abs(mantissa)
+        let currentMantissa = finalMantissa * p
+
+        // Petits montants (< 1000) : valeur brute, comme formattedString().
+        if exponent < 3 {
+            let scale = Foundation.pow(10.0, Double(exponent))
+            let decimals = (finalMantissa * scale) < 1.0 ? 2 : 0
+            return "\(prefix)\(String(format: "%.\(decimals)f", currentMantissa * scale))"
+        }
+
+        switch style {
+        case .scientific:
+            return "\(prefix)\(String(format: "%.2f", currentMantissa))e\(exponent)"
+        case .suffixes:
+            let index = exponent / 3 - 1
+            guard index >= 0, index < Self.suffixArray.count else {
+                return "\(prefix)\(String(format: "%.2f", currentMantissa))e\(exponent)"
+            }
+            let scale = Foundation.pow(10.0, Double(exponent % 3))
+            let finalDisplay = finalMantissa * scale
+            let decimals = floor(finalDisplay) == finalDisplay ? 0 : 1
+            return "\(prefix)\(String(format: "%.\(decimals)f", currentMantissa * scale))\(Self.suffixArray[index])"
+        }
     }
 }
 

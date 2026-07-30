@@ -10,16 +10,23 @@ struct PerkSheetView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                NeonBackground()
 
                 VStack(spacing: 0) {
-                    let factoryPerksCount = gameManager.perksInventory.filter { $0.type == .factory }.count
-                    let duckPerksCount = gameManager.perksInventory.filter { $0.type == .duck }.count
+                    // perksInventory était filtré TROIS fois (compteur usines, compteur canards,
+                    // puis la liste elle-même) : deux passes suffisent, les tableaux obtenus sont
+                    // les mêmes et dans le même ordre.
+                    let factoryPerks = gameManager.perksInventory.filter { $0.type == .factory }
+                    let duckPerks = gameManager.perksInventory.filter { $0.type == .duck }
+                    let factoryPerksCount = factoryPerks.count
+                    let duckPerksCount = duckPerks.count
+
+                    // Le badge « ÉQUIPÉ » de chaque carte déclenchait un balayage complet de
+                    // l'inventaire (jusqu'à 10 000 canards), et deux fois par carte affichée.
+                    // On construit l'ensemble des perks équipés une seule fois pour toute la liste :
+                    // `contains` sur ce Set donne exactement le même booléen.
+                    let allEquippedPerkIds: Set<UUID> = Set(gameManager.factories.flatMap { $0.equippedPerkIds })
+                        .union(gameManager.inventory.flatMap { $0.equippedPerkIds })
 
                     // Sélecteur de type
                     HStack(spacing: 8) {
@@ -47,10 +54,9 @@ struct PerkSheetView: View {
 
                     ScrollView {
                         LazyVStack(spacing: 12) {
-                            let typeFilter: PerkType = selectedTab == 0 ? .factory : .duck
-                            let filteredPerks = gameManager.perksInventory.filter { $0.type == typeFilter }
+                            let filteredPerks = selectedTab == 0 ? factoryPerks : duckPerks
                             ForEach(filteredPerks) { perk in
-                                PerkCardView(perk: perk, showRecycle: true)
+                                PerkCardView(perk: perk, showRecycle: true, allEquippedPerkIds: allEquippedPerkIds)
                             }
                             if filteredPerks.isEmpty {
                                 VStack(spacing: 12) {
@@ -69,6 +75,8 @@ struct PerkSheetView: View {
             }
             .navigationTitle("\(tr("Inventaire de Perks")) (\(gameManager.perksInventory.count))")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .preferredColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showInfo = true }) {
@@ -78,13 +86,15 @@ struct PerkSheetView: View {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(tr("Fermer")) { dismiss() }
+                        .foregroundColor(.cyan)
                 }
             }
-            .alert(tr("Que sont les Perks ?"), isPresented: $showInfo) {
-                Button(tr("Compris"), role: .cancel) { }
-            } message: {
-                Text(tr("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"))
-            }
+            .infoPopup(
+                isPresented: $showInfo,
+                title: tr("Que sont les Perks ?"),
+                message: tr("Les Perks sont des bonus d'équipement que vous gagnez via les missions et les passages de niveaux. Vous pouvez équiper un Perk d'Usine sur une usine (dans le menu Usines) ou un Perk de Canard sur un canard (dans son profil détaillé) pour augmenter sa rentabilité !"),
+                accent: Neon.purple
+            )
         }
     }
 }
@@ -132,11 +142,16 @@ private struct PerkTypeTabButton: View {
 struct PerkCardView: View {
     let perk: Perk
     var showRecycle: Bool = false
+    /// Ensemble des ids de perks équipés (usines + canards), calculé UNE seule fois par la liste
+    /// parente. Sans lui, chaque carte refaisait un `inventory.contains(where:)` sur tout
+    /// l'inventaire, plusieurs fois par ligne. `nil` = repli sur l'ancien calcul, résultat identique.
+    var allEquippedPerkIds: Set<UUID>? = nil
 
     @Environment(GameManager.self) private var gameManager
     @State private var showingRecycleAlert = false
 
     var isEquipped: Bool {
+        if let ids = allEquippedPerkIds { return ids.contains(perk.id) }
         if gameManager.factories.contains(where: { $0.equippedPerkIds.contains(perk.id) }) { return true }
         if gameManager.inventory.contains(where: { $0.equippedPerkIds.contains(perk.id) }) { return true }
         return false
@@ -165,6 +180,10 @@ struct PerkCardView: View {
     }
 
     var body: some View {
+        // `isEquipped` était évalué deux fois par carte (badge + bouton recycler) : une seule
+        // évaluation ici, la valeur est la même pour les deux usages.
+        let equipped = isEquipped
+
         HStack(alignment: .top, spacing: 12) {
             // Icône du type dans un halo aux couleurs de la rareté
             ZStack {
@@ -185,7 +204,7 @@ struct PerkCardView: View {
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
 
-                    if isEquipped {
+                    if equipped {
                         HStack(spacing: 2) {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 8, weight: .black))
@@ -216,7 +235,7 @@ struct PerkCardView: View {
                     .background(Capsule().fill(perk.rarity.color.opacity(0.15)))
                     .overlay(Capsule().stroke(perk.rarity.color.opacity(0.4), lineWidth: 1))
 
-                if showRecycle && !isEquipped {
+                if showRecycle && !equipped {
                     Button(action: { showingRecycleAlert = true }) {
                         Image(systemName: "trash")
                             .font(.system(size: 12))

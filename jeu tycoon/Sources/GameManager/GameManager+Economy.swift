@@ -1,71 +1,68 @@
 import SwiftUI
 
 extension GameManager {
-    /// Seuil d'argent requis pour le premier prestige (0 étoile). Centralisé pour éviter la duplication.
-    static let firstPrestigeThreshold = BigNumber(1_000_000_000_000.0)
+    /// Seuil d'argent requis pour le premier prestige (0 étoile). Pilotable via Remote Config.
+    /// Plancher à 1 : un seuil nul provoquerait une division par zéro dans `calculatePrestigeStars`.
+    static var firstPrestigeThreshold: BigNumber {
+        BigNumber(max(1.0, RemoteConfigManager.shared.getDouble(RCKey.prestigeStarCostBase)))
+    }
+
+    /// Capsules visibles en boutique : les capsules standard + la Capsule Secrète une fois la collection complète réclamée
+    ///
+    /// CE QUI COÛTAIT : la variante `var crates = Crate.allCrates` + `append` réallouait un tableau
+    /// complet à chaque lecture dès que la Capsule Secrète était débloquée — et cette propriété est
+    /// lue à chaque tick par `evaluateAffordableCrates` ainsi qu'à chaque `body` de la boutique.
+    /// POURQUOI LE RENDU RESTE IDENTIQUE : les deux tableaux pré-assemblés contiennent exactement
+    /// les mêmes capsules dans le même ordre que ce que produisait l'`append` (voir Crate.swift).
+    var availableCrates: [Crate] {
+        claimedAllDucksCollection ? Crate.allCratesWithSecret : Crate.allCrates
+    }
 
     // MARK: - Shop UI Optimization
     func evaluateAffordableCrates(reset: Bool) {
-        if reset {
-            affordableCrateKeys.removeAll()
-        }
-        
+        // On recalcule l'ensemble complet dans un Set local, puis on ne réaffecte la propriété
+        // @Observable que si le contenu change réellement → aucun re-render superflu des cartes
+        // boutique quand l'accessibilité n'a pas bougé (cas ultra-fréquent à chaque tick).
+        // (`reset` est conservé pour la compatibilité d'appel ; le rebuild complet le rend inutile.)
+        _ = reset
+
         let multiplierMulti = isUnlocked(.multipleOpenX10) ? 10 : 5
         let isMultipleUnlocked = isUnlocked(.multipleOpenX5) || isUnlocked(.multipleOpenX10)
         let isMultipleMaxUnlocked = isUnlocked(.multipleOpenMax)
-        
-        for crate in Crate.allCrates {
-            let type = crate.type.rawValue
-            
+
+        // Les clés sont désormais pré-calculées une fois pour toutes (voir `CrateAffordabilityKeys`
+        // dans Crate.swift) : cette boucle n'alloue plus jusqu'à 5 String par capsule et par
+        // seconde juste pour les jeter après l'`insert`. Les chaînes sont strictement les mêmes.
+        let crates = availableCrates
+        var newKeys = Set<String>()
+        newKeys.reserveCapacity(crates.count * 5)
+        for crate in crates {
+            let keys = crate.type.affordabilityKeys
+
             // 1x Money
             if let cost = crate.costMoney {
-                let key1 = "\(type)_money_1"
-                if money >= cost {
-                    affordableCrateKeys.insert(key1)
-                } else {
-                    affordableCrateKeys.remove(key1)
-                }
-                
-                // Multi Money
-                if isMultipleUnlocked, let multiCost = calculateCrateCostMoney(crate: crate, amount: multiplierMulti) {
-                    let keyM = "\(type)_money_multi"
-                    if money >= multiCost {
-                        affordableCrateKeys.insert(keyM)
-                    } else {
-                        affordableCrateKeys.remove(keyM)
-                    }
+                if money >= cost { newKeys.insert(keys.money1) }
+                if isMultipleUnlocked, let multiCost = calculateCrateCostMoney(crate: crate, amount: multiplierMulti), money >= multiCost {
+                    newKeys.insert(keys.moneyMulti)
                 }
             }
-            
+
             // 1x Mutation
             if let cost = crate.costMutationPoints {
-                let key1 = "\(type)_mutation_1"
-                if mutationPoints >= cost {
-                    affordableCrateKeys.insert(key1)
-                } else {
-                    affordableCrateKeys.remove(key1)
-                }
-                
-                // Multi Mutation
-                if isMultipleUnlocked, let multiCost = calculateCrateCostMutation(crate: crate, amount: multiplierMulti) {
-                    let keyM = "\(type)_mutation_multi"
-                    if mutationPoints >= multiCost {
-                        affordableCrateKeys.insert(keyM)
-                    } else {
-                        affordableCrateKeys.remove(keyM)
-                    }
+                if mutationPoints >= cost { newKeys.insert(keys.mutation1) }
+                if isMultipleUnlocked, let multiCost = calculateCrateCostMutation(crate: crate, amount: multiplierMulti), mutationPoints >= multiCost {
+                    newKeys.insert(keys.mutationMulti)
                 }
             }
-            
+
             // Multiple Max
-            if isMultipleMaxUnlocked {
-                let keyMax = "\(type)_max"
-                if maxAffordableCrates(crate: crate) >= 1 {
-                    affordableCrateKeys.insert(keyMax)
-                } else {
-                    affordableCrateKeys.remove(keyMax)
-                }
+            if isMultipleMaxUnlocked, maxAffordableCrates(crate: crate) >= 1 {
+                newKeys.insert(keys.maxKey)
             }
+        }
+
+        if newKeys != affordableCrateKeys {
+            affordableCrateKeys = newKeys
         }
     }
     
@@ -81,13 +78,16 @@ extension GameManager {
     
     var earningsMultiplier: BigNumber {
         let level = upgradeLevels[.bonusGlobal] ?? 0
-        let base = BigNumber(1.0 + Double(level) * 0.01)
-        let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.10)
-        let playerLevelBonus = BigNumber(PlayerLevelSystem.moneyMultiplier(for: playerLevel))
+        // Pool de base ADDITIF : bonus d'améliorations (ADN) + Réacteur Énergie (+10%/étoile).
+        // (Le bonus passif de totalStars est supprimé et remplacé par l'allocation du Réacteur.)
+        let base = BigNumber(1.0 + Double(level) * 0.01) + (starsInEnergy * 0.03)
+        let playerLevelBonus = PlayerLevelSystem.moneyMultiplierBig(for: playerLevel)
         let adBonus = BigNumber(currentAdMultiplier)
-        var total = base * prestigeBonus * playerLevelBonus * adBonus
+        // Multiplicateurs stricts conservés (niveau, pub, upgrades prestige).
+        var total = base * playerLevelBonus * adBonus
         if hasPrestigeUpgrade("p2_eco") { total *= 1.30 }
         if hasPrestigeUpgrade("p7_omnipotence") { total *= 11.0 } // +1000%
+        total *= max(0.0, RemoteConfigManager.shared.getDouble(RCKey.economyFactoryProdMult))
         return total
     }
 
@@ -96,6 +96,7 @@ extension GameManager {
         let level = upgradeLevels[.bonusPerkPower] ?? 0
         var multiplier = 1.0 + Double(level) * 0.02
         if hasPrestigeUpgrade("p6_perk_power") { multiplier += 0.30 }
+        multiplier *= RemoteConfigManager.shared.getDouble(RCKey.perkPowerMult)
         return multiplier
     }
 
@@ -104,22 +105,6 @@ extension GameManager {
         hasPrestigeUpgrade("p5_perk_slot") ? 2 : 1
     }
 
-    /// Bonus cumulé des perks "Chance de Caisse" équipés sur les canards actuellement assignés à une usine
-    var crateLuckBonus: Double {
-        var bonus = 0.0
-        for factory in factories {
-            for duckId in factory.assignedDuckIds {
-                guard let duck = inventory.first(where: { $0.id == duckId }) else { continue }
-                for perkId in duck.equippedPerkIds {
-                    if let perk = perksInventory.first(where: { $0.id == perkId }) {
-                        bonus += perk.duckCrateLuckBonus
-                    }
-                }
-            }
-        }
-        return bonus
-    }
-    
     func watchAdForBoost() {
         AdManager.shared.showRewardedAd(for: .factoryBoost) { [weak self] earned in
             guard let self = self, earned else { return }
@@ -154,9 +139,12 @@ extension GameManager {
                 // Donner un canard mythique
                 let duck = Duck(rarity: .mythique, size: DuckSize.allCases.randomElement()!, mutation: .aucune)
                 self.inventory.append(duck)
+                self.registerDuckDiscovery(duck)
                 
-                // Relancer le cooldown entre 30 min (1800s) et 1 heure (3600s)
-                self.nextMysteryCrateDate = Date().addingTimeInterval(Double.random(in: 1800...3600))
+                // Relancer le cooldown : base pilotable à distance, +0 à +100% de variation.
+                // Plancher à 1s : une valeur ≤ 0 (mauvaise config) donnerait une plage random invalide → crash.
+                let baseCooldown = max(1.0, RemoteConfigManager.shared.getDouble(RCKey.cooldownMysteryCrateSec))
+                self.nextMysteryCrateDate = Date().addingTimeInterval(Double.random(in: baseCooldown...(baseCooldown * 2)))
                 self.saveGame()
             }
         }
@@ -182,7 +170,7 @@ extension GameManager {
             guard let self = self, earned else { return }
             
             DispatchQueue.main.async {
-                self.gems += BigNumber(10)
+                self.gems += BigNumber(RemoteConfigManager.shared.getDouble(RCKey.rewardGemsDaily))
                 self.dailyAdGemsCount += 1
                 self.lastAdGemsDate = Date()
                 self.saveGame()
@@ -190,29 +178,28 @@ extension GameManager {
         }
     }
     
-    /// Multiplicateur de points de mutation + Prestige + PlayerLevel
+    /// Multiplicateur de points de mutation : pool de base ADDITIF (améliorations + Réacteur Mutagène +1%/étoile).
     var mutationMultiplier: BigNumber {
         let level = upgradeLevels[.bonusMutation] ?? 0
-        let base = BigNumber(1.0 + Double(level) * 0.02)
-        let prestigeBonus = BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.03)
+        let base = BigNumber(1.0 + Double(level) * 0.02) + (starsInMutagen * 0.01)
         let playerLevelBonus = BigNumber(PlayerLevelSystem.mutationMultiplier(for: playerLevel))
-        var total = base * prestigeBonus * playerLevelBonus
+        var total = base * playerLevelBonus
         if hasPrestigeUpgrade("p4_adn") { total *= 3.0 } // +200%
         if hasPrestigeUpgrade("p5_adn2") { total *= 2.5 } // +150%
         if hasPrestigeUpgrade("p7_omnipotence") { total *= 6.0 } // +500%
         return total
     }
-    
-    // Prestige: Bonus d'argent après fusion (+5% par étoile)
-    var fusionValueMultiplier: BigNumber {
-        return BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.05)
-    }
-    
-    // Prestige: Prix des usines moins chères (-1% par étoile, asymptote max 100%)
+
+    // Réacteur (Optimisation) : prix des usines moins chers.
+    // Courbe exponentielle « infinie » douce : 0.999^√étoiles — la réduction continue de progresser
+    // même avec des milliards d'étoiles, sans jamais atteindre brutalement un palier.
     var factoryCostDiscount: Double {
-        var discount = 100.0 / (100.0 + totalStars.doubleValue)
+        var discount = pow(0.999, BigNumber.pow(starsInOptimization, 0.5).doubleValue)
         if hasPrestigeUpgrade("p7_omnipotence") { discount -= 0.75 }
-        return discount
+        discount *= RemoteConfigManager.shared.getDouble(RCKey.economyFactoryCostMult)
+        // Plancher : le facteur de coût ne doit jamais devenir nul ou négatif
+        // (sinon les usines deviendraient "gratuites" voire rémunératrices).
+        return max(0.001, discount)
     }
 
     /// Réduction de coût d'évolution d'usine : factoryCostDiscount + Maîtrise d'Évolution + upgrades de prestige dédiés
@@ -227,22 +214,11 @@ extension GameManager {
         return discount
     }
     
-    // Prestige: Chance de canard muté spontanée (+0.2% par étoile, si totalStars >= 100)
-    var prestigeSpontaneousMutationChance: Double {
-        guard totalStars >= BigNumber(100.0) else { return 0.0 }
-        
-        if totalStars >= BigNumber(500.0) { // 500 étoiles = 100% de chance
-            return 1.0
-        }
-        return min(1.0, pow(totalStars.doubleValue, 0.5) * 0.002)
-    }
-    
-    // Prestige: Gain du Rituel (+2% par étoile, si totalStars >= 1000)
-    var prestigeRitualBonusMultiplier: BigNumber {
-        guard totalStars >= BigNumber(1000.0) else { return BigNumber(1.0) }
-        return BigNumber(1.0) + (BigNumber.pow(totalStars, 0.5) * 0.02)
-    }
-    
+    // NOTE : les bonus passifs du Réacteur (bonus de fusion, mutation spontanée, gain du Rituel)
+    // ont été retirés. Chaque pôle n'a plus qu'un seul effet, clair et lisible :
+    // Énergie = revenus Argent, Mutagène = revenus ADN, Optimisation = coût des usines.
+
+
     /// Multiplicateur de revenus pour une rareté spécifique
     func rarityMultiplier(for rarity: DuckRarity) -> Double {
         let upgradeId: UpgradeID
@@ -513,23 +489,42 @@ extension GameManager {
     
     // MARK: - Sell Value & UI Helpers
     
+    /// Valeur affichée d'un canard. Point d'entrée public (utilisé par les vues) : inchangé.
     func displaySellValue(for duck: Duck) -> BigNumber {
-        let ritualCount = Double(duck.ritualSuccesses + duck.goldenRitualSuccesses)
-        var prestigeRitualBonus = BigNumber.pow(prestigeRitualBonusMultiplier, ritualCount)
-        
+        // Les trois multiplicateurs globaux ne dépendent pas du canard : on les calcule ici puis on
+        // délègue à la variante « boucle ». Même expression, même ordre → résultat identique.
+        displaySellValue(for: duck,
+                         earningsMult: earningsMultiplier,
+                         perkPower: perkPowerMultiplier,
+                         collectionBonus: collectionDuckBonusMultiplier)
+    }
+
+    /// Variante destinée aux BOUCLES sur des listes de canards.
+    ///
+    /// CE QUI COÛTAIT : `earningsMultiplier` et `perkPowerMultiplier` sont des propriétés calculées
+    /// qui prennent chacune le NSLock de RemoteConfig et refont plusieurs hachages de String
+    /// (`hasPrestigeUpgrade`) ainsi que de l'arithmétique BigNumber. Elles étaient réévaluées pour
+    /// CHAQUE canard alors qu'elles sont invariantes sur toute la boucle.
+    ///
+    /// POURQUOI LE RENDU RESTE IDENTIQUE : le corps de calcul est copié à l'identique (mêmes
+    /// facteurs, dans le même ordre de multiplication, donc mêmes arrondis flottants) ; seuls les
+    /// multiplicateurs globaux sont passés en paramètre au lieu d'être relus.
+    func displaySellValue(for duck: Duck, earningsMult: BigNumber, perkPower: Double, collectionBonus: Double) -> BigNumber {
+        var prestigeRitualBonus = BigNumber(1.0)
+
         if hasPrestigeUpgrade("p4_rituel") {
             let fixRitual = BigNumber.pow(BigNumber(1.5), Double(duck.ritualSuccesses)) // 3.0 / 2.0
             let fixGolden = BigNumber.pow(BigNumber(1.5), Double(duck.goldenRitualSuccesses)) // 15.0 / 10.0
             prestigeRitualBonus *= fixRitual * fixGolden
         }
-        
-        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
 
-        return duck.calculateSellValue(with: duckPerks, perkPowerFactor: perkPowerMultiplier) * earningsMultiplier * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus
+        let duckPerks = equippedPerks(of: duck)
+
+        return duck.calculateSellValue(with: duckPerks, perkPowerFactor: perkPower) * earningsMult * rarityMultiplier(for: duck.rarity) * prestigeRitualBonus * collectionBonus
     }
 
     func displayRecycleValue(for duck: Duck) -> BigNumber {
-        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        let duckPerks = equippedPerks(of: duck)
         var recycleRarityBonus = 1.0
         if hasPrestigeUpgrade("p7_rarete_primo") && (duck.rarity == .exotique || duck.rarity == .celeste || duck.rarity == .primordiale) {
             recycleRarityBonus += 2.00
@@ -600,11 +595,13 @@ extension GameManager {
     // MARK: - Prestige System
     
     func calculatePrestigeStars() -> BigNumber {
-        guard money >= GameManager.firstPrestigeThreshold else { return .zero }
-        let ratioBN = money / GameManager.firstPrestigeThreshold
+        let threshold = GameManager.firstPrestigeThreshold
+        guard money >= threshold else { return .zero }
+        let ratioBN = money / threshold
 
-        // floor( pow( Argent / seuil, 0.25 ) )
-        let rawStars = BigNumber.pow(ratioBN, 0.25)
+        // floor( pow( Argent / seuil, facteur ) )
+        let factor = RemoteConfigManager.shared.getDouble(RCKey.prestigeStarCostFactor)
+        let rawStars = BigNumber.pow(ratioBN, factor)
 
         var stars = rawStars.exponent >= 15 ? rawStars : BigNumber(Foundation.floor(rawStars.doubleValue))
 
@@ -612,7 +609,10 @@ extension GameManager {
         var starGainMultiplier = 1.0 + Double(bonusLevel) * 0.005
         if hasPrestigeUpgrade("p7_star_gain") { starGainMultiplier += 0.50 }
         if starGainMultiplier != 1.0 {
-            stars = BigNumber(Foundation.floor((stars * starGainMultiplier).doubleValue))
+            // En late game, stars peut dépasser la limite du Double : ne pas repasser
+            // par .doubleValue (qui renverrait .infinity → BigNumber(0)).
+            let multiplied = stars * starGainMultiplier
+            stars = multiplied.exponent >= 15 ? multiplied : BigNumber(Foundation.floor(multiplied.doubleValue))
         }
 
         return stars
@@ -664,11 +664,16 @@ enum NumberFormatStyle: String, CaseIterable, Identifiable {
 
 extension Double {
     func formattedString() -> String {
-        let styleString = UserDefaults.standard.string(forKey: "numberFormatStyle") ?? NumberFormatStyle.scientific.rawValue
-        let style = NumberFormatStyle(rawValue: styleString) ?? .scientific
-        
+        let style = BigNumber.cachedFormatStyle
+
         let value = self
-        
+
+        // Garde : un NaN passerait les tests `< 1000` et `>= 1e100` (tous deux faux)
+        // et ferait planter `Int(log10(NaN))` plus bas.
+        if !value.isFinite {
+            return value.isNaN ? "0" : (value < 0 ? "-inf" : "inf")
+        }
+
         if value < 1000 {
             return String(format: "%.0f", value)
         }

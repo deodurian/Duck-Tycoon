@@ -65,12 +65,6 @@ struct LeveledUnlockCard: View {
         }
         .padding(10)
         .frame(height: 140)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(isMaxed ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1.5)
-        )
-        .shadow(color: isMaxed ? Color.green.opacity(0.1) : .clear, radius: 4)
+        .neonPanel(color: isMaxed ? Neon.green : .orange, cornerRadius: 14)
     }
 }

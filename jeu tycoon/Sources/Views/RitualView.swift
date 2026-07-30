@@ -34,7 +34,23 @@ struct RitualView: View {
     
     @State private var showSaveAdAlert = false
     @State private var duckPendingDestruction: Duck? = nil
-    
+
+    // Rituel annulable : permet de « skip » l'animation de la roue.
+    @State private var ritualTask: Task<Void, Never>? = nil
+    @State private var pendingRitual: PendingRitual? = nil
+
+    // Juice "Cuve d'expérimentation"
+    @State private var redFlash: Double = 0
+    @State private var spinPulse = false
+
+    /// Paramètres du rituel en cours, conservés pour pouvoir conclure immédiatement en cas de skip.
+    private struct PendingRitual {
+        let duck: Duck
+        let isSuccess: Bool
+        let isGolden: Bool
+        let targetAngle: Double
+    }
+
     var successChance: Double {
         guard let duck = selectedDuck else { return 0.5 }
         return duck.ritualSuccessChance(occulteLevel: gameManager.occulteLevel)
@@ -45,20 +61,18 @@ struct RitualView: View {
             // Particules flottantes
             RitualParticlesView()
                 .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
+
+            // Machine à sous fixe : pas de scroll. La roue occupe une région flexible qui
+            // prend tout l'espace restant et s'auto-dimensionne → tout tient sur un seul écran (SE compris).
+            VStack(spacing: 10) {
                 // Titre
                 HStack(spacing: 8) {
                     Text(tr("Le Rituel Canarifique"))
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color(hue: 0.78, saturation: 0.6, brightness: 1.0), Color(hue: 0.83, saturation: 0.5, brightness: 0.9)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            LinearGradient(colors: [Neon.red, Neon.yellow], startPoint: .leading, endPoint: .trailing)
                         )
-                        .shadow(color: .purple.opacity(0.4), radius: 8)
+                        .shadow(color: Neon.red.opacity(0.6), radius: 8)
                     
                     Button(action: {
                         showInfoAlert = true
@@ -72,18 +86,33 @@ struct RitualView: View {
                 }
                 .padding(.top, 8)
                 
-                // Roue de la fortune stylisée
-                ZStack {
-                    // Glow derrière la roue
+                // Roue de la fortune stylisée (occupe la région flexible restante)
+                GeometryReader { wg in
+                    let wheelScale = min(300, min(wg.size.width, wg.size.height)) / 300
+                    ZStack {
+                    // Glow "cœur instable" derrière le réacteur
                     Circle()
                         .fill(
                             RadialGradient(colors: [
-                                .purple.opacity(glowPulse ? 0.25 : 0.1),
+                                Neon.red.opacity(glowPulse ? 0.35 : 0.15),
+                                Neon.yellow.opacity(glowPulse ? 0.12 : 0.05),
                                 .clear
-                            ], center: .center, startRadius: 60, endRadius: 160)
+                            ], center: .center, startRadius: 40, endRadius: 170)
                         )
                         .frame(width: 300, height: 300)
-                    
+
+                    // Anneaux de confinement (statiques)
+                    Circle()
+                        .stroke(
+                            LinearGradient(colors: [Neon.red, Neon.yellow, Neon.red], startPoint: .top, endPoint: .bottom),
+                            lineWidth: 3
+                        )
+                        .frame(width: 238, height: 238)
+                        .shadow(color: Neon.red.opacity(0.7), radius: glowPulse ? 10 : 5)
+                    Circle()
+                        .stroke(Color.white.opacity(0.15), style: StrokeStyle(lineWidth: 2, dash: [4, 8]))
+                        .frame(width: 224, height: 224)
+
                     // Roue
                     ZStack {
                         // Fond rouge
@@ -117,16 +146,17 @@ struct RitualView: View {
                                 )
                         }
                         
-                        // Centre de la roue
+                        // Noyau central du réacteur (lumineux)
                         Circle()
                             .fill(
-                                RadialGradient(colors: [Color(white: 0.2), Color(white: 0.08)], center: .center, startRadius: 0, endRadius: 20)
+                                RadialGradient(colors: [Neon.yellow, Neon.red, Color(red: 0.3, green: 0.02, blue: 0.02)], center: .center, startRadius: 0, endRadius: 18)
                             )
-                            .frame(width: 30, height: 30)
-                        
+                            .frame(width: 32, height: 32)
+                            .shadow(color: Neon.yellow.opacity(0.8), radius: glowPulse ? 8 : 4)
+
                         Circle()
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                            .frame(width: 30, height: 30)
+                            .stroke(Color.white.opacity(0.4), lineWidth: 1)
+                            .frame(width: 32, height: 32)
                     }
                     .rotationEffect(.degrees(wheelRotation))
                     .frame(width: 210, height: 210)
@@ -135,14 +165,14 @@ struct RitualView: View {
                         Circle()
                             .stroke(
                                 LinearGradient(
-                                    colors: [.white.opacity(0.6), .purple.opacity(0.3), .white.opacity(0.6)],
+                                    colors: [Neon.yellow.opacity(0.8), Neon.red.opacity(0.6), Neon.yellow.opacity(0.8)],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 ),
                                 lineWidth: 4
                             )
                     )
-                    .shadow(color: .purple.opacity(0.5), radius: 15)
+                    .shadow(color: Neon.red.opacity(0.6), radius: 15)
                     
                     // Flèche stylisée
                     HStack {
@@ -162,8 +192,19 @@ struct RitualView: View {
                     }
                     .frame(width: 260)
                 }
-                .padding(.vertical, 10)
-                
+                    .frame(width: 300, height: 300)
+                    .scaleEffect(wheelScale)
+                    .frame(width: wg.size.width, height: wg.size.height)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // Toucher la roue pendant qu'elle tourne coupe l'animation et révèle le résultat.
+                        if isSpinning {
+                            skipRitual()
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                 // Sélection de canard
                 Button(action: {
                     if !isSpinning {
@@ -294,45 +335,34 @@ struct RitualView: View {
                         .font(.subheadline)
                         .padding(.vertical, 14)
                 }
-                
-                Spacer()
-                
+
                 // Bouton Lancer
                 Button(action: {
                     lancerRituel()
                 }) {
                     HStack(spacing: 8) {
                         Image(systemName: "flame.fill")
-                            .font(.title3)
                             .scaleEffect(flameFlicker ? 1.15 : 1.0)
                         Text(tr("LANCER LE RITUEL"))
-                            .font(.title3.weight(.bold))
                         Image(systemName: "flame.fill")
-                            .font(.title3)
                             .scaleEffect(flameFlicker ? 1.0 : 1.15)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        Group {
-                            if selectedDuck == nil || isSpinning {
-                                Color.gray.opacity(0.3)
-                            } else {
-                                LinearGradient(
-                                    colors: [Color(hue: 0.78, saturation: 0.7, brightness: 0.7), Color(hue: 0.83, saturation: 0.8, brightness: 0.5)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            }
-                        }
-                    )
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .shadow(color: selectedDuck != nil && !isSpinning ? .purple.opacity(0.5) : .clear, radius: 10, y: 5)
                 }
+                .neonButton(Neon.red)
+                .opacity(selectedDuck == nil || isSpinning ? 0.45 : 1.0)
                 .disabled(selectedDuck == nil || isSpinning)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 10)
+                .padding(.bottom, 6)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .scaleEffect(spinPulse ? 1.015 : 1.0)
+        .overlay(Color.red.opacity(redFlash).ignoresSafeArea().allowsHitTesting(false))
+        .onChange(of: isSpinning) { _, spinning in
+            if spinning {
+                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) { spinPulse = true }
+            } else {
+                withAnimation(.easeOut(duration: 0.2)) { spinPulse = false }
             }
         }
         .overlay {
@@ -347,11 +377,12 @@ struct RitualView: View {
                     }
             }
         }
-        .alert(tr("Règles du Rituel"), isPresented: $showInfoAlert) {
-            Button(tr("Compris"), role: .cancel) {}
-        } message: {
-            Text(tr("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"))
-        }
+        .infoPopup(
+            isPresented: $showInfoAlert,
+            title: tr("Règles du Rituel"),
+            message: tr("Sacrifiez un canard pour doubler sa valeur ! Mais attention : la chance de réussite diminue de 5% à chaque succès. En cas d'échec, le canard sera détruit à jamais !"),
+            accent: Neon.red
+        )
         .alert(tr("Rituel Échoué !"), isPresented: $showSaveAdAlert) {
             Button(tr("Sauver (Pub)"), role: .cancel) {
                 AdManager.shared.showRewardedAd(for: .ritualSave) { earned in
@@ -364,6 +395,14 @@ struct RitualView: View {
                     duckPendingDestruction = nil
                 }
             }
+            if gameManager.canAffordRitualGemSave {
+                Button(tr("Sauver") + " (100 💎)") {
+                    if gameManager.saveRitualWithGems() {
+                        // Canard sauvé : on le conserve tel quel.
+                        duckPendingDestruction = nil
+                    }
+                }
+            }
             Button(tr("Accepter la perte"), role: .destructive) {
                 if let d = duckPendingDestruction {
                     gameManager.destroyDuck(id: d.id)
@@ -372,7 +411,7 @@ struct RitualView: View {
                 duckPendingDestruction = nil
             }
         } message: {
-            Text(tr("Le rituel a échoué. Votre canard va être détruit. Regardez une publicité pour le sauver !"))
+            Text(tr("Le rituel a échoué. Votre canard va être détruit. Sauvez-le avec une publicité ou 100 gemmes."))
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
@@ -392,63 +431,116 @@ struct RitualView: View {
     
     private func lancerRituel() {
         guard let duck = selectedDuck else { return }
-        
+
         isSpinning = true
+        showResult = false
         let chance = successChance
         let goldenLevel = gameManager.goldenRitualLevel
         let goldenRatio = Double(goldenLevel) * 0.04
         let goldenDegrees = min(360.0 * goldenRatio, 360.0 * chance)
         let goldenChance = goldenDegrees / 360.0
-        
+
         let roll = Double.random(in: 0.0..<1.0)
         let isGoldenResult = roll < goldenChance
         let isSuccess = roll < chance
-        
+
+        // Marge de sécurité : la flèche ne doit jamais tomber pile sur une bordure de couleur.
         let targetAngle: Double
         if isGoldenResult {
-            targetAngle = goldenDegrees > 0 ? Double.random(in: 0..<goldenDegrees) : 0
+            // Zone dorée [0, goldenDegrees), bordée par le haut (rouge) et par le vert.
+            targetAngle = paddedAngle(lower: 0, upper: goldenDegrees)
         } else if isSuccess {
             let maxAngle = 360 * chance
-            targetAngle = goldenDegrees < maxAngle ? Double.random(in: goldenDegrees..<maxAngle) : goldenDegrees
+            targetAngle = paddedAngle(lower: goldenDegrees, upper: maxAngle)
         } else {
             let minAngle = min(360 * chance, 360.0)
-            targetAngle = minAngle < 360.0 ? Double.random(in: minAngle...360.0) : 360.0
+            targetAngle = paddedAngle(lower: minAngle, upper: 360.0)
         }
-        
+
+        pendingRitual = PendingRitual(duck: duck, isSuccess: isSuccess, isGolden: isGoldenResult, targetAngle: targetAngle)
+
         // On veut que l'angle `targetAngle` tombe sur la flèche (à 0 degrés).
         // Donc on tourne de `-targetAngle` + 5 tours complets
         let totalRotation = -(targetAngle) - (360 * 5)
-        
+
         withAnimation(.easeOut(duration: 3.0)) {
             wheelRotation = totalRotation
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.2) {
-            resultSuccess = isSuccess
-            resultGolden = isGoldenResult
-            withAnimation {
-                showResult = true
-            }
-            
-            // Appliquer la logique métier
-            gameManager.performRitual(on: duck.id, success: isSuccess, isGolden: isGoldenResult)
-            
-            // Mettre à jour l'UI
-            if isSuccess {
-                // Le canard a gagné, on met à jour son instance locale pour voir la flamme
-                if let updatedDuck = gameManager.inventory.first(where: { $0.id == duck.id }) {
-                    selectedDuck = updatedDuck
-                }
-            } else {
-                // On met en attente de destruction
-                duckPendingDestruction = duck
-                showSaveAdAlert = true
-            }
-            
-            // Réinitialiser la roue silencieusement
-            wheelRotation = -(targetAngle) // Garder la même position visuelle mais enlever les tours
-            isSpinning = false
+
+        // Délai annulable : un tap sur la roue peut le couper pour révéler le résultat immédiatement.
+        ritualTask = Task {
+            try? await Task.sleep(nanoseconds: 3_200_000_000)
+            if Task.isCancelled { return }
+            finishRitual(duck: duck, isSuccess: isSuccess, isGoldenResult: isGoldenResult, targetAngle: targetAngle)
         }
+    }
+
+    /// Coupe l'animation en cours et conclut le rituel tout de suite (skip).
+    private func skipRitual() {
+        guard isSpinning, let pending = pendingRitual else { return }
+        ritualTask?.cancel()
+        ritualTask = nil
+
+        // Arrêter net l'animation de la roue en la figeant à sa position finale.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            wheelRotation = -(pending.targetAngle)
+        }
+
+        finishRitual(duck: pending.duck, isSuccess: pending.isSuccess, isGoldenResult: pending.isGolden, targetAngle: pending.targetAngle)
+    }
+
+    /// Logique de fin de rituel : affichage du résultat, application métier, remise à zéro.
+    /// Idempotente : le garde `isSpinning` évite une double exécution (timer + skip).
+    private func finishRitual(duck: Duck, isSuccess: Bool, isGoldenResult: Bool, targetAngle: Double) {
+        guard isSpinning else { return }
+
+        resultSuccess = isSuccess
+        resultGolden = isGoldenResult
+        withAnimation {
+            showResult = true
+        }
+
+        // Appliquer la logique métier
+        gameManager.performRitual(on: duck.id, success: isSuccess, isGolden: isGoldenResult)
+
+        // Mettre à jour l'UI + juice
+        if isSuccess {
+            // Succès : vibration forte + étincelles d'ADN
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            gameManager.triggerConfetti()
+            // Le canard a gagné, on met à jour son instance locale pour voir la flamme
+            if let updatedDuck = gameManager.inventory.first(where: { $0.id == duck.id }) {
+                selectedDuck = updatedDuck
+            }
+        } else {
+            // Échec : vibration d'erreur + flash rouge + secousse d'écran
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            gameManager.triggerScreenShake()
+            withAnimation(.easeIn(duration: 0.08)) { redFlash = 0.55 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.easeOut(duration: 0.35)) { redFlash = 0 }
+            }
+            // On met en attente de destruction
+            duckPendingDestruction = duck
+            showSaveAdAlert = true
+        }
+
+        // Réinitialiser la roue silencieusement (garder la position visuelle, enlever les tours)
+        wheelRotation = -(targetAngle)
+        isSpinning = false
+        pendingRitual = nil
+        ritualTask = nil
+    }
+
+    /// Angle aléatoire dans [lower, upper] en gardant une marge (padding) loin des bordures.
+    /// Si la zone est trop fine pour la marge, on vise son milieu exact (toujours au centre d'une couleur).
+    private func paddedAngle(lower: Double, upper: Double, padding: Double = 2.0) -> Double {
+        let lo = lower + padding
+        let hi = upper - padding
+        guard lo < hi else { return (lower + upper) / 2.0 }
+        return Double.random(in: lo..<hi)
     }
 }
 
@@ -539,45 +631,54 @@ struct RitualDuckPickerSheet: View {
     
     var body: some View {
         NavigationStack {
-            if isLoading {
-                ProgressView("Chargement des canards...")
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 55), spacing: 8)], spacing: 8) {
-                        ForEach(displayDucks) { duck in
-                            DuckGridCard(
-                                duck: duck,
-                                displayValue: gameManager.displaySellValue(for: duck).formattedString(),
-                                isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
-                                dynamicLevel: gameManager.getDynamicStats(for: duck).level
-                            )
-                            .onTapGesture {
-                                selectedDuck = duck
-                                dismiss()
-                            }
-                            .onAppear {
-                                if duck.id == displayDucks.last?.id {
-                                    loadMoreIfNeeded()
+            ZStack {
+                NeonBackground(accent: Neon.red)
+
+                if isLoading {
+                    ProgressView("Chargement des canards...")
+                        .tint(.white)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 55), spacing: 8)], spacing: 8) {
+                            ForEach(displayDucks) { duck in
+                                DuckGridCard(
+                                    duck: duck,
+                                    displayValue: gameManager.displaySellValue(for: duck).formattedString(),
+                                    isAssigned: gameManager.isDuckAssigned(duckId: duck.id),
+                                    dynamicLevel: gameManager.getDynamicStats(for: duck).level
+                                )
+                                .onTapGesture {
+                                    selectedDuck = duck
+                                    dismiss()
+                                }
+                                .onAppear {
+                                    if duck.id == displayDucks.last?.id {
+                                        loadMoreIfNeeded()
+                                    }
                                 }
                             }
+
+                            if isLoadingMore {
+                                ProgressView()
+                                    .tint(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            }
                         }
-                        
-                        if isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        }
-                    }
-                    .padding()
-                }
-                .navigationTitle(tr("Sélectionner un canard"))
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(tr("Fermer")) { dismiss() }
+                        .padding()
                     }
                 }
             }
+            .navigationTitle(tr("Sélectionner un canard"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(tr("Fermer")) { dismiss() }
+                }
+            }
         }
+        .preferredColorScheme(.dark)
         .onAppear {
             updateDisplayInventory()
         }

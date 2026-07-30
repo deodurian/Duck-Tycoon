@@ -84,7 +84,7 @@ struct Perk: Identifiable, Codable, Hashable {
             case .extraDuck: return tr("Canard+")
             case .mythicFactory: return tr("Omnipotence Usine")
             case .stackBonus: return tr("Cumul d'Usine")
-            case .evolutionBoost: return tr("Catalyseur d'Évolution")
+            case .evolutionBoost: return tr("Évolution Boostée")
             case .mutationYield: return tr("Extracteur ADN")
             default: return tr("Perk Usine")
             }
@@ -98,8 +98,6 @@ struct Perk: Identifiable, Codable, Hashable {
             case .recycleMut: return tr("Recyclage+")
             case .extraSlot: return tr("Emplacement+")
             case .mythicDuck: return tr("Dieu Canard")
-            case .rarityUpgrade: return tr("Ascension")
-            case .crateLuck: return tr("Chance de Caisse")
             default: return tr("Perk Canard")
             }
         }
@@ -109,15 +107,15 @@ struct Perk: Identifiable, Codable, Hashable {
         if type == .factory {
             switch family {
             case .income: return tr("Donne \(Int(factoryIncomeBonus * 100))% d'argent en plus a l'usine")
-            case .synergy: return tr("Donne \(Int(factoryIncomeConditionalBonus(duckRarity: expectedRarityForTarget, duckFusionLevel: nil) * 100))% d'argent en plus si un canard \(target?.displayName ?? "") est équipé")
+            case .synergy: return tr("Donne \(Int(factoryIncomeConditionalBonus(duckRarity: expectedRarityForTarget, duckFusionLevel: nil) * 100))% d'argent en plus si un canard \(synergyTargetLabel) est équipé")
             case .discount: return tr("Baisse le prix des améliorations de l'usine de \(Int(factoryUpgradeDiscount * 100))%")
             case .sacrifice: return tr("Réduit de \(Int(factoryDrawbackSelf * 100))% la production mais augmente de \(Int(factoryBonusOthers * 100))% les autres usines")
-            case .fusion: return tr("Augmente de \(Int(factoryIncomeConditionalBonus(duckRarity: nil, duckFusionLevel: expectedFusionForTarget) * 100))% la production si un canard \(target?.displayName ?? "") est équipé")
+            case .fusion: return tr("Augmente de \(Int(factoryIncomeConditionalBonus(duckRarity: nil, duckFusionLevel: 1) * 100))% la production si un canard fusionné est équipé")
             case .extraSlot: return tr("Permet de rajouter un 2ème perk a l'usine et donne \(Int(factoryExtraPerkBonus * 100))% d'argent en plus")
             case .extraDuck: return tr("Permet de mettre un 2ème canard dans l'usine et donne un bonus de \(Int(factoryExtraDuckBonus * 100))%")
             case .mythicFactory: return tr("+500% argent, -55% prix amélioration, +10% argent par usine active")
-            case .stackBonus: return tr("Donne \(String(format: "%.2f", factoryStackBonus(currentLevel: 1) * 100))% d'argent en plus par niveau de l'usine")
-            case .evolutionBoost: return tr("Baisse de \(Int(factoryEvolutionDiscount * 100))% le coût d'évolution de cette usine")
+            case .stackBonus: return tr("Donne \(String(format: "%.1f", factoryStackBonus(cumulativeLevel: 1) * 100))% d'argent en plus par niveau cumulé de l'usine (évolutions comprises)")
+            case .evolutionBoost: return tr("Donne \(Int(factoryEvolutionProductionBonus(evolution: 1) * 100))% de production en plus par niveau d'évolution de l'usine")
             case .mutationYield: return tr("Augmente de \(Int(factoryMutationYieldBonus * 100))% la production d'ADN de cette usine")
             default: return ""
             }
@@ -131,8 +129,6 @@ struct Perk: Identifiable, Codable, Hashable {
             case .recycleMut: return tr("Multiplie par \(Int(duckRecycleMutationMultiplier)) la valeur en 🧬 du canard (Perk détruit)")
             case .extraSlot: return tr("Permet de mettre un 2ème perk et augmente de \(Int(duckExtraPerkBonus * 100))% la valeur")
             case .mythicDuck: return tr("+500% valeur, max stats, 2ème perk, compte 32 fois en fusion")
-            case .rarityUpgrade: return tr("\(Int(duckRarityUpgradeChance * 100))% de chance de faire monter la rareté du canard au lieu de le recycler")
-            case .crateLuck: return tr("Augmente de \(String(format: "%.1f", duckCrateLuckBonus * 100))% les chances de rareté à l'ouverture de caisses")
             default: return ""
             }
         }
@@ -150,13 +146,11 @@ struct Perk: Identifiable, Codable, Hashable {
         default: return .commun
         }
     }
-    
-    private var expectedFusionForTarget: Int {
-        switch target {
-        case .fusion2, .fusion23: return 2
-        case .fusion1234: return 1
-        default: return 0
-        }
+
+    /// Libellé de la cible de synergie : la variante Légendaire « C/PC/Rare » couvre aussi l'Épique.
+    private var synergyTargetLabel: String {
+        if rarity == .legendaire && target == .cpr { return tr("de rareté ≤ Épique") }
+        return target?.displayName ?? ""
     }
     
     // MARK: - Factory Effects
@@ -194,24 +188,24 @@ struct Perk: Identifiable, Codable, Hashable {
                 if t == .cpr && [.commun, .peuCommun, .rare].contains(dRarity) { bonus += 2.10 }
                 if t == .el && [.epique, .legendaire].contains(dRarity) { bonus += 1.00 }
             case .legendaire:
-                if t == .cpr && [.commun, .peuCommun, .rare].contains(dRarity) { bonus += 3.00 }
-                if t == .elm && [.epique, .legendaire, .mythique].contains(dRarity) { bonus += 1.30 }
+                // La variante « commun » légendaire couvre désormais tout ce qui est ≤ Épique.
+                if t == .cpr && [.commun, .peuCommun, .rare, .epique].contains(dRarity) { bonus += 3.00 }
+                if t == .elm && [.epique, .legendaire, .mythique].contains(dRarity) { bonus += 3.00 }
             default: break
             }
         }
-        
-        if family == .fusion, let level = duckFusionLevel, let t = target {
+
+        // Boost Fusion : s'applique dès qu'un canard fusionné (niveau ≠ 0) est équipé,
+        // quel que soit son palier de fusion. La puissance dépend de la rareté du perk.
+        if family == .fusion, let level = duckFusionLevel, level != 0 {
             switch rarity {
-            case .rare:
-                if t == .fusion2 && level == 2 { bonus += 1.00 }
-            case .epique:
-                if t == .fusion23 && (level == 2 || level == 3) { bonus += 1.50 }
-            case .legendaire:
-                if t == .fusion1234 && level >= 1 && level <= 4 { bonus += 1.50 }
+            case .rare: bonus += 1.00
+            case .epique: bonus += 2.00
+            case .legendaire: bonus += 3.00
             default: break
             }
         }
-        
+
         return bonus
     }
     
@@ -282,32 +276,33 @@ struct Perk: Identifiable, Codable, Hashable {
         return 0.10
     }
 
-    /// Bonus de revenu qui scale avec le niveau actuel de l'usine (par niveau)
-    func factoryStackBonus(currentLevel: Int) -> Double {
+    /// Bonus de revenu qui scale avec le nombre TOTAL de niveaux achetés par l'usine,
+    /// évolutions comprises (voir `DuckFactory.cumulativeLevel`).
+    func factoryStackBonus(cumulativeLevel: Int) -> Double {
         guard type == .factory, family == .stackBonus else { return 0.0 }
         let perLevel: Double
         switch rarity {
-        case .commun: perLevel = 0.0002
-        case .peuCommun: perLevel = 0.0004
-        case .rare: perLevel = 0.0007
-        case .epique: perLevel = 0.0012
-        case .legendaire: perLevel = 0.0020
+        case .commun: perLevel = 0.001      // 0,1 % / niveau
+        case .peuCommun: perLevel = 0.003   // 0,3 %
+        case .rare: perLevel = 0.005        // 0,5 %
+        case .epique: perLevel = 0.010      // 1 %
+        case .legendaire: perLevel = 0.030  // 3 %
         default: perLevel = 0.0
         }
-        return perLevel * Double(currentLevel)
+        return perLevel * Double(cumulativeLevel)
     }
 
-    /// Réduction du coût d'évolution de cette usine spécifique
-    var factoryEvolutionDiscount: Double {
-        guard type == .factory, family == .evolutionBoost else { return 0.0 }
+    /// Évolution Boostée : production supplémentaire par niveau d'évolution de l'usine.
+    func factoryEvolutionProductionBonus(evolution: Int) -> Double {
+        guard type == .factory, family == .evolutionBoost, evolution > 0 else { return 0.0 }
+        let perEvolution: Double
         switch rarity {
-        case .commun: return 0.03
-        case .peuCommun: return 0.06
-        case .rare: return 0.10
-        case .epique: return 0.15
-        case .legendaire: return 0.22
-        default: return 0.0
+        case .rare: perEvolution = 0.80
+        case .epique: perEvolution = 1.20
+        case .legendaire: perEvolution = 1.60
+        default: perEvolution = 0.0
         }
+        return perEvolution * Double(evolution)
     }
 
     /// Bonus de production d'ADN de cette usine (pertinent si évolution >= 1)
@@ -457,29 +452,9 @@ struct Perk: Identifiable, Codable, Hashable {
         }
     }
 
-    /// Chance, au recyclage, de faire monter la rareté du canard au lieu de le recycler
-    nonisolated var duckRarityUpgradeChance: Double {
-        guard type == .duck, family == .rarityUpgrade else { return 0.0 }
-        switch rarity {
-        case .rare: return 0.04
-        case .epique: return 0.07
-        case .legendaire: return 0.12
-        default: return 0.0
-        }
-    }
-
-    /// Bonus ajouté au globalBonus des tirages de caisses futurs quand ce canard est assigné à une usine
-    nonisolated var duckCrateLuckBonus: Double {
-        guard type == .duck, family == .crateLuck else { return 0.0 }
-        switch rarity {
-        case .commun: return 0.001
-        case .peuCommun: return 0.002
-        case .rare: return 0.004
-        case .epique: return 0.007
-        case .legendaire: return 0.012
-        default: return 0.0
-        }
-    }
+    // NOTE : les familles `.rarityUpgrade` (Ascension) et `.crateLuck` (Chance de Capsule) ont été
+    // retirées du jeu. Les cas d'enum sont conservés pour que les anciennes sauvegardes se décodent ;
+    // `migrateRemovedPerks()` les remplace au chargement par un perk aléatoire de même rareté.
 
     // MARK: - Generation
     
@@ -522,15 +497,15 @@ struct Perk: Identifiable, Codable, Hashable {
         } else {
             switch rarity {
             case .commun:
-                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.crateLuck, nil)]
+                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil)]
             case .peuCommun:
-                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.crateLuck, nil)]
+                options = [(.value, nil), (.levelBoost, .commun), (.levelBoost, .peuCommun), (.levelBoost, .rare), (.size, nil), (.mutation, nil), (.fusionWeight, nil)]
             case .rare:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .epique), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .epique), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil)]
             case .epique:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil)]
             case .legendaire:
-                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil), (.crateLuck, nil), (.rarityUpgrade, nil)]
+                options = [(.value, nil), (.levelBoost, .cpr), (.levelBoost, .elm), (.size, nil), (.mutation, nil), (.fusionWeight, nil), (.recycleMut, nil), (.extraSlot, nil)]
             case .mythique:
                 options = [(.mythicDuck, nil)]
             default:

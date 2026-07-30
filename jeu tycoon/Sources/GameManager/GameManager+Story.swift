@@ -28,13 +28,13 @@ extension GameManager {
             )
         case 1:
             return StoryStepInfo(
-                dialogue: "Bravo, c’est la première étape d’un avenir radieux entre toi et les canards. Il nous faut maintenant plus de canards pour plus d’argent. J’ai fait livrer des caisses, va en ouvrir une en bois dans la boutique.",
-                quest: StoryQuest(title: "Les Caisses", description: "Ouvrir 1 caisse en bois", rewardDescription: "Débloque l'onglet Inventaire"),
+                dialogue: "Bravo, c’est la première étape d’un avenir radieux entre toi et les canards. Il nous faut maintenant plus de canards pour plus d’argent. J’ai fait livrer des capsules, va en ouvrir une en bois dans la boutique.",
+                quest: StoryQuest(title: "Les Capsules", description: "Ouvrir 1 capsule en bois", rewardDescription: "Débloque l'onglet Inventaire"),
                 unlocks: "Inventaire"
             )
         case 2:
             return StoryStepInfo(
-                dialogue: "Bon, pendant que tu ouvrais des caisses j’ai eu le temps de réparer le bâtiment des améliorations, tu vas pouvoir booster tes gains. J’ai remarqué qu’il y a des canards trop normaux dans l’inventaire. Tu peux les améliorer mais cela coûte des points de mutation, que l’on obtient en détruisant (recyclant) nos précieux canards.",
+                dialogue: "Bon, pendant que tu ouvrais des capsules j’ai eu le temps de réparer le bâtiment des améliorations, tu vas pouvoir booster tes gains. J’ai remarqué qu’il y a des canards trop normaux dans l’inventaire. Tu peux les améliorer mais cela coûte des points de mutation, que l’on obtient en détruisant (recyclant) nos précieux canards.",
                 quest: StoryQuest(title: "Le Laboratoire", description: "Recycler 1 canard ET l'améliorer", rewardDescription: "50 ADN + Mécanique de Fusion"),
                 unlocks: "Améliorations"
             )
@@ -79,6 +79,8 @@ extension GameManager {
         // Skip if story is over
         if currentStoryStep > 7 { return }
 
+        let wasReady = isStoryQuestReadyToClaim
+
         switch currentStoryStep {
         case 0:
             if action == "assign_duck" { isStoryQuestReadyToClaim = true }
@@ -104,7 +106,10 @@ extension GameManager {
             break
         }
 
-        if isStoryQuestReadyToClaim {
+        // La sauvegarde ne se justifie qu'au moment où la quête DEVIENT réclamable :
+        // en la laissant hors du garde, chaque canard ouvert re-sauvegardait tout l'état.
+        if isStoryQuestReadyToClaim && !wasReady {
+            announceQuestCompleted()
             saveGame()
         }
     }
@@ -123,6 +128,9 @@ extension GameManager {
         case 3:
             let freePerk = Perk.rollRandom(type: .duck)
             perksInventory.append(freePerk)
+            invalidatePerkCache()
+            registerPerkDiscovery(freePerk)
+            hasUnseenPerk = true
         case 4:
             break
         case 5:

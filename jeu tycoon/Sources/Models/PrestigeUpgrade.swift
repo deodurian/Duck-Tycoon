@@ -16,7 +16,7 @@ struct PrestigeUpgrade: Identifiable, Equatable {
         if requiredSpentStars == 10 { return 4 }
         if requiredSpentStars == 25 { return 5 }
         if requiredSpentStars == 60 { return 6 }
-        if requiredSpentStars == 150 { return 7 }
+        if requiredSpentStars == 120 { return 7 }
         return 7 // fallback explicite pour tout seuil futur non mappé
     }
 
@@ -70,7 +70,7 @@ extension PrestigeUpgrade {
         // Palier 5
         PrestigeUpgrade(id: "p5_rarete_exo", name: "Synchronisation Exotique", description: "+100 % à la valeur des canards Exotique, Céleste et Primordiale.", cost: 8, requiredSpentStars: 25),
         PrestigeUpgrade(id: "p5_evo_cost", name: "Ingénierie d'Évolution", description: "-20 % sur le coût des évolutions d'usine (cumulatif).", cost: 6, requiredSpentStars: 25),
-        PrestigeUpgrade(id: "p5_auto2", name: "Automatisation Avancée", description: "Débloque directement Auto-Ouvrier V (1 caisse / 0.25s).", cost: 10, requiredSpentStars: 25),
+        PrestigeUpgrade(id: "p5_auto2", name: "Automatisation Avancée", description: "Débloque directement Auto-Ouvrier V (1 capsule / 0.25s).", cost: 10, requiredSpentStars: 25),
         PrestigeUpgrade(id: "p5_perk_slot", name: "Emplacements Renforcés", description: "+1 emplacement de perk supplémentaire pour les usines ET les canards.", cost: 12, requiredSpentStars: 25),
         PrestigeUpgrade(id: "p5_adn2", name: "Mutagénèse Avancée", description: "+150 % à tous les revenus d'ADN (cumulatif avec Mutagénèse Globale).", cost: 8, requiredSpentStars: 25),
 
@@ -82,10 +82,10 @@ extension PrestigeUpgrade {
         PrestigeUpgrade(id: "p6_fusion_taxfree", name: "Fusion Libre", description: "-50 % supplémentaires sur la taxe de fusion (cumulatif avec Paradis Fiscal).", cost: 10, requiredSpentStars: 60),
 
         // Palier 7
-        PrestigeUpgrade(id: "p7_rarete_primo", name: "Éveil Primordial", description: "+200 % valeur ET +200 % ADN pour les canards Primordiale, Céleste et Exotique.", cost: 20, requiredSpentStars: 150),
-        PrestigeUpgrade(id: "p7_usine_evo_cost", name: "Maîtrise Industrielle Totale", description: "-50 % sur le coût de toutes les évolutions d'usine (cumulatif).", cost: 18, requiredSpentStars: 150),
-        PrestigeUpgrade(id: "p7_star_gain", name: "Constellation", description: "+50 % d'étoiles gagnées à chaque prestige.", cost: 25, requiredSpentStars: 150),
-        PrestigeUpgrade(id: "p7_auto_max", name: "Singularité Automatisée", description: "Auto-Ouvrier et Auto-Usine démarrent instantanément à vitesse maximale sur toute usine.", cost: 20, requiredSpentStars: 150),
-        PrestigeUpgrade(id: "p7_omnipotence", name: "Ascension Finale", description: "+1000 % argent, +500 % ADN, -75 % sur tous les coûts d'usine et d'évolution.", cost: 30, requiredSpentStars: 150)
+        PrestigeUpgrade(id: "p7_rarete_primo", name: "Éveil Primordial", description: "+200 % valeur ET +200 % ADN pour les canards Primordiale, Céleste et Exotique.", cost: 20, requiredSpentStars: 120),
+        PrestigeUpgrade(id: "p7_usine_evo_cost", name: "Maîtrise Industrielle Totale", description: "-50 % sur le coût de toutes les évolutions d'usine (cumulatif).", cost: 18, requiredSpentStars: 120),
+        PrestigeUpgrade(id: "p7_star_gain", name: "Constellation", description: "+50 % d'étoiles gagnées à chaque prestige.", cost: 25, requiredSpentStars: 120),
+        PrestigeUpgrade(id: "p7_auto_max", name: "Singularité Automatisée", description: "Auto-Ouvrier et Auto-Usine démarrent instantanément à vitesse maximale sur toute usine.", cost: 20, requiredSpentStars: 120),
+        PrestigeUpgrade(id: "p7_omnipotence", name: "Ascension Finale", description: "+1000 % argent, +500 % ADN, -75 % sur tous les coûts d'usine et d'évolution.", cost: 30, requiredSpentStars: 120)
     ]
 }

@@ -2,7 +2,7 @@ import Foundation
 
 /// La statistique du jeu sur laquelle une quête secondaire mesure sa progression
 enum SideQuestMetric {
-    case ducksFromCrates   // canards obtenus en ouvrant des caisses (cumulé)
+    case ducksFromCrates   // canards obtenus en ouvrant des capsules (cumulé)
     case ducksRecycled     // canards recyclés (cumulé)
     case fusionsDone       // fusions effectuées (cumulé)
     case inventoryCount    // canards actuellement dans l'inventaire
@@ -50,23 +50,23 @@ struct SideQuest: Identifiable {
     // MARK: - Catalogue
 
     static let all: [SideQuest] = [
-        // ── Ouverture de caisses ────────────────────────────────────────────
+        // ── Ouverture de capsules ────────────────────────────────────────────
         SideQuest(
             title: "Fournisseur",
-            description: "Obtenir 32 canards via des caisses",
+            description: "Obtenir 32 canards via des capsules",
             metric: .ducksFromCrates, target: 32,
             rewardId: .multipleOpenX5
         ),
         SideQuest(
             title: "Grossiste",
-            description: "Obtenir 160 canards via des caisses",
+            description: "Obtenir 160 canards via des capsules",
             metric: .ducksFromCrates, target: 160,
             rewardId: .multipleOpenX10,
             prerequisiteQuestId: UpgradeID.multipleOpenX5.rawValue
         ),
         SideQuest(
-            title: "Magnat des Caisses",
-            description: "Obtenir 800 canards via des caisses",
+            title: "Magnat des Capsules",
+            description: "Obtenir 800 canards via des capsules",
             metric: .ducksFromCrates, target: 800,
             rewardId: .multipleOpenMax,
             prerequisiteQuestId: UpgradeID.multipleOpenX10.rawValue

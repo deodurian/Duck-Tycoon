@@ -63,12 +63,6 @@ struct UnlockCard: View {
         }
         .padding(10)
         .frame(height: 140)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(isPurchased ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1.5)
-        )
-        .shadow(color: isPurchased ? Color.green.opacity(0.1) : .clear, radius: 4)
+        .neonPanel(color: isPurchased ? Neon.green : .orange, cornerRadius: 14)
     }
 }

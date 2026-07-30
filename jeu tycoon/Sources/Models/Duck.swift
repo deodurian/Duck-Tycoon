@@ -47,17 +47,10 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
     }
 
     var baseProbability: Double {
-        switch self {
-        case .commun: return 67.0
-        case .peuCommun: return 26.0
-        case .rare: return 5.5
-        case .epique: return 1.2
-        case .legendaire: return 0.25
-        case .mythique: return 0.04
-        case .exotique: return 0.008
-        case .celeste: return 0.0015
-        case .primordiale: return 0.0005
-        }
+        // Perf : lecture dans la table pré-extraite (une prise de verrou, zéro allocation) au lieu
+        // de construire une clé String par interpolation puis de la hacher. Valeur identique :
+        // la table est remplie depuis le même instantané Remote Config.
+        return RemoteConfigManager.shared.rarityProbabilities().value(for: self)
     }
 
     var color: Color {
@@ -149,21 +142,36 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         }
     }
     
+    /// Ordre de tirage figé (même contenu et même ordre que `allCases`, qui suit l'ordre de
+    /// déclaration). Perf : `allCases` est une propriété calculée synthétisée qui reconstruit un
+    /// tableau de 9 éléments (allocation sur le tas) à CHAQUE accès ; il était lu deux fois par
+    /// tirage, donc pour chaque canard généré. Rendu et tirage identiques : mêmes éléments, même
+    /// ordre de parcours, même dernier élément pour le repli.
+    private nonisolated static let rollOrder: [DuckRarity] = [
+        .commun, .peuCommun, .rare, .epique, .legendaire,
+        .mythique, .exotique, .celeste, .primordiale
+    ]
+
     static func rollRandom(globalBonus: Double = 0.0) -> DuckRarity {
         let roll = Double.random(in: 0..<100)
-        
-        let baseCommun = DuckRarity.commun.baseProbability
+
+        // Perf : les 9 probabilités sont récupérées en UNE prise de verrou au lieu d'une par rareté
+        // (chacune précédée d'une allocation de clé String). Tirage inchangé : même appel unique au
+        // générateur aléatoire, dans le même ordre, et mêmes valeurs de probabilités.
+        let probabilities = RemoteConfigManager.shared.rarityProbabilities()
+
+        let baseCommun = probabilities.value(for: .commun)
         let communThreshold = max(0.0, baseCommun - (globalBonus * 100.0))
-        
+
         if roll < communThreshold { return .commun }
-        
+
         // Distribution of the remaining chance proportionally
         let remaining = 100.0 - communThreshold
         let originalRemaining = 100.0 - baseCommun
-        
+
         var cumulative = communThreshold
-        for rarity in DuckRarity.allCases where rarity != .commun {
-            let share = remaining * (rarity.baseProbability / originalRemaining)
+        for rarity in DuckRarity.rollOrder where rarity != .commun {
+            let share = remaining * (probabilities.value(for: rarity) / originalRemaining)
             cumulative += share
             if roll < cumulative {
                 return rarity
@@ -171,7 +179,7 @@ enum DuckRarity: String, Codable, CaseIterable, Comparable {
         }
         
         // Fallback to the rarest case
-        return DuckRarity.allCases.last ?? .commun
+        return DuckRarity.rollOrder.last ?? .commun
     }
     
     // Le bonus qu'une rareté donne lors du recyclage d'un canard en masse
@@ -258,27 +266,30 @@ enum DuckSize: String, Codable, CaseIterable, Comparable {
     }
 
     var baseProbability: Double {
-        switch self {
-        case .petit: return 68.0
-        case .moyen: return 20.0
-        case .grand: return 8.5
-        case .geant: return 3.0
-        case .colossal: return 0.5
-        }
+        // Perf : voir DuckRarity.baseProbability — table pré-extraite, valeur identique.
+        return RemoteConfigManager.shared.sizeProbabilities().value(for: self)
     }
 
     nonisolated static func < (lhs: DuckSize, rhs: DuckSize) -> Bool {
         return lhs.multiplier < rhs.multiplier
     }
 
-    // Poids pour la probabilité de drop dans les caisses
+    /// Ordre de tirage figé : `allCases` reconstruit un tableau (allocation sur le tas) à CHAQUE
+    /// accès, or il est parcouru à chaque canard généré. Même contenu, même ordre que `allCases`.
+    private nonisolated static let rollOrder: [DuckSize] = [.petit, .moyen, .grand, .geant, .colossal]
+
+    // Poids pour la probabilité de drop dans les capsules
     static func rollRandom(genesCroissants: Bool = false) -> DuckSize {
         let roll = Double.random(in: 0..<100)
         let modifier = genesCroissants ? 1.618 : 0.0
 
+        // Perf : les 5 probabilités en UNE prise de verrou, sans allocation de clé String.
+        // Tirage inchangé : mêmes valeurs, même ordre de parcours, même usage de l'aléatoire.
+        let probabilities = RemoteConfigManager.shared.sizeProbabilities()
+
         var cumulative: Double = 0.0
-        for size in DuckSize.allCases {
-            var chance = size.baseProbability
+        for size in DuckSize.rollOrder {
+            var chance = probabilities.value(for: size)
 
             // Les gènes croissants réduisent la chance d'avoir un petit et l'ajoutent au moyen
             if size == .petit {
@@ -363,13 +374,8 @@ enum DuckMutation: String, Codable, CaseIterable, Comparable {
     }
 
     var baseProbability: Double {
-        switch self {
-        case .aucune: return 87.0
-        case .dore: return 9.0
-        case .radioactif: return 3.0
-        case .cristallise: return 0.9
-        case .quantique: return 0.1
-        }
+        // Perf : voir DuckRarity.baseProbability — table pré-extraite, valeur identique.
+        return RemoteConfigManager.shared.mutationProbabilities().value(for: self)
     }
 
     var color: Color {
@@ -386,30 +392,37 @@ enum DuckMutation: String, Codable, CaseIterable, Comparable {
         return lhs.multiplier < rhs.multiplier
     }
     
+    /// Ordre de tirage figé (voir `DuckSize.rollOrder`) : évite l'allocation d'`allCases`.
+    private nonisolated static let rollOrder: [DuckMutation] = [.aucune, .dore, .radioactif, .cristallise, .quantique]
+
     // Les mutations sont rares au tirage
     static func rollRandom(bonusChance: Double = 0.0) -> DuckMutation {
         let roll = Double.random(in: 0..<100)
-        
-        let baseAucune = DuckMutation.aucune.baseProbability
+
+        // Perf : les 5 probabilités en UNE prise de verrou, sans allocation de clé String.
+        // Tirage inchangé : mêmes valeurs, même ordre de parcours, même usage de l'aléatoire.
+        let probabilities = RemoteConfigManager.shared.mutationProbabilities()
+
+        let baseAucune = probabilities.value(for: .aucune)
         let aucuneThreshold = max(0.0, baseAucune - (bonusChance * 100.0))
-        
+
         if roll < aucuneThreshold { return .aucune }
-        
+
         // Distribution of the remaining chance proportionally
         let remaining = 100.0 - aucuneThreshold
         let originalRemaining = 100.0 - baseAucune
-        
+
         var cumulative = aucuneThreshold
-        for mutation in DuckMutation.allCases where mutation != .aucune {
-            let share = remaining * (mutation.baseProbability / originalRemaining)
+        for mutation in DuckMutation.rollOrder where mutation != .aucune {
+            let share = remaining * (probabilities.value(for: mutation) / originalRemaining)
             cumulative += share
             if roll < cumulative {
                 return mutation
             }
         }
-        
+
         // Fallback to the last case
-        return DuckMutation.allCases.last ?? .aucune
+        return DuckMutation.rollOrder.last ?? .aucune
     }
 }
 
@@ -422,14 +435,16 @@ struct Duck: Identifiable, Codable, Hashable {
     var mutation: DuckMutation
     var ritualSuccesses: Int = 0
     var goldenRitualSuccesses: Int = 0
-    
+    /// Nombre de rituels réussis sur ce canard (soft cap : la chance décroît à chaque succès).
+    var ritualCount: Int = 0
+
     var equippedPerkIds: [UUID] = []
-    
+
     // Migration fields
     private var equippedPerkId: String? = nil
-    
+
     enum CodingKeys: String, CodingKey {
-        case id, rarity, size, mutation, ritualSuccesses, goldenRitualSuccesses, equippedPerkId, equippedPerkIds, fusionLevel, customBasePrice, customRecycleValue, level
+        case id, rarity, size, mutation, ritualSuccesses, goldenRitualSuccesses, ritualCount, equippedPerkId, equippedPerkIds, fusionLevel, customBasePrice, customRecycleValue, level
     }
     
     init(id: UUID = UUID(), rarity: DuckRarity, size: DuckSize, mutation: DuckMutation, ritualSuccesses: Int = 0, goldenRitualSuccesses: Int = 0, equippedPerkIds: [UUID] = [], fusionLevel: Int = 0, customBasePrice: BigNumber? = nil, customRecycleValue: BigNumber? = nil, level: Int = 1) {
@@ -454,7 +469,9 @@ struct Duck: Identifiable, Codable, Hashable {
         self.mutation = try container.decode(DuckMutation.self, forKey: .mutation)
         self.ritualSuccesses = try container.decodeIfPresent(Int.self, forKey: .ritualSuccesses) ?? 0
         self.goldenRitualSuccesses = try container.decodeIfPresent(Int.self, forKey: .goldenRitualSuccesses) ?? 0
-        
+        // Migration : à défaut de valeur, on reprend le total de rituels déjà réussis.
+        self.ritualCount = try container.decodeIfPresent(Int.self, forKey: .ritualCount) ?? (self.ritualSuccesses + self.goldenRitualSuccesses)
+
         if let singlePerkStr = try container.decodeIfPresent(String.self, forKey: .equippedPerkId), let singlePerkUUID = UUID(uuidString: singlePerkStr) {
             self.equippedPerkIds = [singlePerkUUID]
         } else {
@@ -475,6 +492,7 @@ struct Duck: Identifiable, Codable, Hashable {
         try container.encode(mutation, forKey: .mutation)
         try container.encode(ritualSuccesses, forKey: .ritualSuccesses)
         try container.encode(goldenRitualSuccesses, forKey: .goldenRitualSuccesses)
+        try container.encode(ritualCount, forKey: .ritualCount)
         try container.encode(equippedPerkIds, forKey: .equippedPerkIds)
         try container.encode(fusionLevel, forKey: .fusionLevel)
         try container.encodeIfPresent(customBasePrice, forKey: .customBasePrice)
@@ -486,12 +504,14 @@ struct Duck: Identifiable, Codable, Hashable {
         return ritualSuccesses + goldenRitualSuccesses
     }
     
-    /// Probabilité de réussite du prochain rituel (de 0.0 à 1.0)
+    /// Probabilité de réussite du prochain rituel (de 0.0 à 1.0).
+    /// Soft cap : la zone verte décroît exponentiellement à chaque rituel réussi sur ce canard
+    /// (`base * 0.75^ritualCount`). L'Occulte ralentit la décroissance.
     func ritualSuccessChance(occulteLevel: Int = 0) -> Double {
-        let baseFailure = Double(totalRituals + 1) * 0.05
-        let reduction = Double(occulteLevel) * 0.05
-        let actualFailure = max(0.005, baseFailure - reduction)
-        return max(0.0, 1.0 - actualFailure)
+        let base = 0.95
+        let decay = min(0.95, 0.75 + Double(occulteLevel) * 0.02)
+        let chance = base * Foundation.pow(decay, Double(ritualCount))
+        return max(0.02, min(0.95, chance))
     }
     
     // Fusion
@@ -504,7 +524,17 @@ struct Duck: Identifiable, Codable, Hashable {
     
     // Le prix de base abstrait d'un canard
     nonisolated static let basePrice: Double = 5.0
-    
+
+    /// Constantes BigNumber pré-calculées.
+    /// Perf : `BigNumber(Double)` exécute un `log10` + un `Foundation.pow` à CHAQUE construction, et
+    /// ces valeurs constantes étaient reconstruites à chaque calcul de valeur de vente / recyclage
+    /// (donc pour chaque canard de l'inventaire, à chaque rafraîchissement). Le résultat est
+    /// identique au bit près — même littéral, même conversion —, seul le travail répété disparaît.
+    nonisolated static let basePriceBig = BigNumber(Duck.basePrice)
+    nonisolated static let ritualMultiplierBase = BigNumber(2.0)
+    nonisolated static let goldenRitualMultiplierBase = BigNumber(10.0)
+    nonisolated static let fusionMultiplierBase = BigNumber(3.1)
+
     // MARK: - Dynamic Stats (including perks)
     
     nonisolated func getDynamicStats(with perks: [Perk]) -> (level: Int, size: DuckSize, mutation: DuckMutation, extraValueMultiplier: Double, recycleMultiplier: Double) {
@@ -558,13 +588,13 @@ struct Duck: Identifiable, Codable, Hashable {
     nonisolated func calculateSellValue(with perks: [Perk], perkPowerFactor: Double = 1.0) -> BigNumber {
         let stats = getDynamicStats(with: perks)
 
-        let ritualMultiplier = BigNumber.pow(BigNumber(2.0), Double(ritualSuccesses)) * BigNumber.pow(BigNumber(10.0), Double(goldenRitualSuccesses))
+        let ritualMultiplier = BigNumber.pow(Duck.ritualMultiplierBase, Double(ritualSuccesses)) * BigNumber.pow(Duck.goldenRitualMultiplierBase, Double(goldenRitualSuccesses))
         let levelMultiplier = 1.0 + (Double(stats.level - 1) * 0.01)
-        let base = customBasePrice ?? BigNumber(Duck.basePrice)
+        let base = customBasePrice ?? Duck.basePriceBig
         var value = base * rarity.multiplier * stats.mutation.multiplier * stats.size.multiplier * levelMultiplier
 
         if customBasePrice == nil && fusionLevel > 0 {
-            value *= BigNumber.pow(BigNumber(3.1), Double(fusionLevel))
+            value *= BigNumber.pow(Duck.fusionMultiplierBase, Double(fusionLevel))
         }
 
         let perkAdjustedExtra = 1.0 + (stats.extraValueMultiplier - 1.0) * perkPowerFactor
@@ -584,11 +614,13 @@ struct Duck: Identifiable, Codable, Hashable {
         if let custom = customRecycleValue {
             baseValue = custom * stats.size.recycleMultiplier * stats.mutation.recycleMultiplier
         } else {
-            var value = rarity.baseRecyclePoints * stats.size.recycleMultiplier * stats.mutation.recycleMultiplier
+            // Rester en BigNumber : à haut niveau de fusion, Foundation.pow(3.1, n) déborde le Double
+            // (→ .infinity → BigNumber(0)), ce qui annulait la valeur de recyclage.
+            var value = BigNumber(rarity.baseRecyclePoints * stats.size.recycleMultiplier * stats.mutation.recycleMultiplier)
             if fusionLevel > 0 {
-                value *= Foundation.pow(3.1, Double(fusionLevel))
+                value *= BigNumber.pow(Duck.fusionMultiplierBase, Double(fusionLevel))
             }
-            baseValue = BigNumber(value)
+            baseValue = value
         }
 
         let perkAdjustedRecycleMult = 1.0 + (stats.recycleMultiplier - 1.0) * perkPowerFactor

@@ -26,13 +26,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
+                NeonBackground()
+
                 ScrollView {
                     VStack(spacing: 25) {
                         // Profil / Info
@@ -42,7 +37,7 @@ struct SettingsView: View {
                                 .foregroundStyle(LinearGradient(colors: [.gray, .white], startPoint: .top, endPoint: .bottom))
                             Text(tr("Paramètres"))
                                 .font(.largeTitle.bold())
-                                .foregroundColor(.white)
+                                .neonTitle(Neon.cyan)
                         }
                         .padding(.top, 20)
                         
@@ -67,8 +62,7 @@ struct SettingsView: View {
                                     .pickerStyle(MenuPickerStyle())
                                 }
                                 .padding()
-                                .background(Color.white.opacity(0.05))
-                                .cornerRadius(12)
+                                .neonPanel(color: Neon.cyan, cornerRadius: 12)
                                 
                                 HStack {
                                     Text(tr("Format des Nombres"))
@@ -81,10 +75,14 @@ struct SettingsView: View {
                                     }
                                     .accentColor(.white)
                                     .pickerStyle(MenuPickerStyle())
+                                    // Le formatage des nombres lit un style mis en cache (voir BigNumber) :
+                                    // il faut le rafraîchir quand le joueur en change ici.
+                                    .onChange(of: numberFormatStyle) { _, _ in
+                                        BigNumber.refreshFormatStyle()
+                                    }
                                 }
                                 .padding()
-                                .background(Color.white.opacity(0.05))
-                                .cornerRadius(12)
+                                .neonPanel(color: Neon.cyan, cornerRadius: 12)
                             }
                             .padding(.horizontal)
                         }
@@ -142,8 +140,38 @@ struct SettingsView: View {
                             .padding(.horizontal)
                             .disabled(isRestoring)
                         }
+                        #if DEBUG
+                        // Outils développeur — jamais compilés dans le build App Store
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("🔧 OUTILS DÉVELOPPEUR")
+                                .font(.headline)
+                                .foregroundColor(.orange)
+                                .padding(.horizontal)
+
+                            NavigationLink {
+                                DeveloperMenu()
+                                    .environment(gameManager)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "wrench.and.screwdriver.fill")
+                                    Text("Ouvrir le Menu Développeur")
+                                        .bold()
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.red.opacity(0.35))
+                                .cornerRadius(12)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red, lineWidth: 1))
+                            }
+                            .padding(.horizontal)
+                        }
+                        #endif
+
                         Spacer(minLength: 40)
-                        
+
                         Text(tr("CanardFactory v1.0"))
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -151,6 +179,8 @@ struct SettingsView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .preferredColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(tr("Fermer")) { dismiss() }

@@ -17,6 +17,16 @@ extension GameManager {
         }
     }
 
+    /// Multiplicateur global de difficulté des quêtes (Remote Config). Borné pour éviter une cible nulle.
+    var questDifficultyMult: Double {
+        max(0.01, RemoteConfigManager.shared.getDouble(RCKey.questDifficultyMult))
+    }
+
+    /// Cible effective d'un objectif de quête après application du multiplicateur de difficulté.
+    func effectiveTarget(_ req: SideQuestRequirement) -> Double {
+        return req.target * questDifficultyMult
+    }
+
     func isSideQuestClaimed(_ quest: SideQuest) -> Bool {
         return claimedSideQuestIds.contains(quest.id)
     }
@@ -31,8 +41,9 @@ extension GameManager {
     func sideQuestProgress(_ quest: SideQuest) -> Double {
         if quest.requirements.isEmpty { return 1.0 }
         let totalProgress = quest.requirements.reduce(0.0) { sum, req in
-            guard req.target > 0 else { return sum + 1.0 }
-            return sum + min(1.0, sideQuestValue(for: req.metric) / req.target)
+            let target = effectiveTarget(req)
+            guard target > 0 else { return sum + 1.0 }
+            return sum + min(1.0, sideQuestValue(for: req.metric) / target)
         }
         return totalProgress / Double(quest.requirements.count)
     }
@@ -40,7 +51,7 @@ extension GameManager {
     func canClaimSideQuest(_ quest: SideQuest) -> Bool {
         guard !isSideQuestClaimed(quest), isSideQuestAvailable(quest) else { return false }
         return quest.requirements.allSatisfy { req in
-            sideQuestValue(for: req.metric) >= req.target
+            sideQuestValue(for: req.metric) >= effectiveTarget(req)
         }
     }
 
@@ -55,6 +66,21 @@ extension GameManager {
         invalidateEarningsCache()
         evaluateAffordableCrates(reset: true)
         saveGame()
+    }
+
+    /// Déclenche une bannière quand une quête secondaire vient de devenir réclamable (jauge à 100%).
+    /// Appelé à chaque tick ; le set `announcedClaimableSideQuestIds` évite les répétitions.
+    func checkSideQuestToasts() {
+        for quest in SideQuest.all {
+            if canClaimSideQuest(quest) {
+                if !announcedClaimableSideQuestIds.contains(quest.id) {
+                    announcedClaimableSideQuestIds.insert(quest.id)
+                    announceQuestCompleted()
+                }
+            } else {
+                announcedClaimableSideQuestIds.remove(quest.id)
+            }
+        }
     }
 
     /// Les récompenses de quêtes sont des déblocages permanents : on les

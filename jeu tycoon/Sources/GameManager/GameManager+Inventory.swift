@@ -2,7 +2,9 @@ import SwiftUI
 
 extension GameManager {
     // MARK: - Traitement de l'Ajout de Canards
-    func processNewDucks(_ ducks: [Duck]) {
+    /// `deferSave`: n'écrit pas la sauvegarde (utilisé par l'automatisation qui ajoute des canards
+    /// NON assignés — sans impact sur les revenus/s — pour éviter un snapshot+invalidation par tick).
+    func processNewDucks(_ ducks: [Duck], deferSave: Bool = false) {
         var ducksToKeep = [Duck]()
         var recycleYield: BigNumber = .zero
         
@@ -10,7 +12,15 @@ extension GameManager {
         let isFilterActive = isUnlocked(.autoRecycleFilter) && filterRarityRaw != "None"
         
         let mutationLvl = spontaneousMutationLevel
-        
+
+        // CE QUI COÛTAIT : `mutationMultiplier` est une propriété calculée (arithmétique BigNumber +
+        // plusieurs `hasPrestigeUpgrade`, donc autant de hachages de String) qui était réévaluée pour
+        // CHAQUE canard auto-recyclé — jusqu'à des centaines par ouverture multiple.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : elle ne dépend que d'états (upgrades, niveau joueur) que
+        // cette boucle ne modifie pas ; sa valeur est donc strictement constante ici. Elle n'est calculée
+        // que si le filtre est actif, exactement comme avant où elle n'était lue que dans cette branche.
+        let mutationMult: BigNumber = isFilterActive ? mutationMultiplier : .zero
+
         for var duck in ducks {
             // Appliquer la mutation spontanée
             if mutationLvl > 0 {
@@ -22,7 +32,7 @@ extension GameManager {
             
             if isFilterActive && duck.rarity.rawValue == filterRarityRaw {
                 // Recycle automatically
-                let yield = duck.recycleValue * mutationMultiplier
+                let yield = duck.recycleValue * mutationMult
                 recycleYield += yield
             } else {
                 ducksToKeep.append(duck)
@@ -33,6 +43,8 @@ extension GameManager {
             addMutationPoints(recycleYield)
         }
         
+        registerDuckDiscoveries(ducks)
+        celebrateRareDucks(ducks)
         inventory.append(contentsOf: ducksToKeep)
         totalDucksFromCrates += ducks.count
         emitMissionEvent(.openCrates, amount: BigNumber(ducks.count))
@@ -42,9 +54,9 @@ extension GameManager {
         }
         
         checkStoryAction("open_wooden_crate")
-        saveGame()
+        if !deferSave { saveGame() }
     }
-    
+
     // MARK: - Inventory Limits
     
     var maxInventoryCapacity: Int {
@@ -57,7 +69,8 @@ extension GameManager {
     // MARK: - Actions Utilisateur
     
     var newFactoryCost: BigNumber {
-        return BigNumber(1000.0 * pow(5.0, Double(factories.count - 1)) * factoryCostDiscount)
+        // Calcul en BigNumber : pow(5.0, n) en Double débordait (→ ∞ → BigNumber(0) → usines gratuites) vers ~442 usines.
+        return BigNumber(1000.0) * BigNumber.pow(BigNumber(5.0), factories.count - 1) * factoryCostDiscount
     }
     
     func buyNewFactory() {
@@ -106,9 +119,9 @@ extension GameManager {
     
     // MARK: - Mutation & Recyclage
 
-    /// Perks équipés sur un canard
+    /// Perks équipés sur un canard (via l'index O(1))
     func equippedPerks(of duck: Duck) -> [Perk] {
-        return duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        return perks(for: duck.equippedPerkIds)
     }
 
     /// Détruit les perks « Recyclage+ » consommés lors du recyclage de ce canard (Perk détruit)
@@ -116,6 +129,31 @@ extension GameManager {
         let consumedIds = equippedPerks(of: duck).filter { $0.duckRecycleMutationMultiplier > 1.0 }.map { $0.id }
         if !consumedIds.isEmpty {
             perksInventory.removeAll { consumedIds.contains($0.id) }
+            invalidatePerkCache()
+        }
+    }
+
+    /// Variante « en masse » du recyclage des perks consommés.
+    ///
+    /// CE QUI COÛTAIT : appeler `consumeRecyclePerks(of:)` canard par canard faisait, pour chaque canard
+    /// porteur d'un perk « Recyclage+ », un `removeAll` complet sur `perksInventory` PUIS une
+    /// invalidation de l'index des perks — que le canard suivant devait aussitôt reconstruire
+    /// (O(canards × perks) au lieu de O(canards + perks)).
+    ///
+    /// POURQUOI LE RENDU RESTE IDENTIQUE : l'ensemble final des perks retirés est exactement le même.
+    /// Dans la version séquentielle, un perk déjà retiré n'était simplement plus proposé au canard
+    /// suivant ; ici il est simplement inséré une seconde fois dans un Set, ce qui ne change rien.
+    /// `perksInventory` conserve le même contenu et le même ordre, et l'index reconstruit est identique.
+    private func consumeRecyclePerks(of ducks: [Duck]) {
+        var consumedIds = Set<UUID>()
+        for duck in ducks {
+            for perk in equippedPerks(of: duck) where perk.duckRecycleMutationMultiplier > 1.0 {
+                consumedIds.insert(perk.id)
+            }
+        }
+        if !consumedIds.isEmpty {
+            perksInventory.removeAll { consumedIds.contains($0.id) }
+            invalidatePerkCache()
         }
     }
 
@@ -125,15 +163,6 @@ extension GameManager {
 
         let duck = inventory[index]
         let perks = equippedPerks(of: duck)
-
-        // Perk Ascension: chance de faire monter la rareté au lieu de recycler
-        let ascensionChance = perks.reduce(0.0) { $0 + $1.duckRarityUpgradeChance }
-        if ascensionChance > 0, let nextRarity = duck.rarity.nextRarity, Double.random(in: 0..<1) < ascensionChance {
-            inventory[index].rarity = nextRarity
-            checkStoryAction("recycle_duck")
-            saveGame()
-            return
-        }
 
         addMutationPoints(duck.calculateRecycleValue(with: perks, perkPowerFactor: perkPowerMultiplier) * mutationMultiplier)
         consumeRecyclePerks(of: duck)
@@ -152,7 +181,12 @@ extension GameManager {
     func potentialRecycleYield(rarity: DuckRarity) -> BigNumber {
         let assignedIds = Set(factories.flatMap { $0.assignedDuckIds })
         let unassigned = inventory.filter { $0.rarity == rarity && !assignedIds.contains($0.id) }
-        return unassigned.reduce(into: .zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPowerMultiplier) }
+        // CE QUI COÛTAIT : `perkPowerMultiplier` prend le verrou NSLock de RemoteConfig et refait un
+        // hachage de String (`hasPrestigeUpgrade`) ; il était réévalué pour CHAQUE canard de la somme.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : rien dans cette boucle ne modifie les upgrades ou la
+        // RemoteConfig, la valeur est donc strictement constante → mêmes facteurs, mêmes arrondis.
+        let perkPower = perkPowerMultiplier
+        return unassigned.reduce(into: .zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPower) }
     }
 
     func recycleAllUnassigned(rarity: DuckRarity) {
@@ -160,13 +194,15 @@ extension GameManager {
         let unassigned = inventory.filter { $0.rarity == rarity && !assignedIds.contains($0.id) }
         guard !unassigned.isEmpty else { return }
 
-        let sum = unassigned.reduce(into: BigNumber.zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPowerMultiplier) }
+        // Idem : multiplicateur invariant sorti de la boucle (voir `potentialRecycleYield`).
+        let perkPower = perkPowerMultiplier
+        let sum = unassigned.reduce(into: BigNumber.zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPower) }
         let totalYield = sum * mutationMultiplier
         addMutationPoints(totalYield)
 
-        for duck in unassigned {
-            consumeRecyclePerks(of: duck)
-        }
+        // Une seule passe de suppression des perks consommés au lieu d'une par canard (voir la doc
+        // de `consumeRecyclePerks(of ducks:)`) : mêmes perks retirés, même inventaire final.
+        consumeRecyclePerks(of: unassigned)
 
         let unassignedIds = Set(unassigned.map { $0.id })
         inventory.removeAll(where: { unassignedIds.contains($0.id) })
@@ -179,22 +215,62 @@ extension GameManager {
     }
 
     func recycleDucks(ids: Set<UUID>) {
+        // CE QUI COÛTAIT : `perkPowerMultiplier` (verrou RemoteConfig + hachage de String) et
+        // `mutationMultiplier` (BigNumber + plusieurs hachages de String) étaient recalculés pour
+        // CHAQUE canard de la sélection.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : ni `addMutationPoints` ni la suppression de canards ne
+        // modifient les upgrades / le niveau joueur dont ces valeurs dépendent → elles sont constantes
+        // sur toute la boucle, donc mêmes montants et mêmes arrondis qu'avant.
+        let perkPower = perkPowerMultiplier
+        let mutationMult = mutationMultiplier
+
+        // CE QUI COÛTAIT : pour CHAQUE id sélectionné, un `firstIndex` linéaire sur les usines PUIS
+        // un autre sur l'inventaire — soit O(sélection × inventaire), ce qui explose sur un « tout
+        // sélectionner » (5 000 × 10 000 comparaisons). En prime, `consumeRecyclePerks(of:)` était
+        // appelé canard par canard : chaque appel refaisait un `removeAll` complet sur
+        // `perksInventory` puis invalidait l'index des perks, que le canard suivant reconstruisait.
+        //
+        // POURQUOI LE RENDU RESTE IDENTIQUE : les deux index sont construits en « premier trouvé »,
+        // exactement comme `firstIndex` ; les ids sont parcourus dans le même ordre, donc
+        // `addMutationPoints` reçoit les mêmes montants dans le même ordre (mêmes arrondis cumulés).
+        // Les index de l'inventaire restent valides puisque la suppression est désormais faite en une
+        // seule passe à la fin, et l'ensemble final de canards retirés est le même. Pour les perks
+        // consommés, c'est le raisonnement déjà documenté sur `consumeRecyclePerks(of ducks:)` : un
+        // perk n'est équipé que sur une seule cible, donc en retirer un ne change jamais les perks
+        // résolus pour un autre canard de la sélection.
+        var factoryIndexByDuckId = [UUID: Int]()
+        for (factoryIndex, factory) in factories.enumerated() {
+            for duckId in factory.assignedDuckIds where factoryIndexByDuckId[duckId] == nil {
+                factoryIndexByDuckId[duckId] = factoryIndex
+            }
+        }
+        var inventoryIndexById = [UUID: Int]()
+        inventoryIndexById.reserveCapacity(inventory.count)
+        for (i, duck) in inventory.enumerated() where inventoryIndexById[duck.id] == nil {
+            inventoryIndexById[duck.id] = i
+        }
+
+        var recycledDucks = [Duck]()
+
         for id in ids {
-            // Si le canard est dans une usine, on le retire d'abord
-            if isDuckAssigned(duckId: id) {
-                if let factoryIndex = factories.firstIndex(where: { $0.assignedDuckIds.contains(id) }) {
-                    factories[factoryIndex].assignedDuckIds.removeAll { $0 == id }
-                }
+            // Si le canard est dans une usine, on le retire d'abord.
+            if let factoryIndex = factoryIndexByDuckId[id] {
+                factories[factoryIndex].assignedDuckIds.removeAll { $0 == id }
             }
 
             // Puis on le recycle
-            if let index = inventory.firstIndex(where: { $0.id == id }) {
+            if let index = inventoryIndexById[id] {
                 let duck = inventory[index]
-                addMutationPoints(duck.calculateRecycleValue(with: equippedPerks(of: duck), perkPowerFactor: perkPowerMultiplier) * mutationMultiplier)
-                consumeRecyclePerks(of: duck)
-                inventory.remove(at: index)
+                addMutationPoints(duck.calculateRecycleValue(with: equippedPerks(of: duck), perkPowerFactor: perkPower) * mutationMult)
+                recycledDucks.append(duck)
             }
         }
+
+        if !recycledDucks.isEmpty {
+            consumeRecyclePerks(of: recycledDucks)
+            inventory.removeAll { ids.contains($0.id) }
+        }
+
         totalRecycledDucks += ids.count
         emitMissionEvent(.recycleDuck, amount: BigNumber(ids.count))
         emitMissionEvent(.totalRecycleCount, amount: BigNumber(ids.count))
@@ -213,12 +289,15 @@ extension GameManager {
     func recycleBulkDucks(rarity: DuckRarity, level: Int) {
         let toRecycle = getDucksToRecycle(rarity: rarity, level: level)
 
-        let sum = toRecycle.reduce(into: BigNumber.zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPowerMultiplier) }
+        // Multiplicateur invariant sorti de la boucle (voir `potentialRecycleYield`) : même valeur pour
+        // chaque canard, donc mêmes montants.
+        let perkPower = perkPowerMultiplier
+        let sum = toRecycle.reduce(into: BigNumber.zero) { $0 += $1.calculateRecycleValue(with: equippedPerks(of: $1), perkPowerFactor: perkPower) }
         let idsToRemove = Set(toRecycle.map { $0.id })
 
-        for duck in toRecycle {
-            consumeRecyclePerks(of: duck)
-        }
+        // Une seule passe de suppression des perks consommés au lieu d'une par canard : mêmes perks
+        // retirés, même inventaire final (voir la doc de `consumeRecyclePerks(of ducks:)`).
+        consumeRecyclePerks(of: toRecycle)
 
         addMutationPoints(sum * mutationMultiplier)
         inventory.removeAll(where: { idsToRemove.contains($0.id) })
@@ -262,9 +341,10 @@ extension GameManager {
         
         addMutationPoints(BigNumber(mutYield) * mutationMultiplier)
         perksInventory.remove(at: index)
+        invalidatePerkCache()
         saveGame()
     }
-    
+
     private func getDucksToRecycle(rarity: DuckRarity, level: Int) -> [Duck] {
         let assignedIds = Set(factories.flatMap { $0.assignedDuckIds })
         return inventory.filter { duck in
@@ -278,8 +358,16 @@ extension GameManager {
     private func getFusionChunks(from ducks: [Duck]) -> [[Duck]] {
         let numberOfFusions = ducks.count / 3
         if numberOfFusions == 0 { return [] }
-        let sortedDucks = ducks.sorted(by: { $0.sellValue < $1.sellValue })
+        // CE QUI COÛTAIT : `sellValue` est une propriété CALCULÉE (BigNumber.pow, stats dynamiques…) et
+        // elle était réévaluée à chaque comparaison, soit 2·n·log n fois par appel — et cette fonction
+        // est appelée dans les boucles imbriquées de la méga-fusion.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : on pré-calcule la clé une fois par canard puis on trie les
+        // index. Le comparateur renvoie exactement les mêmes booléens pour les mêmes paires et le tri
+        // de la stdlib est stable, donc la permutation obtenue — et donc les chunks — sont les mêmes.
+        let sellValues = ducks.map { $0.sellValue }
+        let sortedDucks = ducks.indices.sorted { sellValues[$0] < sellValues[$1] }.map { ducks[$0] }
         var chunks = [[Duck]]()
+        chunks.reserveCapacity(numberOfFusions)
         for i in 0..<numberOfFusions {
             chunks.append(Array(sortedDucks[(i * 3)..<(i * 3 + 3)]))
         }
@@ -341,16 +429,18 @@ extension GameManager {
         
         // Créer le nouveau canard
         // On divise par le multiplicateur de la nouvelle rareté pour que le sellValue final soit exactement totalSellValue
-        let rawCustomBasePrice = (totalSellValue / newRarity.multiplier) * fusionValueMultiplier
+        let rawCustomBasePrice = (totalSellValue / newRarity.multiplier)
         let newCustomBasePrice = rawCustomBasePrice
         var newDuck = createFusedDuck(from: ducksToFuse, newRarity: newRarity, newLevel: newLevel, newCustomBasePrice: newCustomBasePrice)
         
         // Spontaneous Mutation check
-        if Double.random(in: 0...1) < (0.01 + prestigeSpontaneousMutationChance) {
+        if Double.random(in: 0...1) < 0.01 {
             newDuck.mutation = DuckMutation.allCases.filter { $0 != .aucune }.randomElement() ?? .aucune
         }
         
         inventory.append(newDuck)
+        registerDuckDiscovery(newDuck)
+        celebrateRareDucks([newDuck])
         totalFusionsDone += 1
         emitMissionEvent(.fuseCommonDuck)
         emitMissionEvent(.totalFusionCount)
@@ -362,19 +452,35 @@ extension GameManager {
     private func getWeightedSellValue(from chunk: [Duck]) -> BigNumber {
         var total = BigNumber.zero
         for duck in chunk {
-            let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first(where: { $0.id == id }) }
-            let weight = duck.fusionWeight(with: perks)
+            // CE QUI COÛTAIT : un scan linéaire complet de `perksInventory` par perk équipé, répété
+            // pour chaque canard de chaque chunk des (méga-)fusions.
+            // POURQUOI LE RENDU RESTE IDENTIQUE : `equippedPerks(of:)` passe par l'index O(1)
+            // `perks(for:)`, qui préserve l'ordre des ids et ignore les ids introuvables — il rend
+            // donc exactement le même tableau que le `first(where:)` d'origine.
+            let duckPerks = equippedPerks(of: duck)
+            let weight = duck.fusionWeight(with: duckPerks)
             total += duck.sellValue * Double(weight)
         }
         return total
     }
-    
+
     private func getWeightedDisplaySellValue(from chunk: [Duck]) -> BigNumber {
+        // CE QUI COÛTAIT : `displaySellValue(for:)` relit `earningsMultiplier`,
+        // `perkPowerMultiplier` et `collectionDuckBonusMultiplier` pour CHAQUE canard — chacun
+        // prenant le verrou NSLock de RemoteConfig et refaisant des hachages de String — alors que
+        // ces trois valeurs sont invariantes sur toute la boucle.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : on appelle la variante « boucle » déjà prévue pour ça,
+        // dont le corps de calcul est le même (mêmes facteurs, même ordre de multiplication, donc
+        // mêmes arrondis) ; seuls les multiplicateurs globaux sont lus une fois au lieu de n fois.
+        let earningsMult = earningsMultiplier
+        let perkPower = perkPowerMultiplier
+        let collectionBonus = collectionDuckBonusMultiplier
         var total = BigNumber.zero
         for duck in chunk {
-            let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first(where: { $0.id == id }) }
-            let weight = duck.fusionWeight(with: perks)
-            total += displaySellValue(for: duck) * Double(weight)
+            // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks).
+            let duckPerks = equippedPerks(of: duck)
+            let weight = duck.fusionWeight(with: duckPerks)
+            total += displaySellValue(for: duck, earningsMult: earningsMult, perkPower: perkPower, collectionBonus: collectionBonus) * Double(weight)
         }
         return total
     }
@@ -385,29 +491,51 @@ extension GameManager {
         let assigned = filterAssigned ? Set(self.factories.flatMap { $0.assignedDuckIds }) : Set()
         
         return await Task.detached {
-            var ducks = snapshot
-            if filterAssigned {
-                ducks = ducks.filter { !assigned.contains($0.id) }
-            }
-            
-            ducks.sort { d1, d2 in
-                switch sortOption {
-                case .defaultSort:
-                    if d1.rarity.multiplier != d2.rarity.multiplier { return d1.rarity.multiplier > d2.rarity.multiplier }
-                    if d1.fusionLevel != d2.fusionLevel { return d1.fusionLevel > d2.fusionLevel }
-                    return d1.sellValue > d2.sellValue
-                case .recycleValueDesc:
-                    return d1.recycleValue > d2.recycleValue
-                case .recycleValueAsc:
-                    return d1.recycleValue < d2.recycleValue
-                case .sellValueDesc:
-                    return d1.sellValue > d2.sellValue
-                case .rarity:
-                    return d1.rarity.multiplier > d2.rarity.multiplier
+            let ducks: [Duck] = filterAssigned ? snapshot.filter { !assigned.contains($0.id) } : snapshot
+
+            // CE QUI COÛTAIT : `sellValue` / `recycleValue` sont des propriétés CALCULÉES
+            // (getDynamicStats + plusieurs BigNumber.pow) et elles étaient réévaluées à CHAQUE
+            // comparaison du tri, soit ~2·n·log n fois par appel (≈70 000 recalculs pour 3 000
+            // canards) — et ce tri est relancé à chaque canard généré, depuis l'inventaire, la
+            // fusion, les usines et le rituel. Le `switch sortOption` était lui aussi réévalué
+            // à chaque comparaison.
+            //
+            // POURQUOI LE RENDU RESTE IDENTIQUE : « decorate-sort-undecorate ». Ces propriétés
+            // sont pures (elles ne dépendent que des champs du canard, que rien ne modifie ici),
+            // donc la clé pré-calculée vaut exactement ce que le comparateur lisait. On trie des
+            // index avec un comparateur qui renvoie les MÊMES booléens pour les mêmes paires, y
+            // compris les départages du cas `.defaultSort` (rareté, puis niveau de fusion, puis
+            // sellValue) ; le tri de la stdlib étant déterministe, la permutation obtenue est la
+            // même, donc la liste renvoyée est identique élément pour élément.
+            let order: [Int]
+            switch sortOption {
+            case .defaultSort:
+                let keys: [(rarity: Double, fusion: Int, sell: BigNumber)] = ducks.map {
+                    (rarity: $0.rarity.multiplier, fusion: $0.fusionLevel, sell: $0.sellValue)
                 }
+                order = ducks.indices.sorted { i, j in
+                    if keys[i].rarity != keys[j].rarity { return keys[i].rarity > keys[j].rarity }
+                    if keys[i].fusion != keys[j].fusion { return keys[i].fusion > keys[j].fusion }
+                    return keys[i].sell > keys[j].sell
+                }
+            case .recycleValueDesc:
+                let keys = ducks.map { $0.recycleValue }
+                order = ducks.indices.sorted { keys[$0] > keys[$1] }
+            case .recycleValueAsc:
+                let keys = ducks.map { $0.recycleValue }
+                order = ducks.indices.sorted { keys[$0] < keys[$1] }
+            case .sellValueDesc:
+                let keys = ducks.map { $0.sellValue }
+                order = ducks.indices.sorted { keys[$0] > keys[$1] }
+            case .rarity:
+                let keys = ducks.map { $0.rarity.multiplier }
+                order = ducks.indices.sorted { keys[$0] > keys[$1] }
             }
-            
-            return Array(ducks.prefix(limit))
+
+            // On ne matérialise que la page demandée : `order` est la permutation triée, donc
+            // ses `limit` premiers index désignent exactement les `limit` premiers canards du
+            // tableau trié (même contenu que `Array(ducks.prefix(limit))` d'avant).
+            return order.prefix(limit).map { ducks[$0] }
         }.value
     }
     
@@ -418,18 +546,33 @@ extension GameManager {
         
         var fusionsCount = 0
         var totalCost = BigNumber.zero
-        
+
+        // CE QUI COÛTAIT : `hasPrestigeUpgrade` (hachage de String dans un Set) et `taxMultiplier`
+        // (lecture de dictionnaire + `hasPrestigeUpgrade`) étaient réévalués pour CHAQUE chunk,
+        // et les trois multiplicateurs globaux de `displaySellValue(for:)` pour CHAQUE canard
+        // (verrou NSLock de RemoteConfig + hachages de String à chaque fois).
+        // POURQUOI LE RENDU RESTE IDENTIQUE : cette fonction ne fait que lire — elle ne modifie ni
+        // les upgrades, ni le prestige, ni le niveau joueur — donc ces valeurs sont strictement
+        // constantes sur toute la boucle : mêmes facteurs, même ordre de multiplication, mêmes
+        // arrondis, donc exactement le même coût affiché.
+        let hasFusionIngenierie = hasPrestigeUpgrade("p4_fusion_ing")
+        let tax = taxMultiplier
+        let earningsMult = earningsMultiplier
+        let perkPower = perkPowerMultiplier
+        let collectionBonus = collectionDuckBonusMultiplier
+
         for (level, ducks) in grouped {
             for chunk in getFusionChunks(from: ducks) {
                 var sumSellValue = getWeightedDisplaySellValue(from: chunk)
-                if hasPrestigeUpgrade("p4_fusion_ing"), let maxVal = chunk.map({ displaySellValue(for: $0) }).max() {
+                if hasFusionIngenierie,
+                   let maxVal = chunk.map({ displaySellValue(for: $0, earningsMult: earningsMult, perkPower: perkPower, collectionBonus: collectionBonus) }).max() {
                     sumSellValue += maxVal
                 }
                 var futureDisplayPrice = sumSellValue
                 if level == 4 {
                     futureDisplayPrice *= 2.0
                 }
-                totalCost += futureDisplayPrice * taxMultiplier
+                totalCost += futureDisplayPrice * tax
                 fusionsCount += 1
             }
         }
@@ -451,7 +594,12 @@ extension GameManager {
         var ducksToRemove = Set<UUID>()
         var ducksToAdd = [Duck]()
         let assignedIds = Set(factories.flatMap { $0.assignedDuckIds })
-        
+
+        // CE QUI COÛTAIT : `hasPrestigeUpgrade` (hachage de String) était réévalué pour chaque chunk.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : rien dans cette boucle ne modifie
+        // `purchasedPrestigeUpgrades`, la valeur est donc constante — même branche prise à chaque tour.
+        let hasFusionIngenierie = hasPrestigeUpgrade("p4_fusion_ing")
+
         for (level, ducks) in grouped {
             for chunk in getFusionChunks(from: ducks) {
                 for duck in chunk {
@@ -462,9 +610,9 @@ extension GameManager {
                         }
                     }
                 }
-                
+
                 var futureRawPrice = getWeightedSellValue(from: chunk)
-                if hasPrestigeUpgrade("p4_fusion_ing"), let maxRaw = chunk.map({ $0.sellValue }).max() {
+                if hasFusionIngenierie, let maxRaw = chunk.map({ $0.sellValue }).max() {
                     futureRawPrice += maxRaw
                 }
                 
@@ -479,7 +627,7 @@ extension GameManager {
                     newRarity = rarity.nextRarity ?? rarity
                 }
                 
-                let rawCustomBasePrice = (futureRawPrice / newRarity.multiplier) * fusionValueMultiplier
+                let rawCustomBasePrice = (futureRawPrice / newRarity.multiplier)
                 
                 ducksToAdd.append(createFusedDuck(from: chunk, newRarity: newRarity, newLevel: newLevel, newCustomBasePrice: rawCustomBasePrice))
             }
@@ -487,7 +635,9 @@ extension GameManager {
         
         inventory.removeAll(where: { ducksToRemove.contains($0.id) })
         inventory.append(contentsOf: ducksToAdd)
-        
+        registerDuckDiscoveries(ducksToAdd)
+        celebrateRareDucks(ducksToAdd)
+
         totalFusionsDone += ducksToAdd.count
         emitMissionEvent(.fuseCommonDuck, amount: BigNumber(ducksToAdd.count))
         emitMissionEvent(.totalFusionCount, amount: BigNumber(ducksToAdd.count))
@@ -513,7 +663,21 @@ extension GameManager {
         var ducksToRemove = Set<UUID>()
         var ducksToAdd = [Duck]()
         let assignedIds = simulateOnly ? Set<UUID>() : Set(factories.flatMap { $0.assignedDuckIds })
-        
+
+        // CE QUI COÛTAIT : `hasPrestigeUpgrade` (hachage de String), `taxMultiplier` (dictionnaire +
+        // `hasPrestigeUpgrade`) et les trois multiplicateurs globaux de `displaySellValue(for:)`
+        // (verrou NSLock de RemoteConfig + hachages de String) étaient réévalués à CHAQUE chunk /
+        // CHAQUE canard, sur une boucle en cascade qui peut traiter tout l'inventaire plusieurs fois.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : la méga-fusion ne touche ni aux upgrades, ni au
+        // prestige, ni au niveau joueur — ces valeurs sont donc constantes du début à la fin. On
+        // passe par la variante « boucle » de `displaySellValue`, dont le corps de calcul est le
+        // même (mêmes facteurs, même ordre, mêmes arrondis).
+        let hasFusionIngenierie = hasPrestigeUpgrade("p4_fusion_ing")
+        let tax = taxMultiplier
+        let earningsMult = earningsMultiplier
+        let perkPower = perkPowerMultiplier
+        let collectionBonus = collectionDuckBonusMultiplier
+
         var didFuseInPass = true
         while didFuseInPass {
             didFuseInPass = false
@@ -532,19 +696,19 @@ extension GameManager {
                         var futureRawPrice = getWeightedSellValue(from: chunk)
                         var futureDisplayPrice = getWeightedDisplaySellValue(from: chunk)
                         
-                        if hasPrestigeUpgrade("p4_fusion_ing") {
+                        if hasFusionIngenierie {
                             let maxRaw = chunk.map({ $0.sellValue }).max() ?? .zero
-                            let maxDisplay = chunk.map({ displaySellValue(for: $0) }).max() ?? .zero
+                            let maxDisplay = chunk.map({ displaySellValue(for: $0, earningsMult: earningsMult, perkPower: perkPower, collectionBonus: collectionBonus) }).max() ?? .zero
                             futureRawPrice += maxRaw
                             futureDisplayPrice += maxDisplay
                         }
-                        
+
                         if level == 4 {
                             futureRawPrice *= 2.0
                             futureDisplayPrice *= 2.0
                         }
-                        
-                        totalCost += futureDisplayPrice * taxMultiplier // 100% tax for mega fusion
+
+                        totalCost += futureDisplayPrice * tax // 100% tax for mega fusion
                         totalFusionsCount += 1
                         
                         var newRarity = rarity
@@ -554,7 +718,7 @@ extension GameManager {
                             newRarity = rarity.nextRarity ?? rarity
                         }
                         
-                        let rawCustomBasePrice = (futureRawPrice / newRarity.multiplier) * fusionValueMultiplier
+                        let rawCustomBasePrice = (futureRawPrice / newRarity.multiplier)
                         let newCustomBasePrice = rawCustomBasePrice
                         
                         if !simulateOnly {
@@ -586,6 +750,8 @@ extension GameManager {
             inventory.removeAll(where: { ducksToRemove.contains($0.id) })
             let finalDucksToAdd = ducksToAdd.filter { !ducksToRemove.contains($0.id) }
             inventory.append(contentsOf: finalDucksToAdd)
+            registerDuckDiscoveries(finalDucksToAdd)
+            celebrateRareDucks(finalDucksToAdd)
             totalFusionsDone += finalDucksToAdd.count
             saveGame()
         }
@@ -612,12 +778,16 @@ extension GameManager {
     func upgradeDuckSize(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
-        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        
+        // CE QUI COÛTAIT : un scan linéaire de tout `perksInventory` par perk équipé.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : `equippedPerks(of:)` s'appuie sur l'index O(1)
+        // `perks(for:)`, qui conserve l'ordre des ids et ignore les ids introuvables → même tableau.
+        let duckPerks = equippedPerks(of: duck)
+
         if let cost = duck.sizeUpgradeCost(with: duckPerks), mutationPoints >= cost, let nextSize = duck.size.next {
             mutationPoints -= cost
             duck.size = nextSize
             inventory[index] = duck
+            registerDuckDiscovery(duck)
             emitMissionEvent(.upgradeDuckSize)
             checkStoryAction("upgrade_duck")
             saveGame()
@@ -627,8 +797,9 @@ extension GameManager {
     func upgradeDuckMutation(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
-        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        
+        // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks).
+        let duckPerks = equippedPerks(of: duck)
+
         if let cost = duck.mutationUpgradeCost(with: duckPerks), mutationPoints >= cost, let nextMutation = duck.mutation.next {
             mutationPoints -= cost
             duck.mutation = nextMutation
@@ -639,16 +810,16 @@ extension GameManager {
     }
     
     func getDynamicStats(for duck: Duck) -> (level: Int, size: DuckSize, mutation: DuckMutation) {
-        let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        let stats = duck.getDynamicStats(with: perks)
+        let stats = duck.getDynamicStats(with: equippedPerks(of: duck))
         return (stats.level, stats.size, stats.mutation)
     }
     
     func upgradeDuckLevel(id: UUID) {
         guard let index = inventory.firstIndex(where: { $0.id == id }) else { return }
         var duck = inventory[index]
-        let duckPerks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        
+        // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks).
+        let duckPerks = equippedPerks(of: duck)
+
         if let cost = duck.levelUpgradeCost(with: duckPerks), money >= cost, duck.level < 100 {
             money -= cost
             duck.level += 1
@@ -667,7 +838,10 @@ extension GameManager {
         if factories[index].level >= 100 { return }
         let amountToUpgrade = min(levels, 100 - factories[index].level)
         
-        let factoryPerks = factories[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        // CE QUI COÛTAIT : un scan linéaire de tout `perksInventory` par perk équipé.
+        // POURQUOI LE RENDU RESTE IDENTIQUE : `perks(for:)` est l'index O(1) déjà en place ; il
+        // préserve l'ordre des ids et ignore les ids introuvables → tableau strictement identique.
+        let factoryPerks = perks(for: factories[index].equippedPerkIds)
         let cost = factories[index].upgradeCost(levels: amountToUpgrade, factoryPerks: factoryPerks, baseDiscount: factoryCostDiscount)
         
         if money >= cost {
@@ -688,7 +862,8 @@ extension GameManager {
         // Bloqué par Prestige Upgrade si on n'a pas l'upgrade (uniquement pour la première évolution)
         if factories[index].evolution == 0 && !hasPrestigeUpgrade("p3_usine_evo") { return }
         
-        let factoryPerks = factories[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+        // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks).
+        let factoryPerks = perks(for: factories[index].equippedPerkIds)
         let cost = factories[index].evolveCost(factoryPerks: factoryPerks, baseDiscount: factoryEvolutionCostDiscount)
         if money >= cost {
             money -= cost
@@ -748,7 +923,9 @@ extension GameManager {
             factories[index].equippedPerkIds.removeAll { $0 == perkId }
             
             // Si on retire un perk qui donnait un slot canard extra, retirer le 2ème canard
-            let currentPerks = factories[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks :
+            // `perks(for:)` préserve l'ordre et ignore les ids introuvables).
+            let currentPerks = perks(for: factories[index].equippedPerkIds)
             let hasExtraDuckSlot = currentPerks.contains(where: { $0.factoryExtraDuckSlot })
             if !hasExtraDuckSlot && factories[index].assignedDuckIds.count > 1 {
                 factories[index].assignedDuckIds = [factories[index].assignedDuckIds[0]]
@@ -771,7 +948,8 @@ extension GameManager {
             inventory[index].equippedPerkIds.removeAll { $0 == perkId }
             
             // Si on retire un perk qui donnait un slot perk extra, retirer les perks en surplus
-            let currentPerks = inventory[index].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
+            // Index O(1) au lieu du scan linéaire de `perksInventory` (même tableau de perks).
+            let currentPerks = perks(for: inventory[index].equippedPerkIds)
             let hasExtraPerkSlot = currentPerks.contains(where: { $0.duckExtraPerkSlot })
             let allowedSlots = hasExtraPerkSlot ? basePerkSlots + 1 : basePerkSlots
             if inventory[index].equippedPerkIds.count > allowedSlots {
@@ -783,28 +961,31 @@ extension GameManager {
         }
     }
     
+    // CE QUI COÛTAIT : ces quatre helpers sont appelés par les vues (une fois par usine / par canard
+    // affiché, donc à chaque réévaluation de la liste) et chacun faisait un scan linéaire complet de
+    // `perksInventory` pour CHAQUE perk équipé.
+    // POURQUOI LE RENDU RESTE IDENTIQUE : `perks(for:)` / `equippedPerks(of:)` s'appuient sur l'index
+    // O(1) déjà en place, qui préserve l'ordre des ids et ignore les ids introuvables : le tableau de
+    // perks est le même, donc le `contains(where:)` et la valeur renvoyée sont les mêmes.
+
     /// Calcule le nombre max de canards autorisés dans une usine
     func maxDuckSlots(for factory: DuckFactory) -> Int {
-        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        return perks.contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
+        return perks(for: factory.equippedPerkIds).contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
     }
-    
+
     /// Calcule le nombre max de perks autorisés sur une usine
     func maxPerkSlots(for factory: DuckFactory) -> Int {
-        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        return perks.contains(where: { $0.factoryExtraPerkSlot }) ? basePerkSlots + 1 : basePerkSlots
+        return perks(for: factory.equippedPerkIds).contains(where: { $0.factoryExtraPerkSlot }) ? basePerkSlots + 1 : basePerkSlots
     }
-    
+
     /// Calcule le nombre max de canards autorisés sur une usine
     func maxDucks(for factory: DuckFactory) -> Int {
-        let perks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        return perks.contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
+        return perks(for: factory.equippedPerkIds).contains(where: { $0.factoryExtraDuckSlot }) ? 2 : 1
     }
-    
+
     /// Calcule le nombre max de perks autorisés sur un canard
     func maxDuckPerkSlots(for duck: Duck) -> Int {
-        let perks = duck.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-        return perks.contains(where: { $0.duckExtraPerkSlot }) ? basePerkSlots + 1 : basePerkSlots
+        return equippedPerks(of: duck).contains(where: { $0.duckExtraPerkSlot }) ? basePerkSlots + 1 : basePerkSlots
     }
     
     /// Retourne TOUS les perks pour un type donné (pour l'affichage)
@@ -841,6 +1022,7 @@ extension GameManager {
                 // Succès
                 inventory[index].ritualSuccesses += 1
             }
+            inventory[index].ritualCount += 1  // soft cap : durcit le prochain rituel de ce canard
             emitMissionEvent(.upgradeDuckMutation)
             checkStoryAction("ritual_success")
             saveGame()

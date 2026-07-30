@@ -28,10 +28,15 @@ extension GameManager {
     
     func startGameLoop() {
         lastTickTime = Date()
+        timer?.invalidate()
         // Un tick toutes les 1.0 seconde
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.tick()
         }
+        // Sans tolérance, le noyau doit programmer un réveil EXACT chaque seconde et ne peut pas
+        // le regrouper avec les autres réveils du système : c'est le pire cas pour la batterie.
+        // 0,2 s de marge est invisible pour le joueur (le tick utilise le temps réel écoulé).
+        timer?.tolerance = 0.2
     }
 
     
@@ -58,6 +63,24 @@ extension GameManager {
         cachedEarningsPerSecond = nil
         cachedMutationsPerSecond = nil
         isAssignedDucksCacheValid = false
+    }
+
+    /// Résout des perks par id via un index O(1) (reconstruit paresseusement). Préserve l'ordre
+    /// et la sémantique « ignore les ids introuvables » du scan linéaire d'origine.
+    func perks(for ids: [UUID]) -> [Perk] {
+        guard !ids.isEmpty else { return [] }
+        if !isPerkCacheValid { rebuildPerkCache() }
+        return ids.compactMap { perkById[$0] }
+    }
+
+    func invalidatePerkCache() {
+        isPerkCacheValid = false
+    }
+
+    private func rebuildPerkCache() {
+        perkById.removeAll(keepingCapacity: true)
+        for perk in perksInventory { perkById[perk.id] = perk }
+        isPerkCacheValid = true
     }
     
     private func tick() {
@@ -87,30 +110,41 @@ extension GameManager {
         if cachedEarningsPerSecond == nil || cachedMutationsPerSecond == nil {
             var earningsThisSecond: BigNumber = .zero
             var mutationsThisSecond: BigNumber = .zero
-            
+
             if !isAssignedDucksCacheValid {
                 rebuildAssignedDucksCache()
             }
-            
+
+            // Perks résolus UNE seule fois par usine (index O(1)) et réutilisés pour le bonus global
+            // et les calculs de revenus (au lieu de deux scans linéaires par usine).
+            let perksByFactory = factories.map { perks(for: $0.equippedPerkIds) }
             var globalFactoryBonusOthers = 0.0
-            for factory in factories {
-                let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-                for perk in factoryPerks {
-                    globalFactoryBonusOthers += perk.factoryBonusOthers
-                }
+            for fp in perksByFactory {
+                for perk in fp { globalFactoryBonusOthers += perk.factoryBonusOthers }
             }
-            
-            for factory in factories {
+
+            // Multiplicateurs joueur invariants sur la passe : calculés une fois.
+            // `earningsMult` et `collectionBonus` s'ajoutent ici pour la même raison que `ppm` :
+            // `displaySellValue(for:)` les relisait pour CHAQUE canard assigné, et chacun prend le
+            // verrou NSLock de RemoteConfig plus plusieurs hachages de String. Valeur identique,
+            // simplement calculée une fois par passe au lieu d'une fois par canard.
+            let ppm = perkPowerMultiplier
+            let mutMult = mutationMultiplier
+            let earningsMult = earningsMultiplier
+            let collectionBonus = collectionDuckBonusMultiplier
+
+            for (i, factory) in factories.enumerated() {
                 if !factory.assignedDuckIds.isEmpty {
                     let ducks = factory.assignedDuckIds.compactMap { assignedDucksCache[$0] }
-                    let displayValues = ducks.map { displaySellValue(for: $0) }
-                    let factoryPerks = factory.equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
-                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, globalPerkBonus: globalFactoryBonusOthers, perkPowerFactor: perkPowerMultiplier)
-                    mutationsThisSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutationMultiplier, factoryPerks: factoryPerks)
+                    let displayValues = ducks.map {
+                        displaySellValue(for: $0, earningsMult: earningsMult, perkPower: ppm, collectionBonus: collectionBonus)
+                    }
+                    let factoryPerks = perksByFactory[i]
+                    earningsThisSecond += factory.calculateEarningsPerSecond(assignedDucks: ducks, duckDisplayValues: displayValues, factoryPerks: factoryPerks, globalPerkBonus: globalFactoryBonusOthers, perkPowerFactor: ppm)
+                    mutationsThisSecond += factory.calculateMutationsPerSecond(assignedDucks: ducks, globalBonus: mutMult, factoryPerks: factoryPerks)
                 }
             }
-            
-            // Arrondir avec 5 chiffres significatifs comme suggéré
+
             cachedEarningsPerSecond = earningsThisSecond
             cachedMutationsPerSecond = mutationsThisSecond
         }
@@ -143,18 +177,31 @@ extension GameManager {
         }
         
         processOnlineAutomation(deltaTime: deltaTime)
-        
-        verifyStateMissions()
+
+        // Ces scans passifs (revenus/ADN atteignant un palier) n'ont pas besoin d'être vérifiés
+        // chaque seconde — les progrès liés aux actions passent déjà par emitMissionEvent.
+        // Toutes les ~5 s : imperceptible pour le joueur, O(missions)+O(quêtes) divisé par 5.
+        if tickCount % 5 == 0 {
+            verifyStateMissions()
+            checkSideQuestToasts()
+        }
     }
     
     // MARK: - Automatisation
     private func processOnlineAutomation(deltaTime: Double) {
-        // Auto-Ouvrier
+        // Auto-Ouvrier : ajoute des canards NON assignés (sans impact sur les revenus/s).
+        // On calcule le bonus de chance UNE fois, on saute la sauvegarde par canard (deferSave)
+        // et on s'arrête dès qu'un achat échoue (l'argent ne remonte pas dans ce tick).
         if let interval = autoCrateInterval, let targetId = autoCrateTargetId, let crate = Crate.allCrates.first(where: { $0.type.rawValue == targetId }) {
             autoCrateAccumulator += deltaTime
-            while autoCrateAccumulator >= interval {
-                autoCrateAccumulator -= interval
-                _ = silentBuyCrateAutomation(crate: crate)
+            if autoCrateAccumulator >= interval {
+                while autoCrateAccumulator >= interval {
+                    autoCrateAccumulator -= interval
+                    if !silentBuyCrateAutomation(crate: crate, deferSave: true) {
+                        autoCrateAccumulator = 0
+                        break
+                    }
+                }
             }
         }
         
@@ -211,15 +258,15 @@ extension GameManager {
                     while remainingToGenerate > 0 {
                         let spaceLeft = maxInventoryCapacity - inventory.count
                         if spaceLeft <= 0 { break }
-                        
+
                         let batchSize = min(remainingToGenerate, spaceLeft)
                         var generatedDucks = [Duck]()
                         generatedDucks.reserveCapacity(batchSize)
-                        
+
                         for _ in 0..<batchSize {
-                            let rarity = crate.probabilities.rollRarity(bonus: crateLuckBonus)
+                            let rarity = crate.probabilities.rollRarity()
                             let size = DuckSize.rollRandom(genesCroissants: hasGenes)
-                            let mutation = DuckMutation.rollRandom(bonusChance: prestigeSpontaneousMutationChance)
+                            let mutation = DuckMutation.rollRandom()
                             generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
                         }
                         
@@ -241,9 +288,10 @@ extension GameManager {
     
     private func executeAutoFactoryUpgrade(factoryIndex: Int, maxCycles: Int) -> BigNumber {
         var spent = BigNumber.zero
+        // Les perks de l'usine sont invariants sur les cycles : résolus une seule fois.
+        let factoryPerks = perks(for: factories[factoryIndex].equippedPerkIds)
         for _ in 0..<maxCycles {
             if factories[factoryIndex].level >= 100 { break }
-            let factoryPerks = factories[factoryIndex].equippedPerkIds.compactMap { id in perksInventory.first { $0.id == id } }
             let upgradeCost = factories[factoryIndex].upgradeCost(levels: 1, factoryPerks: factoryPerks, baseDiscount: factoryCostDiscount)
             if money >= upgradeCost {
                 money -= upgradeCost
@@ -257,9 +305,9 @@ extension GameManager {
         return spent
     }
     
-    private func silentBuyCrateAutomation(crate: Crate) -> Bool {
+    private func silentBuyCrateAutomation(crate: Crate, deferSave: Bool = false) -> Bool {
         if inventory.count >= maxInventoryCapacity { return false } // Excédent jeté ignoré pour l'automatisation en ligne pour ne pas gaspiller d'argent sans avertissement
-        
+
         if let moneyCost = crate.costMoney, money >= moneyCost {
             money -= moneyCost
         } else if let mutCost = crate.costMutationPoints, mutationPoints >= mutCost {
@@ -267,14 +315,14 @@ extension GameManager {
         } else {
             return false
         }
-        
+
         let hasGenes = isUnlocked(.genesCroissants)
-        let rarity = crate.probabilities.rollRarity(bonus: crateLuckBonus)
+        let rarity = crate.probabilities.rollRarity()
         let size = DuckSize.rollRandom(genesCroissants: hasGenes)
-        let mutation = DuckMutation.rollRandom(bonusChance: prestigeSpontaneousMutationChance)
+        let mutation = DuckMutation.rollRandom()
         let duck = Duck(rarity: rarity, size: size, mutation: mutation)
-        
-        processNewDucks([duck])
+
+        processNewDucks([duck], deferSave: deferSave)
         return true
     }
     

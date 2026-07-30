@@ -14,7 +14,7 @@ enum AdPlacement: CaseIterable {
         switch self {
         case .factoryBoost: return "ca-app-pub-7096586150673683/1776948229" // 1. Boost Usines
         case .ritualSave: return "ca-app-pub-7096586150673683/1800998957"   // 2. Sauvetage Rituel
-        case .mysteryCrate: return "ca-app-pub-7096586150673683/7361135752" // 3. Caisse Mystère
+        case .mysteryCrate: return "ca-app-pub-7096586150673683/7361135752" // 3. Capsule Mystère
         case .dailyGems: return "ca-app-pub-7096586150673683/5524621544"    // 4. Gemmes Quotidiennes
         case .offlineBoost: return "ca-app-pub-7096586150673683/1776948229" // 5. Boost Hors-Ligne (J'utilise le même que Usine pour le moment)
         }
@@ -27,7 +27,13 @@ import GoogleMobileAds
 @MainActor
 class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @unchecked Sendable {
     static let shared = AdManager()
-    
+
+    #if DEBUG
+    /// Mode développeur : toute pub est considérée comme regardée avec succès,
+    /// sans charger AdMob. Permet de tester tous les flux de récompense.
+    static var simulateAdSuccess = false
+    #endif
+
     @Published var isReady: Bool = false
     
     private var rewardedAds: [AdPlacement: RewardedAd] = [:]
@@ -62,6 +68,13 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate, @uncheck
     }
     
     func showRewardedAd(for placement: AdPlacement, completion: @escaping (Bool) -> Void) {
+        #if DEBUG
+        if AdManager.simulateAdSuccess {
+            completion(true)
+            return
+        }
+        #endif
+
         self.onRewardEarned = completion
         self.isRewardEarned = false
         self.currentlyShowingPlacement = placement

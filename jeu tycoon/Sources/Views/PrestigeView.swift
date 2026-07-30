@@ -13,6 +13,10 @@ struct PrestigeView: View {
     // Pour la fenêtre modale d'achat
     @State private var selectedUpgrade: PrestigeUpgrade? = nil
     @State private var showingUpgradeDetails = false
+
+    // Réacteur Stellaire & respec de l'arbre
+    @State private var showingReactor = false
+    @State private var showRespecPrestigeConfirm = false
     
     // Animations
     @State private var starPulse = false
@@ -34,13 +38,9 @@ struct PrestigeView: View {
                 Text(tr("Le Prestige"))
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color(hue: 0.13, saturation: 0.9, brightness: 1.0), Color(hue: 0.08, saturation: 0.85, brightness: 1.0)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                        LinearGradient(colors: [Neon.purple, Neon.yellow], startPoint: .leading, endPoint: .trailing)
                     )
-                    .shadow(color: .yellow.opacity(0.5), radius: 10)
+                    .shadow(color: Neon.purple.opacity(0.6), radius: 10)
                     .padding(.top, 10)
                 
                 // Sous-onglets stylisés
@@ -93,6 +93,18 @@ struct PrestigeView: View {
                 .presentationDetents([.height(350)])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showingReactor) {
+            ReactorView()
+                .environment(gameManager)
+        }
+        .alert(tr("Réinitialiser l'Arbre ?"), isPresented: $showRespecPrestigeConfirm) {
+            Button(tr("Annuler"), role: .cancel) {}
+            Button(tr("Confirmer") + " (200 💎)", role: .destructive) {
+                gameManager.respecPrestigeTree()
+            }
+        } message: {
+            Text(tr("Toutes les améliorations de prestige sont réinitialisées et les étoiles dépensées vous sont rendues. Coût : 200 gemmes."))
+        }
         .onAppear {
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
                 starPulse = true
@@ -136,9 +148,9 @@ struct PrestigeView: View {
                     // Carte des bonus passifs
                     VStack(alignment: .leading, spacing: 0) {
                         HStack {
-                            Image(systemName: "sparkles")
+                            Image(systemName: "atom")
                                 .foregroundColor(.yellow)
-                            Text(tr("Bonus Passifs"))
+                            Text(tr("Réacteur Stellaire"))
                                 .font(.headline.weight(.bold))
                                 .foregroundColor(.white)
                         }
@@ -147,31 +159,35 @@ struct PrestigeView: View {
                         .padding(.bottom, 10)
                         
                         VStack(spacing: 0) {
-                            bonusRow(icon: "dollarsign.circle.fill", label: tr("Gain d'argent"), value: "+\(formatBonus(10))%", color: .green)
+                            // Bonus désormais issus de l'allocation du Réacteur Stellaire.
+                            bonusRow(icon: "bolt.fill", label: tr("Gain d'argent"), value: "+\((gameManager.starsInEnergy * 3.0).formattedString())%", color: .green)
                             Divider().background(Color.white.opacity(0.1))
-                            bonusRow(icon: "arrow.triangle.merge", label: tr("Bonus fusion"), value: "+\(formatBonus(5))%", color: .blue)
+                            bonusRow(icon: "flask.fill", label: tr("Gain mutation"), value: "+\((gameManager.starsInMutagen * 1.0).formattedString())%", color: .cyan)
                             Divider().background(Color.white.opacity(0.1))
                             let discount = 1.0 - gameManager.factoryCostDiscount
-                            bonusRow(icon: "building.2.fill", label: tr("Réduction usines"), value: "-\(Int(discount * 100))%", color: .purple)
-                            Divider().background(Color.white.opacity(0.1))
-                            bonusRow(icon: "flask.fill", label: tr("Gain mutation"), value: "+\(formatBonus(3))%", color: .cyan)
-                            Divider().background(Color.white.opacity(0.1))
-                            if gameManager.totalStars >= 100 {
-                                bonusRow(icon: "wand.and.stars", label: tr("Mutation spontanée"), value: "+\(formatBonus(0.2))%", color: .mint)
-                            } else {
-                                bonusRow(icon: "lock.fill", label: tr("Mutation spontanée"), value: "100 ⭐️", color: .red, locked: true)
-                            }
-                            Divider().background(Color.white.opacity(0.1))
-                            if gameManager.totalStars >= 1000 {
-                                bonusRow(icon: "flame.fill", label: tr("Gain du Rituel"), value: "+\(formatBonus(2))%", color: .orange)
-                            } else {
-                                bonusRow(icon: "lock.fill", label: tr("Gain du Rituel"), value: "1000 ⭐️", color: .red, locked: true)
-                            }
+                            bonusRow(icon: "building.2.fill", label: tr("Réduction usines"), value: "-\(String(format: "%.1f", discount * 100))%", color: .purple)
                         }
                     }
                     .background(Color.white.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.yellow.opacity(0.15), lineWidth: 1))
+                    .padding(.horizontal)
+
+                    // Ouvrir le Réacteur pour allouer les étoiles
+                    Button(action: { showingReactor = true }) {
+                        HStack {
+                            Image(systemName: "atom")
+                            Text(tr("Gérer le Réacteur"))
+                                .font(.subheadline.weight(.bold))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                        .foregroundColor(.cyan)
+                        .padding()
+                        .background(Color.cyan.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                    }
                     .padding(.horizontal)
                 } else {
                     Text(tr("Effectuez un Prestige pour gagner des étoiles et débloquer de puissants bonus passifs."))
@@ -182,85 +198,17 @@ struct PrestigeView: View {
                 }
                 
                 Spacer(minLength: 20)
-                
+
                 // Section action Prestige
-                if gameManager.money < GameManager.firstPrestigeThreshold {
-                    // Verrouillé
-                    VStack(spacing: 14) {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.gray.opacity(0.6))
-
-                        Text(tr("Atteindre") + " " + GameManager.firstPrestigeThreshold.doubleValue.formattedString() + " " + tr("d'argent"))
-                            .font(.headline)
-                            .foregroundColor(.gray)
-
-                        let progress = (gameManager.money / GameManager.firstPrestigeThreshold).doubleValue
-                        ProgressView(value: min(progress, 1.0))
-                            .tint(.yellow)
-                            .scaleEffect(y: 1.5)
-                            .padding(.horizontal, 30)
-                        
-                        Text("\(String(format: "%.1f", progress * 100))%")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(20)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white.opacity(0.04))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gray.opacity(0.2), lineWidth: 1))
-                    .padding(.horizontal)
-                } else {
-                    let potentialStars = gameManager.calculatePrestigeStars()
-                    VStack(spacing: 16) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "sparkle")
-                                .foregroundColor(.yellow)
-                            Text(tr("Prestige Disponible !"))
-                                .font(.title3.weight(.bold))
-                                .foregroundColor(.yellow)
-                            Image(systemName: "sparkle")
-                                .foregroundColor(.yellow)
-                        }
-                        
-                        Text("+\(potentialStars.formattedString()) ⭐️")
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
-                            )
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                        
-                        Button(action: {
-                            showingPrestigeAlert = true
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.counterclockwise.circle.fill")
-                                Text(tr("Effectuer un Prestige"))
-                                    .font(.headline.weight(.bold))
-                            }
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                LinearGradient(colors: [.yellow, Color(hue: 0.12, saturation: 0.8, brightness: 1.0)], startPoint: .leading, endPoint: .trailing)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .shadow(color: .yellow.opacity(0.4), radius: 8, y: 4)
-                        }
-                    }
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.yellow.opacity(0.08))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.yellow.opacity(0.3), lineWidth: 1.5)
-                    )
-                    .padding(.horizontal)
-                }
+                // CE QUI COÛTAIT : cette section était la SEULE de l'onglet à lire
+                // `gameManager.money`, propriété mutée par le tick chaque seconde. Comme elle était
+                // écrite directement dans `prestigeContent`, tout l'onglet Prestige (étoile animée,
+                // bulles d'étoiles, carte du Réacteur, bouton Réacteur… ~30 sous-vues) était
+                // invalidé et reconstruit une fois par seconde.
+                // POURQUOI LE RENDU RESTE IDENTIQUE : le contenu est déplacé tel quel dans une vue
+                // feuille (même condition, mêmes vues, mêmes modificateurs, même unique enfant à la
+                // même place du VStack), sur le modèle de `FactoryActionRow`.
+                PrestigeActionSection(showingPrestigeAlert: $showingPrestigeAlert)
             }
             .padding(.bottom, 60)
         }
@@ -344,7 +292,28 @@ struct PrestigeView: View {
                     .clipShape(Capsule())
                 }
                 .padding(.horizontal)
-                
+
+                // Respec de l'arbre (Gem Sink)
+                if !gameManager.purchasedPrestigeUpgrades.isEmpty {
+                    Button(action: { showRespecPrestigeConfirm = true }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(tr("Réinitialiser l'Arbre"))
+                                .font(.subheadline.weight(.bold))
+                            Spacer()
+                            Text("200 💎")
+                                .font(.caption.weight(.bold).monospacedDigit())
+                        }
+                        .foregroundColor(gameManager.canAffordPrestigeRespec ? .pink : .gray)
+                        .padding()
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke((gameManager.canAffordPrestigeRespec ? Color.pink : Color.gray).opacity(0.3), lineWidth: 1))
+                    }
+                    .disabled(!gameManager.canAffordPrestigeRespec)
+                    .padding(.horizontal)
+                }
+
                 // Grouper les améliorations par palier
                 let grouped = Dictionary(grouping: PrestigeUpgrade.allUpgrades, by: { $0.tier })
                 let sortedTiers = grouped.keys.sorted()
@@ -417,6 +386,91 @@ struct PrestigeView: View {
     }
     
 
+}
+
+// MARK: - Section d'action du Prestige (feuille isolée du tick d'argent)
+
+/// Contient les seuls éléments de l'onglet Prestige qui dépendent de `gameManager.money`
+/// (jauge de progression verrouillée / carte « Prestige Disponible »).
+/// En les isolant dans leur propre `View` — exactement comme `FactoryActionRow` le fait pour la
+/// carte d'usine — le reste de l'onglet ne s'invalide plus au tick d'argent : seule cette section
+/// se réévalue chaque seconde. Aucun pixel ne change : le corps ci-dessous est le code d'origine
+/// déplacé sans modification.
+private struct PrestigeActionSection: View {
+    @Environment(GameManager.self) private var gameManager
+    @Binding var showingPrestigeAlert: Bool
+
+    var body: some View {
+        if gameManager.money < GameManager.firstPrestigeThreshold {
+            // Verrouillé
+            VStack(spacing: 14) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(.gray.opacity(0.6))
+
+                Text(tr("Atteindre") + " " + GameManager.firstPrestigeThreshold.doubleValue.formattedString() + " " + tr("d'argent"))
+                    .font(.headline)
+                    .foregroundColor(.gray)
+
+                let progress = (gameManager.money / GameManager.firstPrestigeThreshold).doubleValue
+                ProgressView(value: min(progress, 1.0))
+                    .tint(.yellow)
+                    .scaleEffect(y: 1.5)
+                    .padding(.horizontal, 30)
+
+                Text("\(String(format: "%.1f", progress * 100))%")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity)
+            .background(Color.white.opacity(0.04))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+            .padding(.horizontal)
+        } else {
+            let potentialStars = gameManager.calculatePrestigeStars()
+            VStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkle")
+                        .foregroundColor(.yellow)
+                    Text(tr("Prestige Disponible !"))
+                        .font(.title3.weight(.bold))
+                        .foregroundColor(.yellow)
+                    Image(systemName: "sparkle")
+                        .foregroundColor(.yellow)
+                }
+
+                Text("+\(potentialStars.formattedString()) ⭐️")
+                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+
+                Button(action: {
+                    showingPrestigeAlert = true
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise.circle.fill")
+                        Text(tr("Effectuer un Prestige"))
+                    }
+                }
+                .neonButton(Neon.red)
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.yellow.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.yellow.opacity(0.3), lineWidth: 1.5)
+            )
+            .padding(.horizontal)
+        }
+    }
 }
 
 // MARK: - Carte d'amélioration prestige

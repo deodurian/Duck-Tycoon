@@ -25,6 +25,13 @@ struct PlayerLevelSystem {
         let doubleMultiplier = pow(2.0, Double(level / 100))
         return (1.0 + (percentBonus / 100.0)) * doubleMultiplier
     }
+
+    /// Version BigNumber : le doublement `2^(niveau/100)` en Double débordait vers ∞
+    /// (→ BigNumber(0) → multiplicateur d'argent effondré à 0) au-delà du niveau ~102 400.
+    static func moneyMultiplierBig(for level: Int) -> BigNumber {
+        let percentBonus = Double(level) * 1.0 + Double(level / 5) * 5.0 + Double(level / 10) * 25.0
+        return BigNumber(1.0 + (percentBonus / 100.0)) * BigNumber.pow(BigNumber(2.0), level / 100)
+    }
     
     /// Calcule le multiplicateur de mutation en fonction du niveau
     static func mutationMultiplier(for level: Int) -> Double {

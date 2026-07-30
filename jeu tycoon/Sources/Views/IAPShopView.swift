@@ -21,7 +21,7 @@ struct IAPShopView: View {
                 Text(tr("Banque"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .neonTitle(Neon.green)
                     .padding(.top, 10)
                 
                 Text(tr("Achats Premium"))
@@ -41,18 +41,17 @@ struct IAPShopView: View {
                             
                             Button(action: { gameManager.watchAdForGems() }) {
                                 HStack {
-                                    Image(systemName: "video.fill").font(.title2).foregroundColor(.white)
+                                    Image(systemName: "video.fill").font(.title2)
                                     VStack(alignment: .leading) {
-                                        Text(tr("10 Gemmes Gratuites")).font(.headline).foregroundColor(.white)
+                                        Text(tr("10 Gemmes Gratuites")).font(.headline)
                                         Text("\(5 - gameManager.dailyAdGemsCount) \(tr("restants aujourd'hui"))").font(.caption).foregroundColor(.white.opacity(0.8))
                                     }
                                     Spacer()
-                                    Text("+10 💎").font(.title3.bold()).foregroundColor(.cyan)
+                                    Text("+10 💎").font(.title3.bold())
                                 }
-                                .padding()
-                                .background(gameManager.canWatchAdForGems ? LinearGradient(colors: [.red.opacity(0.8), .orange.opacity(0.8)], startPoint: .leading, endPoint: .trailing) : LinearGradient(colors: [.gray.opacity(0.5)], startPoint: .leading, endPoint: .trailing))
-                                .cornerRadius(16)
                             }
+                            .buttonStyle(NeonButtonStyle(color: Neon.cyan))
+                            .opacity(gameManager.canWatchAdForGems ? 1.0 : 0.5)
                             .disabled(!gameManager.canWatchAdForGems)
                             .padding(.horizontal)
                         }

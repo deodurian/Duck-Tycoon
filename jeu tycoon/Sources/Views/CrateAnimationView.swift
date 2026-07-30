@@ -155,19 +155,10 @@ struct CrateAnimationView: View {
     
     private func singleCrateIcon(size: CGFloat) -> some View {
         ZStack {
-            Image(systemName: "shippingbox.fill")
-                .resizable()
-                .frame(width: size, height: size)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.white, crate.type.accentColor.opacity(0.8)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .shadow(color: crate.type.accentColor.opacity(0.8), radius: 15)
-            
-            // Inner sparkle
+            // Cryo-capsule cohérente avec les cartes de la boutique
+            CryoCapsuleIcon(type: crate.type, glow: true, size: size)
+
+            // Étincelle de révélation (pilotée par l'animation d'ouverture)
             Image(systemName: "sparkle")
                 .font(.system(size: size * 0.25))
                 .foregroundColor(.white.opacity(glowOpacity))

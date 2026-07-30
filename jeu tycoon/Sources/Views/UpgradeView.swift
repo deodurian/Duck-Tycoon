@@ -55,6 +55,7 @@ struct UpgradeView: View {
             HStack {
                 Text(tr("Améliorations"))
                     .font(.largeTitle.bold())
+                    .neonTitle(Neon.cyan)
                 Spacer()
             }
             .padding([.horizontal, .top])
@@ -134,12 +135,12 @@ struct UpgradeView: View {
                                 .padding(.horizontal)
                             }
 
-                            // Réglage : quelle caisse ouvrir automatiquement (une fois l'Auto-Ouvrier acquis)
+                            // Réglage : quelle capsule ouvrir automatiquement (une fois l'Auto-Ouvrier acquis)
                             if gameManager.autoCrateInterval != nil {
                                 AutomationToolCard(
                                     icon: "clock.fill",
-                                    title: tr("Caisse Auto-Ouverte"),
-                                    subtitle: tr("Choisis la caisse ouverte automatiquement."),
+                                    title: tr("Capsule Auto-Ouverte"),
+                                    subtitle: tr("Choisis la capsule ouverte automatiquement."),
                                     color: .purple
                                 ) {
                                     AutoCratePicker()
@@ -195,8 +196,7 @@ struct UpgradeView: View {
                                 }
                                 .padding(30)
                                 .frame(maxWidth: .infinity)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .neonPanel(color: .gray, cornerRadius: 16)
                                 .padding(.horizontal)
                                 .padding(.top, 20)
                             }
@@ -256,12 +256,7 @@ struct AutomationToolCard<Content: View>: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(color.opacity(0.25), lineWidth: 1)
-        )
+        .neonPanel(color: color, cornerRadius: 14)
     }
 }
 

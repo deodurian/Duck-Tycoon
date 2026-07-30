@@ -158,8 +158,8 @@ extension UpgradeDefinition {
             currency: .mutationPoints,
             icon: "square.stack.fill",
             name: "Ouverture ×5",
-            description: "Débloque l'ouverture de 5 caisses simultanément.",
-            effectDescription: "Ouvre 5 caisses en une seule fois.",
+            description: "Débloque l'ouverture de 5 capsules simultanément.",
+            effectDescription: "Ouvre 5 capsules en une seule fois.",
             baseCost: 300,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -171,7 +171,7 @@ extension UpgradeDefinition {
             icon: "square.stack.3d.up.fill",
             name: "Ouverture ×10",
             description: "Remplace le bouton d'ouverture ×5 par ×10.",
-            effectDescription: "Ouvre 10 caisses en une seule fois.",
+            effectDescription: "Ouvre 10 capsules en une seule fois.",
             baseCost: 800,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -182,8 +182,8 @@ extension UpgradeDefinition {
             currency: .mutationPoints,
             icon: "infinity",
             name: "Ouverture MAX",
-            description: "Débloque l'ouverture du maximum de caisses possible.",
-            effectDescription: "Ouvre autant de caisses que ton solde le permet.",
+            description: "Débloque l'ouverture du maximum de capsules possible.",
+            effectDescription: "Ouvre autant de capsules que ton solde le permet.",
             baseCost: 25000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -195,7 +195,7 @@ extension UpgradeDefinition {
             icon: "hand.tap.fill",
             name: "Hold to Open",
             description: "Débloque l'ouverture continue.",
-            effectDescription: "Maintenez appuyé sur une caisse pour l'ouvrir en boucle à toute vitesse.",
+            effectDescription: "Maintenez appuyé sur une capsule pour l'ouvrir en boucle à toute vitesse.",
             baseCost: 1000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -218,7 +218,7 @@ extension UpgradeDefinition {
             currency: .mutationPoints,
             icon: "line.3.horizontal.decrease.circle.fill",
             name: "Filtre de Recyclage",
-            description: "Automatise le recyclage à l'ouverture des caisses.",
+            description: "Automatise le recyclage à l'ouverture des capsules.",
             effectDescription: "Recycle automatiquement les canards d'une rareté spécifiée.",
             baseCost: 2000,
             costMultiplier: 1.0,
@@ -474,8 +474,8 @@ extension UpgradeDefinition {
             currency: .mutationPoints,
             icon: "clock.fill",
             name: "Auto-Ouvrier I",
-            description: "Ouvre automatiquement une caisse choisie.",
-            effectDescription: "1 caisse toutes les 10 secondes.",
+            description: "Ouvre automatiquement une capsule choisie.",
+            effectDescription: "1 capsule toutes les 10 secondes.",
             baseCost: 50000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -487,7 +487,7 @@ extension UpgradeDefinition {
             icon: "clock.fill",
             name: "Auto-Ouvrier II",
             description: "Accélère l'Auto-Ouvrier.",
-            effectDescription: "1 caisse toutes les 5 secondes.",
+            effectDescription: "1 capsule toutes les 5 secondes.",
             baseCost: 150000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -499,7 +499,7 @@ extension UpgradeDefinition {
             icon: "clock.fill",
             name: "Auto-Ouvrier III",
             description: "Accélère considérablement l'Auto-Ouvrier.",
-            effectDescription: "1 caisse toutes les 2 secondes.",
+            effectDescription: "1 capsule toutes les 2 secondes.",
             baseCost: 500000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -511,7 +511,7 @@ extension UpgradeDefinition {
             icon: "clock.fill",
             name: "Auto-Ouvrier IV",
             description: "Accélère encore l'Auto-Ouvrier.",
-            effectDescription: "1 caisse toutes les 0.5 secondes.",
+            effectDescription: "1 capsule toutes les 0.5 secondes.",
             baseCost: 2500000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -523,7 +523,7 @@ extension UpgradeDefinition {
             icon: "clock.fill",
             name: "Auto-Ouvrier V",
             description: "Accélère massivement l'Auto-Ouvrier.",
-            effectDescription: "1 caisse toutes les 0.25 secondes.",
+            effectDescription: "1 capsule toutes les 0.25 secondes.",
             baseCost: 10000000,
             costMultiplier: 1.0,
             maxLevel: 1
@@ -535,7 +535,7 @@ extension UpgradeDefinition {
             icon: "clock.fill",
             name: "Auto-Ouvrier MAX",
             description: "L'Auto-Ouvrier atteint sa vitesse maximale.",
-            effectDescription: "1 caisse toutes les 0.1 seconde.",
+            effectDescription: "1 capsule toutes les 0.1 seconde.",
             baseCost: 50000000,
             costMultiplier: 1.0,
             maxLevel: 1

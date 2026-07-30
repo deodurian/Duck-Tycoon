@@ -1,13 +1,110 @@
 import SwiftUI
 import Foundation
 
+// MARK: - Hexagone (silhouette de cryo-capsule)
+struct Hexagon: Shape {
+    func path(in rect: CGRect) -> Path {
+        let w = rect.width, h = rect.height
+        var p = Path()
+        p.move(to: CGPoint(x: w * 0.5, y: 0))
+        p.addLine(to: CGPoint(x: w, y: h * 0.25))
+        p.addLine(to: CGPoint(x: w, y: h * 0.75))
+        p.addLine(to: CGPoint(x: w * 0.5, y: h))
+        p.addLine(to: CGPoint(x: 0, y: h * 0.75))
+        p.addLine(to: CGPoint(x: 0, y: h * 0.25))
+        p.closeSubpath()
+        return p
+    }
+}
+
+// MARK: - Cryo-Capsule (visuel futuriste remplaçant l'icône carton)
+struct CryoCapsuleIcon: View {
+    let type: CrateType
+    var glow: Bool = false
+    var size: CGFloat = 62
+    /// Lévitation lente + anneau hexagonal qui tourne : la capsule « vit » dans la boutique.
+    var alive: Bool = false
+
+    @State private var float = false
+    @State private var spin = false
+
+    /// Symbole tech par palier de capsule.
+    private var techIcon: String {
+        switch type {
+        case .bois:    return "cube.transparent"
+        case .fer:     return "shield.lefthalf.filled"
+        case .or:      return "atom"
+        case .platine: return "waveform.path.ecg"
+        case .saphir:  return "snowflake"
+        case .rubis:   return "cube.transparent.fill"
+        case .diamant: return "sparkles"
+        case .secrete: return "questionmark.diamond.fill"
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            // Aura lumineuse de la rareté
+            Hexagon()
+                .fill(
+                    RadialGradient(colors: [type.accentColor.opacity(glow ? 0.65 : 0.4), .clear],
+                                   center: .center, startRadius: 2, endRadius: size * 0.85)
+                )
+                .frame(width: size * 1.35, height: size * 1.35)
+                .blur(radius: 7)
+
+            // Anneau de confinement en rotation lente
+            if alive {
+                Hexagon()
+                    .stroke(type.accentColor.opacity(0.38), style: StrokeStyle(lineWidth: 1, dash: [7, 5]))
+                    .frame(width: size * 1.22, height: size * 1.22)
+                    .rotationEffect(.degrees(spin ? 360 : 0))
+                    .animation(.linear(duration: 16).repeatForever(autoreverses: false), value: spin)
+            }
+
+            // Corps de la capsule (dégradé intérieur + reflet + bordure lumineuse)
+            Hexagon()
+                .fill(LinearGradient(colors: type.gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay(
+                    Hexagon()
+                        .fill(LinearGradient(colors: [.white.opacity(0.28), .clear], startPoint: .top, endPoint: .center))
+                )
+                .overlay(
+                    Hexagon()
+                        .stroke(
+                            LinearGradient(colors: [.white.opacity(0.75), type.accentColor.opacity(0.55)], startPoint: .top, endPoint: .bottom),
+                            lineWidth: 1.5
+                        )
+                )
+                .frame(width: size, height: size)
+                .shadow(color: type.accentColor.opacity(glow ? 0.9 : 0.6), radius: glow ? 14 : 9)
+
+            // Symbole tech central
+            Image(systemName: techIcon)
+                .font(.system(size: size * 0.38, weight: .semibold))
+                .foregroundStyle(.white)
+                .shadow(color: type.accentColor.opacity(0.8), radius: 4)
+        }
+        .frame(width: size, height: size)
+        .offset(y: alive ? (float ? -3.5 : 3.5) : 0)
+        .animation(alive ? .easeInOut(duration: 2.6).repeatForever(autoreverses: true) : nil, value: float)
+        .onAppear {
+            guard alive else { return }
+            float = true
+            spin = true
+        }
+    }
+}
+
 // MARK: - Premium Crate Card
 struct PremiumCrateCard: View {
     @Environment(GameManager.self) private var gameManager
     let crate: Crate
+    /// Position dans la grille : sert à échelonner l'entrée en scène.
+    var appearIndex: Int = 0
     @Binding var openingState: CrateOpeningState?
     @Binding var infoCrate: Crate?
-    
+
     @State private var showingBulkSheet = false
     @State private var holdTimer: Timer?
     @State private var openedCount: Int = 0
@@ -15,8 +112,12 @@ struct PremiumCrateCard: View {
     @State private var holdDidTrigger = false
     @State private var shimmerOffset: CGFloat = -1
     @State private var glowPulse = false
+    /// Recul de la capsule au moment de l'achat (micro-célébration avant l'écran d'ouverture).
+    @State private var punch: CGFloat = 0
+    @State private var buyFlash: Double = 0
+    @State private var appeared = false
 
-    /// La rareté la plus élevée que cette caisse peut donner
+    /// La rareté la plus élevée que cette capsule peut donner
     private var bestRarity: DuckRarity? {
         crate.probabilities.chances.filter { $0.value > 0 }.keys.max()
     }
@@ -41,27 +142,16 @@ struct PremiumCrateCard: View {
                     .offset(y: -5)
                 
                 VStack(spacing: 6) {
-                    // Crate icon
-                    ZStack {
-                        Image(systemName: "shippingbox.fill")
-                            .font(.system(size: 36))
-                            .foregroundStyle(LinearGradient(colors: crate.type.gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .shadow(color: crate.type.accentColor.opacity(0.5), radius: 8)
-
-                        // Sparkle on premium crates
-                        if crate.type == .diamant || crate.type == .rubis {
-                            Image(systemName: "sparkle")
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.8))
-                                .offset(x: 18, y: -18)
-                        }
-                    }
+                    // Cryo-capsule futuriste (hexagone + symbole tech + aura de rareté)
+                    CryoCapsuleIcon(type: crate.type, glow: glowPulse, alive: true)
+                        .scaleEffect(1 - punch * 0.14)
+                        .rotationEffect(.degrees(Double(punch) * -7))
 
                     Text(tr(crate.type.shortName))
                         .font(.system(size: 15, weight: .black, design: .rounded))
                         .foregroundColor(crate.type.textColor)
 
-                    // Meilleure rareté obtenable dans cette caisse
+                    // Meilleure rareté obtenable dans cette capsule
                     if let bestRarity = bestRarity {
                         HStack(spacing: 3) {
                             Image(systemName: "star.fill")
@@ -98,7 +188,23 @@ struct PremiumCrateCard: View {
             .padding(.horizontal, 6)
             .padding(.bottom, 8)
             
-            if gameManager.isUnlocked(.holdToOpen) {
+            if openedCount > 0 {
+                // Compteur de série pendant le maintien : on voit la boucle tourner.
+                HStack(spacing: 4) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 8, weight: .black))
+                    Text("×\(openedCount)")
+                        .font(.system(size: 11, weight: .black, design: .rounded))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(Capsule().fill(Color.white.opacity(0.92)))
+                .padding(.bottom, 6)
+                .transition(.scale.combined(with: .opacity))
+            } else if gameManager.isUnlocked(.holdToOpen) {
                 Text(tr("Maintenir = boucle"))
                     .font(.system(size: 7, weight: .medium))
                     .foregroundColor(crate.type.textColor.opacity(0.5))
@@ -156,6 +262,18 @@ struct PremiumCrateCard: View {
             }
             .shadow(color: crate.type.accentColor.opacity(0.35), radius: 10, y: 5)
         )
+        // Éclair d'achat : la carte "encaisse" le coup avant l'écran d'ouverture.
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white)
+                .opacity(buyFlash)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+        }
+        .scaleEffect(1 - punch * 0.035)
+        // Entrée en scène échelonnée
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 14)
         .onAppear {
             // Periodic shimmer
             withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: false).delay(Double.random(in: 0...2))) {
@@ -163,6 +281,9 @@ struct PremiumCrateCard: View {
             }
             withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
                 glowPulse = true
+            }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85).delay(Double(appearIndex) * 0.05)) {
+                appeared = true
             }
         }
         .sheet(isPresented: $showingBulkSheet) {
@@ -283,27 +404,48 @@ struct PremiumCrateCard: View {
         let keyMax = "\(crate.type.rawValue)_max"
         let canBuyMax = gameManager.affordableCrateKeys.contains(keyMax)
         
+        let unlocked = gameManager.isUnlocked(.multipleOpenMax)
+        let active = canBuyMax && unlocked
+
         return Button(action: {
-            if gameManager.isUnlocked(.multipleOpenMax) {
+            if unlocked {
+                NeonHaptics.impact()
                 showingBulkSheet = true
             }
         }) {
             HStack(spacing: 4) {
-                if !gameManager.isUnlocked(.multipleOpenMax) {
-                    Image(systemName: "lock.fill").font(.system(size: 9))
-                }
+                Image(systemName: unlocked ? "square.stack.3d.up.fill" : "lock.fill")
+                    .font(.system(size: 9, weight: .black))
                 Text(tr("Multiple"))
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
-            .background(canBuyMax && gameManager.isUnlocked(.multipleOpenMax) ? Color.white.opacity(0.7) : Color.black.opacity(0.2))
-            .foregroundColor(canBuyMax && gameManager.isUnlocked(.multipleOpenMax) ? .black : crate.type.textColor.opacity(0.4))
-            .cornerRadius(8)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(active ? Color.white.opacity(0.16) : Color.black.opacity(0.22))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(active ? Color.white.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .foregroundStyle(active ? Color.white : crate.type.textColor.opacity(0.4))
         }
-        .disabled(!gameManager.isUnlocked(.multipleOpenMax))
+        .disabled(!unlocked)
     }
     
+    // MARK: - Réaction d'achat
+
+    /// Micro-célébration locale : la capsule recule, la carte encaisse un éclair.
+    /// Se déclenche AVANT l'écran d'ouverture plein écran, pour que l'appui rende quelque chose
+    /// même quand la génération des canards prend un instant.
+    private func reactToPurchase(strong: Bool = true) {
+        punch = 1
+        buyFlash = strong ? 0.32 : 0.16
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.45)) { punch = 0 }
+        withAnimation(.easeOut(duration: strong ? 0.28 : 0.16)) { buyFlash = 0 }
+    }
+
     // MARK: - Buy Logic
     private func handleBulkBuy(amount: Int) {
         guard !isGenerating else { return }
@@ -336,6 +478,7 @@ struct PremiumCrateCard: View {
         }
         
         gameManager.evaluateAffordableCrates(reset: true)
+        reactToPurchase()
         openCrate(amount: amount)
     }
     
@@ -348,6 +491,7 @@ struct PremiumCrateCard: View {
         guard let cost = gameManager.calculateCrateCostMutation(crate: crate, amount: amount), gameManager.mutationPoints >= cost else { return }
         gameManager.mutationPoints -= cost
         gameManager.evaluateAffordableCrates(reset: true)
+        reactToPurchase()
         openCrate(amount: amount)
     }
     
@@ -358,9 +502,8 @@ struct PremiumCrateCard: View {
             var generatedDucks = [Duck]()
             generatedDucks.reserveCapacity(amount)
             let hasGenes = gameManager.isUnlocked(.genesCroissants)
-            let luckBonus = gameManager.crateLuckBonus
             for _ in 0..<amount {
-                let rarity = crate.probabilities.rollRarity(bonus: luckBonus)
+                let rarity = crate.probabilities.rollRarity()
                 let size = DuckSize.rollRandom(genesCroissants: hasGenes)
                 let mutation = DuckMutation.rollRandom()
                 generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -375,7 +518,6 @@ struct PremiumCrateCard: View {
         let probabilities = crate.probabilities
         let crateRef = crate
         let hasGenes = gameManager.isUnlocked(.genesCroissants)
-        let luckBonus = gameManager.crateLuckBonus
 
         DispatchQueue.global(qos: .userInitiated).async {
             var generatedDucks = [Duck]()
@@ -383,7 +525,7 @@ struct PremiumCrateCard: View {
             var rarityCounts: [DuckRarity: Int] = [:]
 
             for _ in 0..<amount {
-                let rarity = probabilities.rollRarity(bonus: luckBonus)
+                let rarity = probabilities.rollRarity()
                 let size = DuckSize.rollRandom(genesCroissants: hasGenes)
                 let mutation = DuckMutation.rollRandom()
                 generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -409,7 +551,9 @@ struct PremiumCrateCard: View {
         holdTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
             holdDidTrigger = true
             if silentBuyCrate(amount: amount) {
-                openedCount += 1
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { openedCount += 1 }
+                NeonHaptics.tick()
+                reactToPurchase(strong: false)
                 triggerFlashAndShake()
             } else {
                 stopHold()
@@ -420,7 +564,7 @@ struct PremiumCrateCard: View {
     private func stopHold() {
         holdTimer?.invalidate()
         holdTimer = nil
-        openedCount = 0
+        withAnimation(.easeOut(duration: 0.2)) { openedCount = 0 }
         withAnimation {
             gameManager.globalFlashOpacity = 0
             gameManager.globalShakeOffset = .zero
@@ -458,9 +602,8 @@ struct PremiumCrateCard: View {
         var generatedDucks = [Duck]()
         generatedDucks.reserveCapacity(amount)
         let hasGenes = gameManager.isUnlocked(.genesCroissants)
-        let luckBonus = gameManager.crateLuckBonus
         for _ in 0..<amount {
-            let rarity = crate.probabilities.rollRarity(bonus: luckBonus)
+            let rarity = crate.probabilities.rollRarity()
             let size = DuckSize.rollRandom(genesCroissants: hasGenes)
             let mutation = DuckMutation.rollRandom()
             generatedDucks.append(Duck(rarity: rarity, size: size, mutation: mutation))
@@ -481,7 +624,7 @@ struct ProbabilityPopup: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("\(tr("Probabilités -")) \(tr(crate.type.rawValue))")
+                Text("\(tr("Probabilités -")) \(tr(crate.type.displayName))")
                     .font(.headline.bold())
                 Spacer()
                 Button(action: { withAnimation { isPresented = false } }) {
@@ -491,7 +634,7 @@ struct ProbabilityPopup: View {
                 }
             }
             .padding()
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.white.opacity(0.05))
             
             ScrollView {
                 VStack(spacing: 20) {
@@ -526,7 +669,7 @@ struct ProbabilityPopup: View {
                                 }
                             }
                         }
-                        .background(Color(.tertiarySystemGroupedBackground))
+                        .background(Color.white.opacity(0.04))
                         .cornerRadius(12)
                         .padding(.horizontal)
                     }
@@ -543,7 +686,7 @@ struct ProbabilityPopup: View {
                                 probRow(name: size.rawValue, percentage: size.baseProbability, color: .primary, multiplier: size.multiplier, isLast: index == DuckSize.allCases.count - 1)
                             }
                         }
-                        .background(Color(.tertiarySystemGroupedBackground))
+                        .background(Color.white.opacity(0.04))
                         .cornerRadius(12)
                         .padding(.horizontal)
                     }
@@ -560,7 +703,7 @@ struct ProbabilityPopup: View {
                                 probRow(name: mutation.rawValue, percentage: mutation.baseProbability, color: mutation.color, multiplier: mutation.multiplier, isLast: index == DuckMutation.allCases.count - 1)
                             }
                         }
-                        .background(Color(.tertiarySystemGroupedBackground))
+                        .background(Color.white.opacity(0.04))
                         .cornerRadius(12)
                         .padding(.horizontal)
                     }
@@ -569,9 +712,13 @@ struct ProbabilityPopup: View {
             }
         }
         .frame(maxWidth: 340, maxHeight: 500)
-        .background(Color(.systemGroupedBackground))
-        .cornerRadius(20)
-        .shadow(radius: 20)
+        .background(Color(hex: 0x0E0E1A))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(crate.type.accentColor.opacity(0.45), lineWidth: 1)
+        )
+        .shadow(color: crate.type.accentColor.opacity(0.35), radius: 20)
     }
     
     private func probRow(name: String, percentage: Double, color: Color, multiplier: Double? = nil, isLast: Bool = false) -> some View {
@@ -628,15 +775,10 @@ struct BulkCrateOpeningSheet: View {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 10) {
-                    Image(systemName: "shippingbox.fill")
-                        .font(.system(size: 50))
-                        .foregroundStyle(
-                            LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
-                        )
-                        .shadow(color: .blue.opacity(0.5), radius: 10)
+                    CryoCapsuleIcon(type: crate.type, glow: true, size: 76)
                     Text(tr("Ouverture Multiple"))
                         .font(.title2.bold())
-                    Text(tr(crate.type.rawValue))
+                    Text(tr(crate.type.displayName))
                         .font(.headline)
                         .foregroundColor(.gray)
                 }
@@ -712,32 +854,23 @@ struct BulkCrateOpeningSheet: View {
                 
                 // Action Button
                 let actualSelected = selectedAmount == 0 ? maxAmount : selectedAmount
+                let canBuy = actualSelected > 0 && actualSelected <= maxAmount
                 Button(action: {
-                    if actualSelected > 0 && actualSelected <= maxAmount {
+                    if canBuy {
                         onBuy(actualSelected)
                         dismiss()
                     }
                 }) {
                     Text(tr("CONFIRMER L'ACHAT"))
-                        .font(.headline.bold())
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(actualSelected > 0 && actualSelected <= maxAmount ? Color.green : Color.gray.opacity(0.3))
-                        .foregroundColor(.white)
-                        .cornerRadius(16)
-                        .shadow(color: actualSelected > 0 && actualSelected <= maxAmount ? Color.green.opacity(0.4) : Color.clear, radius: 8, x: 0, y: 4)
                 }
+                .neonButton(Neon.green)
+                .opacity(canBuy ? 1.0 : 0.45)
                 .padding(.horizontal)
                 .padding(.bottom, 20)
-                .disabled(actualSelected == 0 || actualSelected > maxAmount)
+                .disabled(!canBuy)
             }
-            .background(
-                LinearGradient(
-                    colors: [Color(red: 0.05, green: 0.0, blue: 0.12), Color(red: 0.02, green: 0.0, blue: 0.06), .black],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ).ignoresSafeArea()
-            )
+            .background(NeonBackground())
+            .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -751,6 +884,7 @@ struct BulkCrateOpeningSheet: View {
     }
 }
 
+/// Le bouton le plus tapé du jeu : il doit s'enfoncer, claquer et se lire d'un coup d'œil.
 struct CratePurchaseButton: View {
     let amountLabel: String
     let costStr: String
@@ -765,41 +899,78 @@ struct CratePurchaseButton: View {
 
     @State private var isPressing = false
 
+    private var isActive: Bool { isUnlocked && canAfford }
+
+    private let shape = RoundedRectangle(cornerRadius: 11, style: .continuous)
+
     var body: some View {
         Button(action: {
             if isUnlocked { action() }
         }) {
-            HStack(spacing: 3) {
-                if !isUnlocked {
-                    Image(systemName: "lock.fill").font(.system(size: 9))
+            VStack(spacing: 0) {
+                HStack(spacing: 3) {
+                    if !isUnlocked {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9, weight: .black))
+                    }
+                    Text(amountLabel.replacingOccurrences(of: "x", with: "×"))
+                        .font(.system(size: 13, weight: .black, design: .rounded))
                 }
-                Text(amountLabel)
-                    .font(.system(size: 11, weight: .black))
+
                 if isUnlocked {
-                    Text(costStr)
-                        .font(.system(size: 10, weight: .semibold))
-                    Text(icon)
-                        .font(.system(size: 10))
+                    HStack(spacing: 2) {
+                        Text(icon)
+                            .font(.system(size: 8))
+                        Text(costStr)
+                            .font(.system(size: 10, weight: .heavy, design: .rounded))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.55)
+                    }
+                    .opacity(isActive ? 0.62 : 0.75)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
-            .background(isUnlocked && canAfford ? Color.white.opacity(0.95) : Color.black.opacity(0.3))
-            .foregroundColor(isUnlocked && canAfford ? .black : textColor.opacity(0.5))
-            .cornerRadius(8)
+            .padding(.horizontal, 4)
+            .background {
+                if isActive {
+                    // Pastille "physique" : bombée, avec une arête claire en haut.
+                    shape.fill(
+                        LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xD8D8E4)],
+                                       startPoint: .top, endPoint: .bottom)
+                    )
+                } else {
+                    shape.fill(Color.black.opacity(0.34))
+                }
+            }
+            .foregroundStyle(isActive ? Color(hex: 0x14121C) : textColor.opacity(0.45))
+            .overlay {
+                shape.stroke(
+                    isActive ? Color.white.opacity(0.95) : Color.white.opacity(0.10),
+                    lineWidth: 1
+                )
+            }
+            .clipShape(shape)
+            // Ombre portée sombre : la pastille se détache aussi bien sur les capsules
+            // claires (Plasma, Diamant) que sur les sombres.
+            .shadow(color: .black.opacity(isActive ? 0.45 : 0), radius: 4, y: 2)
+            .scaleEffect(isPressing ? 0.9 : 1.0)
+            .animation(.interactiveSpring(response: 0.16, dampingFraction: 0.55), value: isPressing)
         }
         .disabled(!isUnlocked || !canAfford)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
-                .onChanged { _ in 
-                    if !isPressing && isHoldUnlocked {
+                .onChanged { _ in
+                    if !isPressing {
                         isPressing = true
-                        startHold() 
+                        NeonHaptics.impact()
+                        if isHoldUnlocked { startHold() }
                     }
                 }
-                .onEnded { _ in 
+                .onEnded { _ in
                     isPressing = false
-                    stopHold() 
+                    stopHold()
                 }
         )
     }
